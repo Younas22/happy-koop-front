@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
 
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -62,6 +63,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           </main>
 
           <SiteFooter config={config} />
+
+          {/* Form feedback. Position is bottom-centre so it never covers a
+              sticky mobile action bar on checkout. */}
+          <Toaster position="bottom-center" closeButton richColors />
         </TooltipProvider>
       </body>
     </html>

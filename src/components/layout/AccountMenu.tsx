@@ -18,10 +18,10 @@ import type { SessionResult, User } from "@/lib/types/api";
 /**
  * Account menu.
  *
- * TODO(blocker): the `/login`, `/account`, `/account/orders` and `/admin`
- * routes this menu links to are owned by the auth/account/admin workstream and
- * do not exist in this app yet, so those links 404 until they land. Nothing is
- * stubbed here on purpose - a placeholder page would hide the gap.
+ * `/login`, `/account`, `/account/orders` and `/admin` all resolve: the auth,
+ * account and admin areas are implemented. `/admin` is still only an
+ * affordance - the admin layout re-checks the viewer and the API authorizes
+ * every admin request independently.
  *
  * The viewer is read from the same-origin `GET /api/auth/session` route
  * handler, so the header itself stays cacheable and no token ever reaches the

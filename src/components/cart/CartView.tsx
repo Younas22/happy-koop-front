@@ -22,9 +22,9 @@ import { NOT_CALCULATED_LABEL, displayOrNotCalculated, formatMoney } from "@/lib
  * `removedItems` and `adjustments` are surfaced explicitly, and `null`
  * shipping/tax render as "Calculated at checkout" - never as $0.00.
  *
- * TODO(blocker): the `/checkout` route the summary button points at is owned by
- * the checkout/payments workstream and does not exist in this app yet, so the
- * button 404s until it lands. It is deliberately not stubbed.
+ * The summary button points at `/checkout`, which is implemented: it
+ * re-validates the cart on entry, loads real shipping options per destination
+ * and only offers a payment provider that runtime config says is enabled.
  */
 export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boolean }) {
   const lines = useCartStore((state) => state.lines);

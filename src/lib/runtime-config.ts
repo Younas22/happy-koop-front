@@ -286,12 +286,11 @@ export async function getRuntimeConfig(): Promise<ResolvedRuntimeConfig> {
 
 /**
  * Explicit refresh mechanism (contract 3, rule 6: never cache indefinitely).
- * Call from a route handler or server action after the admin saves store
- * settings.
  *
- * TODO(blocker): nothing calls this yet. The admin store-settings screen that
- * should invoke it after a successful save is owned by the admin workstream.
- * Until then the config refreshes on its own 60s window only.
+ * Called by `saveStoreSettingsAction` and `savePaymentSettingsAction` (see
+ * `src/app/admin/actions.ts`) after a successful write, so a change to the
+ * store name, branding, locale, URLs or provider enablement reaches the
+ * storefront immediately instead of waiting out the 60s window.
  */
 export function revalidateRuntimeConfig(): void {
   revalidateTag(RUNTIME_CONFIG_TAG, "max");

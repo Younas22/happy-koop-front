@@ -92,7 +92,7 @@ export async function ProductReviews({ slug, enabled }: ProductReviewsProps) {
                 {review.storeReply ? (
                   <div className="mt-3 rounded-md border border-line bg-sunken p-3">
                     <p className="text-xs font-semibold text-ink">Store reply</p>
-                    <p className="mt-1 text-sm text-ink-muted">{review.storeReply.body}</p>
+                    <p className="mt-1 text-sm text-ink-muted">{review.storeReply}</p>
                   </div>
                 ) : null}
               </li>

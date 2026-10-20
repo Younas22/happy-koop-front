@@ -469,11 +469,6 @@ export interface ProductDetail {
  * 4. Reviews
  * ------------------------------------------------------------------ */
 
-export interface ReviewStoreReply {
-  body: string;
-  repliedAt: string;
-}
-
 export interface Review {
   id: number;
   rating: number;
@@ -488,7 +483,12 @@ export interface Review {
   isVerifiedPurchase: boolean;
   createdAt: string;
   helpfulCount: number;
-  storeReply: ReviewStoreReply | null;
+  /**
+   * The store's public reply, as plain text. The live API returns a string (or
+   * `null`); the contract only shows `"storeReply": null`, so the string form
+   * is what is implemented here.
+   */
+  storeReply: string | null;
 }
 
 /** Keys are the rating value as a string, `"1"`..`"5"`. */
@@ -782,32 +782,76 @@ export interface OrderItem {
   sku: string | null;
   slug: string | null;
   imageUrl: string | null;
+  /** Option labels frozen into the snapshot, e.g. `["Matte White"]`. */
+  options: string[];
   quantity: number;
   unitPrice: Money;
   lineTotal: Money;
+}
+
+export interface OrderTracking {
+  carrier: string | null;
+  trackingNumber: string | null;
+  trackingUrl: string | null;
+}
+
+export interface OrderShippingMethod {
+  id: string;
+  label: string | null;
 }
 
 /** `POST /checkout/initialize` order payload (contract 5). */
 export interface Order {
   id: number;
   orderNumber: string;
-  /** Opaque guest token guarding guest order reads. */
+  /**
+   * Opaque guest token guarding guest order reads. Returned only to the
+   * creator at initialize; absent from later reads.
+   */
   accessToken: string | null;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
+  paymentProvider: PaymentProvider | null;
   currency: string;
+  email: string | null;
   totals: OrderTotals;
   items: OrderItem[];
-  createdAt: string;
+  shippingAddress: Address | null;
+  billingAddress: Address | null;
+  shippingMethod: OrderShippingMethod | null;
+  couponCode: string | null;
+  customerNote: string | null;
+  tracking: OrderTracking | null;
+  placedAt: string | null;
+  paidAt: string | null;
+  createdAt: string | null;
   /** 60 minutes out at initialize. */
   expiresAt: string | null;
 }
+
+/** `GET /account/orders` list row. */
+export interface AccountOrderSummary {
+  orderNumber: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  currency: string;
+  total: Money;
+  itemCount: number;
+  placedAt: string | null;
+  createdAt: string | null;
+}
+
+/** `GET /account/orders/{orderNumber}` - the full order without the token. */
+export type AccountOrderDetail = Omit<Order, "accessToken"> & { accessToken?: never };
 
 export interface PaymentAttempt {
   id: number;
   provider: PaymentProvider;
   status: string;
 }
+
+/** `POST /paypal/capture` returns the authoritative order status view. */
+export type PaypalCaptureResult = OrderStatusView;
 
 export interface CheckoutInitializeResult {
   order: Order;
@@ -823,9 +867,13 @@ export interface OrderStatusView {
   orderNumber: string;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
+  currency: string;
   totals: OrderTotals;
   items: OrderItem[];
+  shippingAddress: Address | null;
+  tracking: OrderTracking | null;
   placedAt: string | null;
+  expiresAt: string | null;
 }
 
 export interface StripeIntentResult {
@@ -903,111 +951,7 @@ export interface SessionResult {
 }
 
 /* ------------------------------------------------------------------ *
- * 8. Admin
+ * 8. Admin (+ extended order/account shapes) - see ./admin.ts
  * ------------------------------------------------------------------ */
 
-/** Contract 8.2 - a secret is only ever described, never returned. */
-export interface AdminSecretStatus {
-  configured: boolean;
-  maskedSuffix: string | null;
-  updatedAt: string | null;
-}
-
-export interface AdminConnectionCheck {
-  ok: boolean;
-  checkedAt: string;
-  /** Sanitized provider message. */
-  message: string;
-}
-
-export interface AdminStripePaymentSettings {
-  enabled: boolean;
-  mode: StripeMode | string;
-  publishableKey: string | null;
-  secretKey: AdminSecretStatus;
-  webhookSecret: AdminSecretStatus;
-  webhookUrl: string;
-  lastCheck: AdminConnectionCheck | null;
-}
-
-export interface AdminPaypalPaymentSettings {
-  enabled: boolean;
-  mode: PaypalMode | string;
-  clientId: string | null;
-  clientSecret: AdminSecretStatus;
-  webhookId: AdminSecretStatus;
-  webhookUrl: string;
-  lastCheck: AdminConnectionCheck | null;
-}
-
-/** `GET /admin/settings/payments` (contract 8.2) - status, never secrets. */
-export interface AdminPaymentSettings {
-  stripe: AdminStripePaymentSettings;
-  paypal: AdminPaypalPaymentSettings;
-}
-
-/** `GET|PUT /admin/settings/store` validated fields (contract 8.1). */
-export interface AdminStoreSettings {
-  storeName: string;
-  tagline: string | null;
-  logoMediaId: number | null;
-  logoDarkMediaId: number | null;
-  faviconMediaId: number | null;
-  primaryColor: string;
-  accentColor: string;
-  contactEmail: string | null;
-  contactPhone: string | null;
-  addressLines: string[];
-  currency: string;
-  locale: string;
-  timezone: string;
-  canonicalFrontendUrl: string;
-  activeApiBaseUrl: string;
-  seo: RuntimeSeo;
-  policies: RuntimePolicies;
-  social: RuntimeSocial;
-  features: RuntimeFeatures;
-}
-
-export interface AdminStoreSettingsResponse extends AdminStoreSettings {
-  /** Displayed verbatim in the admin UI (contract 8.1). */
-  infrastructureNotice: string;
-}
-
-/** `POST /admin/media` (contract 9). */
-export interface AdminMediaAsset {
-  id: number;
-  url: string;
-  thumbnailUrl: string | null;
-  type: MediaType;
-  mimeType: string;
-  width: number | null;
-  height: number | null;
-  sizeBytes: number;
-  alt: string | null;
-  createdAt: string;
-}
-
-export type ReviewModerationStatus = "pending" | "approved" | "rejected";
-
-export interface AdminReview extends Review {
-  status: ReviewModerationStatus;
-  productId: number;
-  productName: string;
-}
-
-/**
- * `GET /admin/audit-logs` (contract 8). The contract defines the endpoint as
- * "paginated, read-only" but not its fields; these are the actor/ip/key-names
- * that 8.2 says every write records.
- */
-export interface AdminAuditLogEntry {
-  id: number;
-  action: string;
-  actorId: number | null;
-  actorName: string | null;
-  ipAddress: string | null;
-  /** Changed key NAMES only - never values (contract 8.2). */
-  changedKeys: string[];
-  createdAt: string;
-}
+export * from "@/lib/types/admin";
