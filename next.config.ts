@@ -18,9 +18,10 @@ const allowedHosts = (process.env.NEXT_PUBLIC_ALLOWED_API_HOSTS ?? "127.0.0.1,lo
 const nextConfig: NextConfig = {
   reactStrictMode: true,
 
-  // Surface type and lint errors at build time instead of shipping past them.
+  // Surface type errors at build time instead of shipping past them.
+  // Next 16 no longer accepts an `eslint` key here; linting runs through the
+  // `lint` script instead.
   typescript: { ignoreBuildErrors: false },
-  eslint: { ignoreDuringBuilds: false },
 
   // Do not advertise the framework version.
   poweredByHeader: false,

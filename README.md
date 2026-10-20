@@ -1,36 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HappyKoop storefront (Next.js)
 
-## Getting Started
+Customer-facing storefront for HappyKoop. The Laravel API in `../happy-koop` is
+the source of truth for every product, price, stock level and store setting;
+this app renders what that API returns and nothing else.
 
-First, run the development server:
+The authoritative API shape is `docs/api-contract.md`. Change the contract
+before changing code on either side.
+
+## Requirements
+
+- Node.js 20+ (developed on 22)
+- The Laravel API running locally, by default at `http://127.0.0.1:8000`
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # then fill in the values
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Script | What it does |
+|--------|--------------|
+| `npm run dev` | Dev server on port 3000 |
+| `npm run build` | Production build. Succeeds with the API down (degraded render) |
+| `npm run start` | Serve the production build |
+| `npm run lint` | ESLint (Next core-web-vitals + TypeScript + React Compiler rules) |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm test` | Vitest (jsdom) |
+| `npm run test:watch` | Vitest in watch mode |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Environment variables
 
-## Learn More
+See `.env.example` for the full list and comments. Summary:
 
-To learn more about Next.js, take a look at the following resources:
+| Name | Public | Purpose |
+|------|--------|---------|
+| `NEXT_PUBLIC_API_BOOTSTRAP_URL` | yes | Stable API origin used only to fetch public runtime config |
+| `NEXT_PUBLIC_API_BASE_URL` | yes | Documented fallback when the bootstrap fetch fails |
+| `NEXT_PUBLIC_ALLOWED_API_HOSTS` | yes | Comma-separated host allowlist that validates `apiBaseUrl` |
+| `NEXT_PUBLIC_SITE_URL` | yes | Canonical frontend URL for metadata |
+| `SESSION_COOKIE_SECRET` | **no** | Server-only secret for the session cookie |
+| `INTERNAL_API_BASE_URL` | **no** | Optional server-only API origin |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+No Stripe secret, PayPal secret, webhook secret, database credential or
+`APP_KEY` may ever appear in a `NEXT_PUBLIC_*` variable or in frontend source.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Architecture
 
-## Deploy on Vercel
+```
+src/
+  app/                  App Router routes
+    api/auth/*          Next.js route handlers that own the session cookie
+    api/cart/validate   Same-origin proxy to POST /api/v1/cart/validate
+  components/
+    ui/                 Accessible primitives (Radix where interactive)
+    layout/             Header, footer, brand mark, theme injection
+    product/ shop/ home/ cart/ search/
+  lib/
+    types/api.ts        Hand-written types for every contract shape
+    api/client.ts       Server-only typed fetch client + ApiError
+    runtime-config.ts   Bootstrap, URL validation, degraded fallback
+    auth/               Session cookie + server-side viewer helpers
+    cart/               Client cart store (ids and quantities only)
+    product/variants.ts Variant resolution by optionValueIds set
+    money.ts            Integer-only money helpers
+    utils/              cn, url, seo, jsonld, color
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Runtime config bootstrap
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. `NEXT_PUBLIC_API_BOOTSTRAP_URL` is read at runtime (deployment-time setting,
+   not a secret).
+2. `GET {bootstrap}/api/v1/public/runtime-config` is fetched with
+   `revalidate: 60` and the cache tag `runtime-config`.
+3. `urls.apiBaseUrl` is **validated** before it is used as a fetch target:
+   http/https only, https required in production, no embedded credentials, and
+   the host must appear in `NEXT_PUBLIC_ALLOWED_API_HOSTS`. A rejected value
+   falls back to the bootstrap origin. An unvalidated URL is never followed.
+4. If the bootstrap fetch fails, neutral defaults are returned with
+   `degraded: true`; the store renders, says so, and is marked `noindex`.
+   No cached or invented store content is substituted.
+5. `revalidateRuntimeConfig()` is the explicit refresh hook for after an admin
+   saves store settings.
+
+### Authentication
+
+Sanctum bearer tokens, with the token held in an HttpOnly cookie owned by this
+app (`hk_session`; `HttpOnly; SameSite=Lax; Path=/`, `Secure` in production).
+The browser posts credentials to the same-origin `POST /api/auth/login`; the
+Next.js server calls Laravel and stores the token in the cookie. The token is
+never returned to the browser and never written to `localStorage`.
+
+`GET /api/auth/session` returns the sanitized viewer for client components.
+`User.isAdmin` is a UI affordance only - the backend authorizes every admin
+request independently.
+
+### Cart
+
+Client-held, server-validated. `localStorage` holds only
+`{ productId, variantId, quantity }`. Every price, total and availability comes
+from `POST /cart/validate`, and the local cart is replaced with the server's
+items on each response so `removedItems` and `adjustments` take effect.
+`shipping`/`tax` of `null` render as "Calculated at checkout", never `$0.00`.
+
+### Theming
+
+`globals.css` holds the locked design system (Tailwind v4 `@theme`, no
+`tailwind.config.js`). `ThemeStyle` injects `--brand*` custom properties
+derived from the admin's `theme.primaryColor`, validated with
+`/^#[0-9a-fA-F]{6}$/` and falling back to `#2563EB`. No gradients anywhere.
+
+## Deployment notes
+
+- This Next.js app deploys to Vercel. The Laravel API needs its own
+  PHP-capable host - Vercel does not run a conventional Laravel app.
+- `apiBaseUrl` and `canonicalFrontendUrl` are application settings. Saving them
+  does not change DNS, TLS, hosting, the Vercel project domain or its
+  environment variables, CORS allowlists, cookie domains or payment-provider
+  webhook URLs. Each must be updated in its own system.
+- Keep `NEXT_PUBLIC_API_BOOTSTRAP_URL` stable, or update it through deployment
+  configuration when migrating environments.

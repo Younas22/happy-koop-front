@@ -78,6 +78,32 @@ export function discountPercent(price: Money, compareAtPrice: Money | null): num
 }
 
 /**
+ * Major-unit text ("24.99") -> integer minor units (2499), by string math so
+ * no float ever touches a monetary value. Used for the price filter inputs,
+ * since `min_price`/`max_price` are minor units (contract 4).
+ * Returns `null` for anything that is not a plain positive amount.
+ */
+export function parseMajorUnitsToMinor(
+  input: string | null | undefined,
+  minorUnitExponent: number,
+): number | null {
+  const raw = (input ?? "").trim();
+  if (!raw) return null;
+  if (!/^\d+(\.\d+)?$/.test(raw)) return null;
+
+  const exponent = Number.isInteger(minorUnitExponent) && minorUnitExponent >= 0 ? minorUnitExponent : 2;
+  const [wholePart, fractionPart = ""] = raw.split(".");
+  if (exponent === 0) {
+    const value = Number.parseInt(wholePart, 10);
+    return Number.isSafeInteger(value) ? value : null;
+  }
+
+  const padded = (fractionPart + "0".repeat(exponent)).slice(0, exponent);
+  const value = Number.parseInt(`${wholePart}${padded}`, 10);
+  return Number.isSafeInteger(value) ? value : null;
+}
+
+/**
  * Minor units -> major units, using the exponent from runtime config.
  * Used only where a numeric value is required by a machine-readable format
  * (e.g. JSON-LD `price`), never for human display.
