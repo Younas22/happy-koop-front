@@ -26,10 +26,18 @@ export async function getViewer(): Promise<User | null> {
   const token = await getSessionToken();
   if (!token) return null;
 
+  // Laravel nests the viewer under `data.user`, mirroring the login payload
+  // (api-contract.md 2.5). Unwrapping only `data` here would yield the
+  // wrapper object, whose `isAdmin` is undefined - which silently denied
+  // real admins before this was pinned down.
   const { data } = await tryApi(() =>
-    apiGet<User>("/auth/me", { token, revalidate: false, timeoutMs: 6_000 }),
+    apiGet<{ user: User | null }>("/auth/me", {
+      token,
+      revalidate: false,
+      timeoutMs: 6_000,
+    }),
   );
-  return data;
+  return data?.user ?? null;
 }
 
 /** Requires a signed-in viewer, otherwise redirects to login with a return path. */
