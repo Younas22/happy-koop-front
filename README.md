@@ -10,7 +10,7 @@ before changing code on either side.
 ## Requirements
 
 - Node.js 20+ (developed on 22)
-- The Laravel API running locally, by default at `http://127.0.0.1:8000`
+- The Laravel API served by XAMPP Apache at `http://localhost/happy-koop` (no `php artisan serve` needed)
 
 ## Setup
 

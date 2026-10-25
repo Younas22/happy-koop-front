@@ -36,14 +36,18 @@ const nextConfig: NextConfig = {
   },
 
   images: {
-    remotePatterns: allowedHosts.flatMap((hostname) => [
-      { protocol: "http" as const, hostname, port: "8000", pathname: "/storage/**" },
-      { protocol: "https" as const, hostname, pathname: "/storage/**" },
-    ]),
+    // The API may sit at a domain root (https://shop.happykoop.be/storage/...)
+    // or in a subfolder (local XAMPP: http://localhost/happy-koop/storage/...).
+    remotePatterns: allowedHosts.flatMap((hostname) =>
+      (["http", "https"] as const).flatMap((protocol) => [
+        { protocol, hostname, pathname: "/storage/**" },
+        { protocol, hostname, pathname: "/**/storage/**" },
+      ]),
+    ),
 
     // Next 16 refuses to let the image optimiser fetch a host that resolves to
     // a private IP, as SSRF protection. Locally the Laravel API is on
-    // 127.0.0.1:8000, so without this every product, category and avatar image
+    // localhost (XAMPP), so without this every product, category and avatar image
     // fails with "hostname resolved to private IP".
     //
     // Development only. In production the API is a public host, the optimiser

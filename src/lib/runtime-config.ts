@@ -123,7 +123,7 @@ export const apiBaseUrlSchema = z.string().min(1);
 
 export function getBootstrapOrigin(): string {
   const raw = process.env.NEXT_PUBLIC_API_BOOTSTRAP_URL?.trim();
-  return stripTrailingSlash(raw && raw.length > 0 ? raw : "http://127.0.0.1:8000");
+  return stripTrailingSlash(raw && raw.length > 0 ? raw : "https://shop.happykoop.be");
 }
 
 function getFallbackApiBaseUrl(): string {
