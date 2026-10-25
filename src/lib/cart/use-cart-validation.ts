@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { useMessages } from "@/i18n/client";
 import { useCartStore } from "@/lib/cart/store";
 import type { CartLineInput, CartValidation } from "@/lib/types/api";
 
@@ -23,6 +24,9 @@ export interface UseCartValidationResult {
 
 export function useCartValidation(options: { enabled?: boolean } = {}): UseCartValidationResult {
   const enabled = options.enabled ?? true;
+  // Error text in the page's language. The dictionary object is stable for
+  // the life of the page, so listing it as a dependency re-runs nothing.
+  const t = useMessages().cartDrawer;
 
   const lines = useCartStore((state) => state.lines);
   const hydrated = useCartStore((state) => state.hydrated);
@@ -96,7 +100,7 @@ export function useCartValidation(options: { enabled?: boolean } = {}): UseCartV
           const message =
             payload && typeof payload === "object" && "message" in payload
               ? String((payload as { message: unknown }).message)
-              : "We could not check your cart right now.";
+              : t.checkFailed;
           setError(message);
           return;
         }
@@ -104,12 +108,12 @@ export function useCartValidation(options: { enabled?: boolean } = {}): UseCartV
         if (payload && typeof payload === "object" && "data" in payload) {
           replaceFromServer((payload as { data: CartValidation }).data);
         } else {
-          setError("The store returned an unexpected response.");
+          setError(t.unexpected);
         }
       } catch (fetchError) {
         if (cancelled) return;
         if (fetchError instanceof DOMException && fetchError.name === "AbortError") return;
-        setError("We could not reach the store to check your cart.");
+        setError(t.unreachable);
       } finally {
         if (!cancelled) setValidating(false);
       }
@@ -119,7 +123,7 @@ export function useCartValidation(options: { enabled?: boolean } = {}): UseCartV
       cancelled = true;
       controller.abort();
     };
-  }, [enabled, hydrated, fingerprint, nonce, replaceFromServer, setError, setValidating]);
+  }, [enabled, hydrated, fingerprint, nonce, replaceFromServer, setError, setValidating, t]);
 
   return { validation, validating, error, revalidate };
 }

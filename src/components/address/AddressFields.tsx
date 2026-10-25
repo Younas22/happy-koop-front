@@ -6,6 +6,7 @@ import { useFormContext } from "react-hook-form";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import type { CountryOption } from "@/lib/geo/countries";
+import { useMessages } from "@/i18n/client";
 
 /**
  * Postal address fields, shared by the account address book and checkout.
@@ -61,6 +62,7 @@ export function AddressFields({
     (field: string) => (prefix ? `${prefix}.${field}` : field),
     [prefix],
   );
+  const t = useMessages().address;
   const errorFor = (field: string) => messageAt(errors, name(field));
   const id = (field: string) => `${idPrefix}-${field}`;
 
@@ -68,7 +70,7 @@ export function AddressFields({
 
   return (
     <div className="grid gap-4 sm:grid-cols-2">
-      <FormField id={id("firstName")} label="First name" required error={errorFor("firstName")}>
+      <FormField id={id("firstName")} label={t.firstName} required error={errorFor("firstName")}>
         {(field) => (
           <Input
             {...field}
@@ -79,7 +81,7 @@ export function AddressFields({
         )}
       </FormField>
 
-      <FormField id={id("lastName")} label="Last name" required error={errorFor("lastName")}>
+      <FormField id={id("lastName")} label={t.lastName} required error={errorFor("lastName")}>
         {(field) => (
           <Input
             {...field}
@@ -92,8 +94,8 @@ export function AddressFields({
 
       <FormField
         id={id("company")}
-        label="Company"
-        description="Optional"
+        label={t.company}
+        description={t.optional}
         error={errorFor("company")}
         className="sm:col-span-2"
       >
@@ -109,7 +111,7 @@ export function AddressFields({
 
       <FormField
         id={id("line1")}
-        label="Address"
+        label={t.line1}
         required
         error={errorFor("line1")}
         className="sm:col-span-2"
@@ -126,8 +128,8 @@ export function AddressFields({
 
       <FormField
         id={id("line2")}
-        label="Apartment, suite, etc."
-        description="Optional"
+        label={t.line2}
+        description={t.optional}
         error={errorFor("line2")}
         className="sm:col-span-2"
       >
@@ -141,7 +143,7 @@ export function AddressFields({
         )}
       </FormField>
 
-      <FormField id={id("city")} label="City" required error={errorFor("city")}>
+      <FormField id={id("city")} label={t.city} required error={errorFor("city")}>
         {(field) => (
           <Input
             {...field}
@@ -154,8 +156,8 @@ export function AddressFields({
 
       <FormField
         id={id("region")}
-        label="State or region"
-        description="Optional"
+        label={t.region}
+        description={t.optional}
         error={errorFor("region")}
       >
         {(field) => (
@@ -168,7 +170,7 @@ export function AddressFields({
         )}
       </FormField>
 
-      <FormField id={id("postalCode")} label="Postal code" required error={errorFor("postalCode")}>
+      <FormField id={id("postalCode")} label={t.postalCode} required error={errorFor("postalCode")}>
         {(field) => (
           <Input
             {...field}
@@ -180,20 +182,20 @@ export function AddressFields({
         )}
       </FormField>
 
-      <FormField id={id("countryCode")} label="Country" required error={errorFor("countryCode")}>
+      <FormField id={id("countryCode")} label={t.country} required error={errorFor("countryCode")}>
         {(field) => (
           <select
             {...field}
             autoComplete="country"
             disabled={disabled}
-            className="h-11 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink transition-colors hover:border-ink-subtle disabled:cursor-not-allowed disabled:bg-sunken disabled:text-ink-subtle"
+            className="h-12 w-full appearance-none rounded-md border border-line-strong bg-surface-low px-4 text-body-md text-ink transition-[background-color,border-color] duration-200 ease-(--ease-standard) hover:border-ink-subtle hover:bg-surface-container focus:border-brand focus:bg-surface disabled:cursor-not-allowed disabled:bg-surface-container disabled:text-ink-subtle"
             {...countryRegistration}
             onChange={(event) => {
               void countryRegistration.onChange(event);
               onCountryChange?.(event.currentTarget.value);
             }}
           >
-            <option value="">Select a country</option>
+            <option value="">{t.selectCountry}</option>
             {countries.map((country) => (
               <option key={country.code} value={country.code}>
                 {country.name}
@@ -205,8 +207,8 @@ export function AddressFields({
 
       <FormField
         id={id("phone")}
-        label="Phone"
-        description="Optional. Used only if there is a delivery problem."
+        label={t.phone}
+        description={t.phoneHint}
         error={errorFor("phone")}
         className="sm:col-span-2"
       >

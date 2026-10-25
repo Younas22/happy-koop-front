@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { changePasswordAction } from "@/app/account/actions";
+import { changePasswordAction } from "@/app/(storefront)/account/actions";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
@@ -120,7 +120,7 @@ export function PasswordForm() {
         )}
       </FormField>
 
-      <p className="text-xs text-ink-muted">
+      <p className="text-body-sm text-ink-muted">
         Changing your password signs you out everywhere else. This device stays signed in.
       </p>
 

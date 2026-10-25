@@ -1,8 +1,17 @@
 import { Search } from "lucide-react";
-import Link from "next/link";
 
+import { AppBar } from "@/components/layout/AppBar";
 import { BrandLogo } from "@/components/layout/BrandLogo";
+import { CategoryRail } from "@/components/layout/CategoryRail";
 import { HeaderActions } from "@/components/layout/HeaderActions";
+import { HeaderUtilityBar } from "@/components/layout/HeaderUtilityBar";
+import { MobileMenu } from "@/components/layout/MobileMenu";
+import { PrimaryNav } from "@/components/layout/PrimaryNav";
+import { fmt } from "@/i18n/format";
+import { localizePath } from "@/i18n/paths";
+import { getI18n } from "@/i18n/server";
+import { fetchCategories } from "@/lib/catalog/queries";
+import { megaMenuColumns } from "@/lib/layout/navigation";
 import type { ResolvedRuntimeConfig } from "@/lib/types/api";
 
 export interface SiteHeaderProps {
@@ -10,68 +19,93 @@ export interface SiteHeaderProps {
 }
 
 /**
- * Site header. A server component apart from the interactive island, so the
- * navigation and brand mark are part of the static shell.
+ * Site header: an ink utility strip, then the sticky app bar.
  *
- * Navigation comes entirely from `navigation.primary`; nothing is hardcoded,
- * and an empty list simply means no desktop nav.
+ * The bar is three zones - brand on the left, navigation centred, actions on
+ * the right - so the eye lands on the mark, then the catalog, then the cart.
+ * Navigation comes entirely from `navigation.primary`, and the category mega
+ * menu from the catalog tree; both are read here, on the server, so the panel
+ * ships inside the header markup instead of appearing after a client request.
+ *
+ * Search is an inline field from `lg`, where there is room for one, and an
+ * icon that opens a dialog below that - a 1024px bar with five links cannot
+ * also carry a 16rem input without crowding the brand.
+ *
+ * A failed category read is not a broken header: `columns` is simply empty and
+ * the shop link stays a plain link.
  */
-export function SiteHeader({ config }: SiteHeaderProps) {
+export async function SiteHeader({ config }: SiteHeaderProps) {
   const { navigation, store, features } = config;
+  const { locale, m } = await getI18n();
+
+  const { data: tree } = await fetchCategories({ tree: true });
+  const columns = megaMenuColumns(tree ?? []);
+  // The phone rail is one row of names, so it can carry more of the tree than
+  // the menu panel and needs none of the children.
+  const railColumns = megaMenuColumns(tree ?? [], { maxColumns: 10, maxChildren: 0 });
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface/95 backdrop-blur-sm">
-      <div className="page-container flex h-16 items-center gap-3">
-        <BrandLogo store={store} priority />
+    <>
+      <HeaderUtilityBar config={config} m={m} />
 
-        {navigation.primary.length > 0 ? (
-          <nav aria-label="Main" className="hidden min-w-0 flex-1 md:block">
-            <ul className="flex items-center gap-1">
-              {navigation.primary.map((link) => (
-                <li key={`${link.href}-${link.label}`}>
-                  <Link
-                    href={link.href}
-                    className="inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium text-ink transition-colors hover:bg-sunken"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        ) : (
-          <div className="hidden flex-1 md:block" />
-        )}
+      <AppBar>
+        <div className="page-container flex h-16 items-center gap-2 sm:gap-3 md:h-18 md:gap-6">
+          {/* A phone's menu button belongs at the leading edge, before the
+              brand mark - not as the fourth icon on the right. */}
+          <MobileMenu
+            primaryNav={navigation.primary}
+            categories={columns}
+            contact={{ email: store.email, phone: store.phone }}
+            storeName={store.name}
+          />
 
-        {features.search ? (
-          // A plain GET form so search works without JavaScript.
-          <form action="/search" method="get" role="search" className="hidden md:block">
-            <label htmlFor="site-search" className="sr-only">
-              Search products
-            </label>
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-ink-subtle"
-                aria-hidden="true"
-              />
-              <input
-                id="site-search"
-                type="search"
-                name="q"
-                maxLength={100}
-                placeholder="Search"
-                className="h-10 w-44 rounded-md border border-line-strong bg-canvas pl-8 pr-3 text-sm text-ink transition-colors placeholder:text-ink-subtle hover:border-ink-subtle lg:w-56"
-              />
-            </div>
-          </form>
-        ) : null}
+          {/* The mark is clamped rather than trusted: the uploaded logo can be
+              any aspect ratio, and a wide one must not push the actions off a
+              360px screen. */}
+          <BrandLogo
+            store={store}
+            homeLabel={fmt(m.header.homeLabel, { store: store.name })}
+            height={32}
+            className="max-w-28 sm:max-w-44 lg:max-w-56"
+            priority
+          />
 
-        <HeaderActions
-          primaryNav={navigation.primary}
-          searchEnabled={features.search}
-          storeName={store.name}
-        />
-      </div>
-    </header>
+          <PrimaryNav links={navigation.primary} columns={columns} />
+
+          {features.search ? (
+            // A plain GET form so search works without JavaScript - posted to
+            // the search page of the language being read.
+            <form
+              action={localizePath("/search", locale)}
+              method="get"
+              role="search"
+              className="hidden lg:block"
+            >
+              <label htmlFor="site-search" className="sr-only">
+                {m.header.searchProducts}
+              </label>
+              <div className="group relative flex items-center rounded-full border border-line bg-surface-low transition-[background-color,border-color,box-shadow] duration-200 ease-(--ease-standard) focus-within:border-brand focus-within:bg-surface focus-within:elevation-1 hover:border-line-strong">
+                <Search
+                  className="pointer-events-none absolute left-4 size-4 text-ink-subtle transition-colors group-focus-within:text-brand"
+                  aria-hidden="true"
+                />
+                <input
+                  id="site-search"
+                  type="search"
+                  name="q"
+                  maxLength={100}
+                  placeholder={m.header.searchPlaceholder}
+                  className="h-10 w-52 rounded-full bg-transparent pr-4 pl-11 text-body-md text-ink outline-none placeholder:text-ink-subtle xl:w-64"
+                />
+              </div>
+            </form>
+          ) : null}
+
+          <HeaderActions searchEnabled={features.search} />
+        </div>
+      </AppBar>
+
+      <CategoryRail categories={railColumns} />
+    </>
   );
 }

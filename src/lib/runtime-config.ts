@@ -28,9 +28,16 @@ const BOOTSTRAP_TIMEOUT_MS = 8_000;
 /** Fallback brand colour, also the documented default in globals.css. */
 export const DEFAULT_BRAND_HEX = "#2563EB";
 
+/** Per-language overrides; any language without one falls back to the default text. */
+const localizedLabelsSchema = z
+  .object({ en: z.string().nullable().optional(), nl: z.string().nullable().optional() })
+  .nullable()
+  .optional();
+
 const navLinkSchema = z.object({
   label: z.string(),
   href: z.string(),
+  labels: localizedLabelsSchema,
 });
 
 const runtimeConfigSchema = z.object({
@@ -102,6 +109,7 @@ const runtimeConfigSchema = z.object({
     footer: z.array(
       z.object({
         heading: z.string(),
+        headings: localizedLabelsSchema,
         links: z.array(navLinkSchema),
       }),
     ),

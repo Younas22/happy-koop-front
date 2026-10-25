@@ -6,6 +6,8 @@ import * as React from "react";
 import { selectableValueIds, type VariantSelection } from "@/lib/product/variants";
 import type { ProductOption, ProductVariant } from "@/lib/types/api";
 import { cn } from "@/lib/utils/cn";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
 
 export interface VariantSelectorProps {
   options: readonly ProductOption[];
@@ -26,6 +28,7 @@ export interface VariantSelectorProps {
  * so the customer can see the full range the product comes in.
  */
 export function VariantSelector({ options, variants, selection, onChange }: VariantSelectorProps) {
+  const t = useMessages().product;
   if (options.length === 0) return null;
 
   return (
@@ -39,13 +42,13 @@ export function VariantSelector({ options, variants, selection, onChange }: Vari
         return (
           <div key={option.id}>
             <div className="flex flex-wrap items-baseline gap-x-2">
-              <span id={groupId} className="text-sm font-medium text-ink">
+              <span id={groupId} className="text-label-lg text-ink">
                 {option.name}
               </span>
               {selectedLabel ? (
-                <span className="text-sm text-ink-muted">{selectedLabel}</span>
+                <span className="text-body-md text-ink-muted">{selectedLabel}</span>
               ) : (
-                <span className="text-sm text-ink-muted">Choose an option</span>
+                <span className="text-body-md text-ink-muted">Choose an option</span>
               )}
             </div>
 
@@ -68,12 +71,12 @@ export function VariantSelector({ options, variants, selection, onChange }: Vari
                     aria-disabled={!available || undefined}
                     disabled={!available}
                     onClick={() => onChange(option.id, value.id)}
-                    title={available ? value.label : `${value.label} - not available`}
+                    title={available ? value.label : fmt(t.valueNotAvailable, { value: value.label })}
                     className={cn(
-                      "tap-target inline-flex items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors",
+                      "tap-target inline-flex items-center gap-2 rounded-sm border px-4 text-label-lg transition-colors duration-200 ease-(--ease-standard)",
                       selected
-                        ? "border-brand bg-brand-tint text-ink"
-                        : "border-line-strong bg-surface text-ink hover:bg-sunken",
+                        ? "border-brand bg-brand-container text-brand-on-container"
+                        : "state-layer border-line-strong bg-surface text-ink",
                       !available &&
                         "cursor-not-allowed border-line text-ink-subtle line-through hover:bg-surface",
                     )}
@@ -87,7 +90,7 @@ export function VariantSelector({ options, variants, selection, onChange }: Vari
                     ) : null}
                     <span>{value.label}</span>
                     {selected ? (
-                      <Check className="size-3.5 shrink-0 text-brand" aria-hidden="true" />
+                      <Check className="size-3.5 shrink-0 text-brand-on-container" aria-hidden="true" />
                     ) : null}
                   </button>
                 );

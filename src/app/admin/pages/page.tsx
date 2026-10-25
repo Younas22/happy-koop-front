@@ -40,7 +40,7 @@ export default async function AdminPagesPage({ searchParams }: PageProps<"/admin
     <>
       <AdminPageHeader
         title="Pages"
-        description="Content pages served at /pages/{slug}."
+        description="Content pages served at /pages/{slug}. A published page is listed on the storefront automatically - in the footer and at /pages - and is added to sitemap.xml."
         actions={
           <Button asChild>
             <Link href="/admin/pages/new">
@@ -103,7 +103,15 @@ export default async function AdminPagesPage({ searchParams }: PageProps<"/admin
                     <div className="flex justify-end gap-1.5">
                       {cmsPage.isPublished ? (
                         <Button asChild size="sm" variant="ghost">
-                          <Link href={`/pages/${cmsPage.slug}`}>View</Link>
+                          {/* A new tab, so reviewing the live page does not
+                              lose the admin's place in the list. */}
+                          <Link
+                            href={`/pages/${cmsPage.slug}`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View
+                          </Link>
                         </Button>
                       ) : null}
                       <Button asChild size="sm" variant="secondary">

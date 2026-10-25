@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AdminError, AdminPageHeader } from "@/components/admin/AdminParts";
 import { StoreSettingsForm } from "@/components/admin/StoreSettingsForm";
 import { Button } from "@/components/ui/Button";
-import { fetchAdminMedia, fetchStoreSettings } from "@/lib/admin/queries";
+import { fetchAllAdminMedia, fetchStoreSettings } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/session";
 import { getBootstrapOrigin, getRuntimeConfig } from "@/lib/runtime-config";
 import { buildPageMetadata } from "@/lib/utils/seo";
@@ -24,7 +24,8 @@ export default async function AdminStoreSettingsPage() {
 
   const [settings, media] = await Promise.all([
     fetchStoreSettings(),
-    fetchAdminMedia({ type: "image" }),
+    // The whole library, so the media picker can search it.
+    fetchAllAdminMedia({ type: "image" }),
   ]);
 
   return (
@@ -46,7 +47,9 @@ export default async function AdminStoreSettingsPage() {
       ) : (
         <StoreSettingsForm
           settings={settings.data}
-          media={media.data?.data ?? []}
+          media={media.data?.assets ?? []}
+          mediaTotal={media.data?.total}
+          mediaTruncated={media.data?.truncated}
           // Deployment-time values, shown so the admin can see what the
           // storefront will actually accept. Neither is editable here.
           allowedApiHosts={parseAllowedHosts(process.env.NEXT_PUBLIC_ALLOWED_API_HOSTS)}

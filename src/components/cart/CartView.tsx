@@ -2,7 +2,7 @@
 
 import { ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/Link";
 
 import { CartChangeNotices } from "@/components/cart/CartChangeNotices";
 import { Alert } from "@/components/ui/Alert";
@@ -12,7 +12,9 @@ import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useCartStore } from "@/lib/cart/store";
 import { useCartValidation } from "@/lib/cart/use-cart-validation";
-import { NOT_CALCULATED_LABEL, displayOrNotCalculated, formatMoney } from "@/lib/money";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
+import { displayOrNotCalculated, formatMoney } from "@/lib/money";
 
 /**
  * Editable cart.
@@ -27,6 +29,9 @@ import { NOT_CALCULATED_LABEL, displayOrNotCalculated, formatMoney } from "@/lib
  * and only offers a payment provider that runtime config says is enabled.
  */
 export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boolean }) {
+  const m = useMessages();
+  const t = m.cart;
+  const notCalculated = m.common.calculatedAtCheckout;
   const lines = useCartStore((state) => state.lines);
   const hydrated = useCartStore((state) => state.hydrated);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -48,11 +53,11 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
     return (
       <EmptyState
         icon={ShoppingBag}
-        title="Your cart is empty"
-        description="Items you add will be saved here while you browse."
+        title={t.emptyTitle}
+        description={t.emptyBody}
         action={
           <Button asChild>
-            <Link href="/shop">Browse the shop</Link>
+            <Link href="/shop">{m.common.browseShop}</Link>
           </Button>
         }
       />
@@ -69,7 +74,7 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
           <Alert
             tone="danger"
             live
-            title="We could not check your cart"
+            title={t.checkFailedTitle}
           >
             {error}{" "}
             <button
@@ -77,7 +82,7 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
               onClick={revalidate}
               className="font-medium text-brand underline hover:no-underline"
             >
-              Try again
+              {m.common.tryAgain}
             </button>
           </Alert>
         ) : null}
@@ -98,7 +103,7 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
               <li key={item.key} className="flex gap-3 p-3 sm:gap-4 sm:p-4">
                 <Link
                   href={`/product/${item.slug}`}
-                  className="relative size-20 shrink-0 overflow-hidden rounded-md border border-line bg-sunken sm:size-24"
+                  className="relative size-20 shrink-0 overflow-hidden rounded-md border border-line bg-surface-container sm:size-24"
                 >
                   {item.imageUrl ? (
                     <Image
@@ -114,37 +119,37 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/product/${item.slug}`}
-                    className="text-sm font-medium text-ink hover:underline"
+                    className="text-label-lg text-ink hover:underline"
                   >
                     {item.name}
                   </Link>
                   {item.variantLabel ? (
-                    <p className="mt-0.5 text-xs text-ink-muted">{item.variantLabel}</p>
+                    <p className="mt-0.5 text-body-sm text-ink-muted">{item.variantLabel}</p>
                   ) : null}
-                  {item.sku ? <p className="text-xs text-ink-subtle">SKU {item.sku}</p> : null}
+                  {item.sku ? <p className="text-body-sm text-ink-subtle">{fmt(t.sku, { sku: item.sku })}</p> : null}
 
                   <div className="mt-2.5 flex flex-wrap items-center gap-2">
                     <QuantityStepper
                       value={item.quantity}
                       max={item.maxQuantity}
                       disabled={validating}
-                      label={`Quantity for ${item.name}`}
+                      label={fmt(t.quantityFor, { name: item.name })}
                       onChange={(next) => updateQuantity(item.productId, item.variantId, next)}
                     />
                     <button
                       type="button"
                       onClick={() => removeItem(item.productId, item.variantId)}
-                      className="tap-target inline-flex items-center gap-1.5 rounded-md px-2 text-sm text-ink-muted transition-colors hover:bg-sunken hover:text-danger"
+                      className="state-layer tap-target inline-flex items-center gap-1.5 rounded-full px-3 text-body-md text-ink-muted transition-colors hover:text-danger"
                     >
                       <Trash2 className="size-4" aria-hidden="true" />
-                      <span>Remove</span>
+                      <span>{t.remove}</span>
                     </button>
                   </div>
 
                   {item.issues.length > 0 ? (
                     <ul className="mt-2 space-y-1">
                       {item.issues.map((issue) => (
-                        <li key={issue.code} className="text-xs text-warning">
+                        <li key={issue.code} className="text-body-sm text-warning">
                           {issue.message}
                         </li>
                       ))}
@@ -153,12 +158,12 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
                 </div>
 
                 <div className="shrink-0 text-right">
-                  <p className="text-sm font-semibold text-ink tabular-nums">
+                  <p className="text-title-sm text-ink tabular-nums">
                     {formatMoney(item.lineTotal)}
                   </p>
                   {item.quantity > 1 ? (
-                    <p className="mt-0.5 text-xs text-ink-muted tabular-nums">
-                      {formatMoney(item.unitPrice)} each
+                    <p className="mt-0.5 text-body-sm text-ink-muted tabular-nums">
+                      {fmt(t.each, { price: formatMoney(item.unitPrice) })}
                     </p>
                   ) : null}
                 </div>
@@ -170,10 +175,10 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
         {items.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="ghost">
-              <Link href="/shop">Continue shopping</Link>
+              <Link href="/shop">{t.continueShopping}</Link>
             </Button>
             <Button variant="ghost" onClick={clear}>
-              Clear cart
+              {t.clear}
             </Button>
           </div>
         ) : null}
@@ -181,12 +186,12 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
 
       <aside className="lg:sticky lg:top-22 lg:self-start">
         <div className="surface-card p-4">
-          <h2 className="text-base font-semibold text-ink">Order summary</h2>
+          <h2 className="text-title-md text-ink">{t.summary}</h2>
 
           {totals ? (
-            <dl className="mt-3 space-y-2 text-sm">
+            <dl className="mt-3 space-y-2 text-body-md">
               <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Subtotal</dt>
+                <dt className="text-ink-muted">{t.subtotal}</dt>
                 <dd className="font-medium text-ink tabular-nums">
                   {formatMoney(totals.subtotal)}
                 </dd>
@@ -195,9 +200,9 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
               {totals.discount.amount > 0 ? (
                 <div className="flex justify-between gap-4">
                   <dt className="text-ink-muted">
-                    Discount
+                    {t.discount}
                     {validation?.coupon ? (
-                      <span className="ml-1 text-xs text-ink-subtle">
+                      <span className="ml-1 text-body-sm text-ink-subtle">
                         ({validation.coupon.code})
                       </span>
                     ) : null}
@@ -209,7 +214,7 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
               ) : null}
 
               <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Shipping</dt>
+                <dt className="text-ink-muted">{t.shipping}</dt>
                 <dd
                   className={
                     totals.shipping === null
@@ -217,12 +222,12 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
                       : "font-medium text-ink tabular-nums"
                   }
                 >
-                  {displayOrNotCalculated(totals.shipping)}
+                  {displayOrNotCalculated(totals.shipping, notCalculated)}
                 </dd>
               </div>
 
               <div className="flex justify-between gap-4">
-                <dt className="text-ink-muted">Tax</dt>
+                <dt className="text-ink-muted">{t.tax}</dt>
                 <dd
                   className={
                     totals.tax === null
@@ -230,37 +235,36 @@ export function CartView({ guestCheckoutEnabled }: { guestCheckoutEnabled: boole
                       : "font-medium text-ink tabular-nums"
                   }
                 >
-                  {displayOrNotCalculated(totals.tax)}
+                  {displayOrNotCalculated(totals.tax, notCalculated)}
                 </dd>
               </div>
 
               <div className="flex justify-between gap-4 border-t border-line pt-2">
-                <dt className="font-semibold text-ink">Total</dt>
-                <dd className="text-base font-semibold text-ink tabular-nums">
+                <dt className="font-semibold text-ink">{t.total}</dt>
+                <dd className="text-title-md text-ink tabular-nums">
                   {formatMoney(totals.total)}
                 </dd>
               </div>
             </dl>
           ) : (
-            <p className="mt-3 text-sm text-ink-muted">
-              {error ? "Totals are unavailable right now." : "Checking prices…"}
+            <p className="mt-3 text-body-md text-ink-muted">
+              {error ? t.totalsUnavailable : t.checkingPrices}
             </p>
           )}
 
           {totals && (totals.shipping === null || totals.tax === null) ? (
-            <p className="mt-3 text-xs text-ink-subtle">
-              Shipping and tax show as &ldquo;{NOT_CALCULATED_LABEL}&rdquo; until a delivery
-              address and method are chosen.
+            <p className="mt-3 text-body-sm text-ink-subtle">
+              {fmt(t.notCalculatedHint, { label: notCalculated })}
             </p>
           ) : null}
 
           <Button asChild block size="lg" className="mt-4" disabled={items.length === 0}>
-            <Link href="/checkout">Checkout</Link>
+            <Link href="/checkout">{t.checkout}</Link>
           </Button>
 
           {!guestCheckoutEnabled ? (
-            <p className="mt-2 text-xs text-ink-muted">
-              You will need to sign in to complete your order.
+            <p className="mt-2 text-body-sm text-ink-muted">
+              {t.signInRequired}
             </p>
           ) : null}
         </div>

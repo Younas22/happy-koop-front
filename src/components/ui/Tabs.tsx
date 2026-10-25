@@ -33,9 +33,9 @@ export const TabsTrigger = React.forwardRef<
     <TabsPrimitive.Trigger
       ref={ref}
       className={cn(
-        "-mb-px inline-flex min-h-11 shrink-0 items-center border-b-2 border-transparent px-3 text-sm font-medium",
-        "text-ink-muted transition-colors hover:text-ink",
-        "data-[state=active]:border-brand data-[state=active]:text-ink",
+        "state-layer -mb-px inline-flex min-h-12 shrink-0 items-center rounded-t-sm border-b-3 border-transparent px-4 text-label-lg",
+        "text-ink-muted transition-colors duration-200 ease-(--ease-standard) hover:text-ink",
+        "data-[state=active]:border-brand data-[state=active]:text-brand",
         "disabled:pointer-events-none disabled:opacity-55",
         className,
       )}

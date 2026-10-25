@@ -1,6 +1,8 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
 
+import { fmt } from "@/i18n/format";
+import { Link } from "@/i18n/Link";
+import { getMessages } from "@/i18n/server";
 import type { PaginationMeta } from "@/lib/types/api";
 import { cn } from "@/lib/utils/cn";
 
@@ -33,37 +35,44 @@ function pageWindow(current: number, last: number): (number | "gap")[] {
 }
 
 const linkClasses =
-  "tap-target inline-flex items-center justify-center rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink transition-colors hover:bg-sunken";
+  "state-layer tap-target inline-flex items-center justify-center rounded-full border border-line-strong bg-surface px-4 text-label-lg text-ink";
 
 const disabledClasses =
-  "tap-target inline-flex cursor-not-allowed items-center justify-center rounded-md border border-line bg-sunken px-3 text-sm font-medium text-ink-subtle";
+  "tap-target inline-flex cursor-not-allowed items-center justify-center rounded-md border border-line bg-surface-container px-3 text-label-lg text-ink-subtle";
 
-export function Pagination({ meta, buildHref, className }: PaginationProps) {
+/**
+ * A server component: `buildHref` is a function, which cannot cross into a
+ * Client Component, so the labels are read on the server instead of through
+ * the client provider. Links are written locale-free and localized by `Link`.
+ */
+export async function Pagination({ meta, buildHref, className }: PaginationProps) {
   if (meta.lastPage <= 1) return null;
+
+  const { ui } = await getMessages();
 
   const current = meta.currentPage;
   const pages = pageWindow(current, meta.lastPage);
 
   return (
-    <nav aria-label="Pagination" className={cn("flex flex-col items-center gap-3", className)}>
+    <nav aria-label={ui.pagination} className={cn("flex flex-col items-center gap-3", className)}>
       <ul className="flex flex-wrap items-center justify-center gap-1.5">
         <li>
           {current > 1 ? (
             <Link href={buildHref(current - 1)} className={linkClasses} rel="prev">
               <ChevronLeft className="size-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-1">Previous</span>
+              <span className="sr-only sm:not-sr-only sm:ml-1">{ui.previous}</span>
             </Link>
           ) : (
             <span className={disabledClasses} aria-disabled="true">
               <ChevronLeft className="size-4" aria-hidden="true" />
-              <span className="sr-only sm:not-sr-only sm:ml-1">Previous</span>
+              <span className="sr-only sm:not-sr-only sm:ml-1">{ui.previous}</span>
             </span>
           )}
         </li>
 
         {pages.map((page, index) =>
           page === "gap" ? (
-            <li key={`gap-${index}`} aria-hidden="true" className="px-1 text-sm text-ink-subtle">
+            <li key={`gap-${index}`} aria-hidden="true" className="px-1 text-body-md text-ink-subtle">
               &hellip;
             </li>
           ) : (
@@ -71,12 +80,12 @@ export function Pagination({ meta, buildHref, className }: PaginationProps) {
               {page === current ? (
                 <span
                   aria-current="page"
-                  className="tap-target inline-flex items-center justify-center rounded-md border border-brand bg-brand px-3 text-sm font-semibold text-brand-ink"
+                  className="tap-target inline-flex items-center justify-center rounded-md border border-brand bg-brand px-3 text-title-sm text-brand-ink"
                 >
                   {page}
                 </span>
               ) : (
-                <Link href={buildHref(page)} className={linkClasses} aria-label={`Page ${page}`}>
+                <Link href={buildHref(page)} className={linkClasses} aria-label={fmt(ui.pageN, { page })}>
                   {page}
                 </Link>
               )}
@@ -87,12 +96,12 @@ export function Pagination({ meta, buildHref, className }: PaginationProps) {
         <li>
           {current < meta.lastPage ? (
             <Link href={buildHref(current + 1)} className={linkClasses} rel="next">
-              <span className="sr-only sm:not-sr-only sm:mr-1">Next</span>
+              <span className="sr-only sm:not-sr-only sm:mr-1">{ui.next}</span>
               <ChevronRight className="size-4" aria-hidden="true" />
             </Link>
           ) : (
             <span className={disabledClasses} aria-disabled="true">
-              <span className="sr-only sm:not-sr-only sm:mr-1">Next</span>
+              <span className="sr-only sm:not-sr-only sm:mr-1">{ui.next}</span>
               <ChevronRight className="size-4" aria-hidden="true" />
             </span>
           )}
@@ -100,8 +109,8 @@ export function Pagination({ meta, buildHref, className }: PaginationProps) {
       </ul>
 
       {meta.from !== null && meta.to !== null ? (
-        <p className="text-xs text-ink-muted">
-          Showing {meta.from}&ndash;{meta.to} of {meta.total}
+        <p className="text-body-sm text-ink-muted">
+          {fmt(ui.showing, { from: meta.from, to: meta.to, total: meta.total })}
         </p>
       ) : null}
     </nav>

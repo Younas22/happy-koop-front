@@ -24,17 +24,26 @@ export function AdminPageHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+    <div className="mb-5 flex flex-wrap items-start justify-between gap-3 border-b border-line pb-4">
       <div className="min-w-0">
-        <h1 className="text-xl font-semibold text-ink sm:text-2xl">{title}</h1>
-        {description ? <p className="mt-1 text-sm text-ink-muted">{description}</p> : null}
+        <h1 className="text-xl font-semibold tracking-tight text-ink sm:text-2xl">{title}</h1>
+        {description ? (
+          <p className="mt-1 max-w-2xl text-sm text-ink-muted">{description}</p>
+        ) : null}
       </div>
-      {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+      {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
     </div>
   );
 }
 
-/** Keeps a wide table inside its column instead of scrolling the page. */
+/**
+ * Keeps a wide table inside its column instead of scrolling the page.
+ *
+ * Row hover and the last-row rule are set here rather than on `Td`, so every
+ * admin table gets them without each call site having to pass a class to its
+ * own `<tr>`. `overflow-hidden` on the outer element is what lets the card's
+ * radius clip the header band.
+ */
 export function AdminTableWrap({
   children,
   className,
@@ -43,8 +52,20 @@ export function AdminTableWrap({
   className?: string;
 }) {
   return (
-    <div className={cn("surface-card overflow-x-auto", className)}>
-      <table className="w-full min-w-[40rem] border-collapse text-sm">{children}</table>
+    <div className={cn("surface-card overflow-hidden", className)}>
+      <div className="overflow-x-auto">
+        <table
+          className={cn(
+            "w-full min-w-[40rem] border-collapse text-sm",
+            "[&_tbody_tr]:transition-colors [&_tbody_tr:hover]:bg-sunken/70",
+            // The card border already closes the table; a rule under the last
+            // row would read as a double line.
+            "[&_tbody_tr:last-child_td]:border-b-0",
+          )}
+        >
+          {children}
+        </table>
+      </div>
     </div>
   );
 }
@@ -54,7 +75,8 @@ export function Th({ children, className }: { children: React.ReactNode; classNa
     <th
       scope="col"
       className={cn(
-        "border-b border-line px-3 py-2.5 text-left text-xs font-semibold tracking-wide text-ink-subtle uppercase",
+        "surface-panel px-3 py-2.5 text-left whitespace-nowrap",
+        "label-eyebrow",
         className,
       )}
     >
@@ -65,7 +87,7 @@ export function Th({ children, className }: { children: React.ReactNode; classNa
 
 export function Td({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <td className={cn("border-b border-line px-3 py-2.5 align-top text-ink", className)}>
+    <td className={cn("border-b border-line px-3 py-3 align-middle text-ink", className)}>
       {children}
     </td>
   );
@@ -81,10 +103,14 @@ export function MetricTile({
   hint?: string | null;
 }) {
   return (
-    <div className="surface-card p-4">
-      <p className="text-xs font-medium tracking-wide text-ink-subtle uppercase">{label}</p>
-      <p className="mt-1.5 text-xl font-semibold text-ink tabular-nums sm:text-2xl">{value}</p>
-      {hint ? <p className="mt-1 text-xs text-ink-muted">{hint}</p> : null}
+    <div className="surface-card flex flex-col p-4 sm:p-5">
+      <p className="label-eyebrow">{label}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight text-ink tabular-nums sm:text-3xl">
+        {value}
+      </p>
+      {hint ? (
+        <p className="mt-auto pt-2 text-xs leading-relaxed text-ink-subtle">{hint}</p>
+      ) : null}
     </div>
   );
 }

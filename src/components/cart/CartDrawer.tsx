@@ -2,7 +2,6 @@
 
 import { ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import * as React from "react";
 
 import { CartChangeNotices } from "@/components/cart/CartChangeNotices";
@@ -18,6 +17,9 @@ import {
 } from "@/components/ui/Drawer";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
+import { Link } from "@/i18n/Link";
 import { displayOrNotCalculated, formatMoney } from "@/lib/money";
 import { useCartStore } from "@/lib/cart/store";
 import { useCartValidation } from "@/lib/cart/use-cart-validation";
@@ -35,6 +37,8 @@ export interface CartDrawerProps {
  * shipping/tax renders as "Calculated at checkout" rather than a zero amount.
  */
 export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
+  const m = useMessages();
+  const t = m.cartDrawer;
   const lines = useCartStore((state) => state.lines);
   const hydrated = useCartStore((state) => state.hydrated);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -50,22 +54,20 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent side="right" aria-describedby={undefined}>
         <DrawerHeader>
-          <DrawerTitle className="text-base font-semibold text-ink">Your cart</DrawerTitle>
+          <DrawerTitle className="text-title-md text-ink">{t.title}</DrawerTitle>
         </DrawerHeader>
 
         <DrawerBody>
           {isEmpty ? (
             <div className="flex flex-col items-center py-12 text-center">
-              <span className="mb-4 inline-flex size-12 items-center justify-center rounded-full bg-sunken">
+              <span className="mb-4 inline-flex size-12 items-center justify-center rounded-full bg-surface-container">
                 <ShoppingBag className="size-5.5 text-ink-subtle" aria-hidden="true" />
               </span>
-              <p className="text-sm font-medium text-ink">Your cart is empty</p>
-              <p className="mt-1 text-sm text-ink-muted">
-                Items you add will appear here.
-              </p>
+              <p className="text-label-lg text-ink">{t.emptyTitle}</p>
+              <p className="mt-1 text-body-md text-ink-muted">{t.emptyBody}</p>
               <Button asChild variant="secondary" className="mt-5">
                 <Link href="/shop" onClick={() => onOpenChange(false)}>
-                  Browse the shop
+                  {m.common.browseShop}
                 </Link>
               </Button>
             </div>
@@ -103,7 +105,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                       <Link
                         href={`/product/${item.slug}`}
                         onClick={() => onOpenChange(false)}
-                        className="relative size-18 shrink-0 overflow-hidden rounded-md border border-line bg-sunken"
+                        className="relative size-18 shrink-0 overflow-hidden rounded-md border border-line bg-surface-container"
                       >
                         {item.imageUrl ? (
                           <Image
@@ -120,12 +122,12 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         <Link
                           href={`/product/${item.slug}`}
                           onClick={() => onOpenChange(false)}
-                          className="block truncate text-sm font-medium text-ink hover:underline"
+                          className="block truncate text-label-lg text-ink hover:underline"
                         >
                           {item.name}
                         </Link>
                         {item.variantLabel ? (
-                          <p className="mt-0.5 truncate text-xs text-ink-muted">{item.variantLabel}</p>
+                          <p className="mt-0.5 truncate text-body-sm text-ink-muted">{item.variantLabel}</p>
                         ) : null}
 
                         <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -133,21 +135,21 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                             value={item.quantity}
                             max={item.maxQuantity}
                             disabled={validating}
-                            label={`Quantity for ${item.name}`}
+                            label={fmt(t.quantityFor, { name: item.name })}
                             onChange={(next) => updateQuantity(item.productId, item.variantId, next)}
                           />
                           <button
                             type="button"
                             onClick={() => removeItem(item.productId, item.variantId)}
-                            className="tap-target inline-flex items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-sunken hover:text-danger"
-                            aria-label={`Remove ${item.name}`}
+                            className="state-layer tap-target inline-flex items-center justify-center rounded-full text-ink-muted transition-colors hover:text-danger"
+                            aria-label={fmt(t.removeItem, { name: item.name })}
                           >
                             <Trash2 className="size-4" aria-hidden="true" />
                           </button>
                         </div>
                       </div>
 
-                      <p className="shrink-0 text-sm font-semibold text-ink tabular-nums">
+                      <p className="shrink-0 text-title-sm text-ink tabular-nums">
                         {formatMoney(item.lineTotal)}
                       </p>
                     </li>
@@ -161,25 +163,25 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
         {!isEmpty ? (
           <DrawerFooter className="space-y-3">
             {validation ? (
-              <dl className="space-y-1.5 text-sm">
+              <dl className="space-y-1.5 text-body-md">
                 <div className="flex justify-between">
-                  <dt className="text-ink-muted">Subtotal</dt>
+                  <dt className="text-ink-muted">{t.subtotal}</dt>
                   <dd className="font-medium text-ink tabular-nums">
                     {formatMoney(validation.totals.subtotal)}
                   </dd>
                 </div>
                 {validation.totals.discount.amount > 0 ? (
                   <div className="flex justify-between">
-                    <dt className="text-ink-muted">Discount</dt>
+                    <dt className="text-ink-muted">{t.discount}</dt>
                     <dd className="font-medium text-success tabular-nums">
                       &minus;{formatMoney(validation.totals.discount)}
                     </dd>
                   </div>
                 ) : null}
                 <div className="flex justify-between">
-                  <dt className="text-ink-muted">Shipping</dt>
+                  <dt className="text-ink-muted">{t.shipping}</dt>
                   <dd className="text-ink-muted">
-                    {displayOrNotCalculated(validation.totals.shipping)}
+                    {displayOrNotCalculated(validation.totals.shipping, m.common.calculatedAtCheckout)}
                   </dd>
                 </div>
               </dl>
@@ -187,7 +189,7 @@ export function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
 
             <Button asChild block size="lg" disabled={items.length === 0}>
               <Link href="/cart" onClick={() => onOpenChange(false)}>
-                View cart
+                {t.viewCart}
               </Link>
             </Button>
           </DrawerFooter>

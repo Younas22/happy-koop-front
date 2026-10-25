@@ -1,8 +1,12 @@
+"use client";
+
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/Link";
 
 import type { Address, OrderItem, OrderTotals, OrderTracking } from "@/lib/types/api";
 import { countryName } from "@/lib/geo/countries";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
 import { displayOrNotCalculated, formatMoney } from "@/lib/money";
 
 /**
@@ -17,15 +21,16 @@ import { displayOrNotCalculated, formatMoney } from "@/lib/money";
  */
 
 export function OrderItemList({ items }: { items: readonly OrderItem[] }) {
+  const t = useMessages().orders;
   if (items.length === 0) {
-    return <p className="text-sm text-ink-muted">This order has no line items on record.</p>;
+    return <p className="text-body-md text-ink-muted">{t.noItems}</p>;
   }
 
   return (
     <ul className="divide-y divide-line">
       {items.map((item) => (
         <li key={item.id} className="flex gap-3 py-3 sm:gap-4">
-          <div className="relative size-16 shrink-0 overflow-hidden rounded-md border border-line bg-sunken">
+          <div className="relative size-16 shrink-0 overflow-hidden rounded-md border border-line bg-surface-container">
             {item.imageUrl ? (
               <Image src={item.imageUrl} alt="" fill sizes="64px" className="object-cover" />
             ) : null}
@@ -35,30 +40,30 @@ export function OrderItemList({ items }: { items: readonly OrderItem[] }) {
             {item.slug ? (
               <Link
                 href={`/product/${item.slug}`}
-                className="text-sm font-medium text-ink hover:underline"
+                className="text-label-lg text-ink hover:underline"
               >
                 {item.name}
               </Link>
             ) : (
-              <p className="text-sm font-medium text-ink">{item.name}</p>
+              <p className="text-label-lg text-ink">{item.name}</p>
             )}
 
             {item.variantLabel ? (
-              <p className="mt-0.5 text-xs text-ink-muted">{item.variantLabel}</p>
+              <p className="mt-0.5 text-body-sm text-ink-muted">{item.variantLabel}</p>
             ) : null}
 
             {item.options.length > 0 ? (
-              <p className="mt-0.5 text-xs text-ink-muted">{item.options.join(" · ")}</p>
+              <p className="mt-0.5 text-body-sm text-ink-muted">{item.options.join(" · ")}</p>
             ) : null}
 
-            {item.sku ? <p className="text-xs text-ink-subtle">SKU {item.sku}</p> : null}
+            {item.sku ? <p className="text-body-sm text-ink-subtle">{fmt(t.sku, { sku: item.sku })}</p> : null}
 
-            <p className="mt-1 text-xs text-ink-muted tabular-nums">
+            <p className="mt-1 text-body-sm text-ink-muted tabular-nums">
               {item.quantity} × {formatMoney(item.unitPrice)}
             </p>
           </div>
 
-          <p className="shrink-0 text-sm font-semibold text-ink tabular-nums">
+          <p className="shrink-0 text-title-sm text-ink tabular-nums">
             {formatMoney(item.lineTotal)}
           </p>
         </li>
@@ -86,7 +91,7 @@ function Row({
           muted
             ? "text-right text-ink-muted"
             : strong
-              ? "text-base font-semibold text-ink tabular-nums"
+              ? "text-title-md text-ink tabular-nums"
               : "font-medium text-ink tabular-nums"
         }
       >
@@ -103,26 +108,32 @@ export function OrderTotalsList({
   totals: OrderTotals;
   couponCode?: string | null;
 }) {
+  const m = useMessages();
+  const t = m.orders;
   return (
-    <dl className="space-y-2 text-sm">
-      <Row label="Subtotal" value={formatMoney(totals.subtotal)} />
+    <dl className="space-y-2 text-body-md">
+      <Row label={t.subtotal} value={formatMoney(totals.subtotal)} />
 
       {totals.discount.amount > 0 ? (
         <Row
-          label={couponCode ? `Discount (${couponCode})` : "Discount"}
+          label={couponCode ? fmt(t.discountWith, { code: couponCode }) : t.discount}
           value={`-${formatMoney(totals.discount)}`}
         />
       ) : null}
 
       <Row
-        label="Shipping"
-        value={displayOrNotCalculated(totals.shipping)}
+        label={t.shipping}
+        value={displayOrNotCalculated(totals.shipping, m.common.calculatedAtCheckout)}
         muted={totals.shipping === null}
       />
-      <Row label="Tax" value={displayOrNotCalculated(totals.tax)} muted={totals.tax === null} />
+      <Row
+        label={t.tax}
+        value={displayOrNotCalculated(totals.tax, m.common.calculatedAtCheckout)}
+        muted={totals.tax === null}
+      />
 
       <div className="border-t border-line pt-2">
-        <Row label="Total" value={formatMoney(totals.total)} strong />
+        <Row label={t.total} value={formatMoney(totals.total)} strong />
       </div>
     </dl>
   );
@@ -136,7 +147,7 @@ export function AddressBlock({
   locale?: string;
 }) {
   if (!address) {
-    return <p className="text-sm text-ink-muted">No address on record.</p>;
+    return <p className="text-body-md text-ink-muted">No address on record.</p>;
   }
 
   const lines = [
@@ -149,7 +160,7 @@ export function AddressBlock({
   ].filter((line): line is string => Boolean(line && line.length > 0));
 
   return (
-    <address className="text-sm leading-6 text-ink-muted not-italic">
+    <address className="text-body-md leading-6 text-ink-muted not-italic">
       {lines.map((line, index) => (
         <span key={`${line}-${index}`} className="block">
           {line}
@@ -165,20 +176,21 @@ export function AddressBlock({
  * No estimated delivery date is ever invented.
  */
 export function TrackingBlock({ tracking }: { tracking: OrderTracking | null }) {
+  const t = useMessages().orders;
   if (!tracking) return null;
   const { carrier, trackingNumber, trackingUrl } = tracking;
   if (!carrier && !trackingNumber && !trackingUrl) return null;
 
   return (
-    <div className="text-sm text-ink-muted">
+    <div className="text-body-md text-ink-muted">
       {carrier ? (
         <p>
-          Carrier: <span className="text-ink">{carrier}</span>
+          {t.carrier} <span className="text-ink">{carrier}</span>
         </p>
       ) : null}
       {trackingNumber ? (
         <p>
-          Tracking number: <span className="text-ink tabular-nums">{trackingNumber}</span>
+          {t.trackingNumber} <span className="text-ink tabular-nums">{trackingNumber}</span>
         </p>
       ) : null}
       {trackingUrl ? (
@@ -189,7 +201,7 @@ export function TrackingBlock({ tracking }: { tracking: OrderTracking | null }) 
             rel="noopener noreferrer nofollow"
             className="font-medium text-brand underline-offset-2 hover:underline"
           >
-            Track this shipment
+            {t.track}
           </a>
         </p>
       ) : null}

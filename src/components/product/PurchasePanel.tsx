@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, ShoppingBag } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/Link";
 import * as React from "react";
 
 import { AvailabilityPill } from "@/components/product/AvailabilityPill";
@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/Button";
 import { PriceDisplay } from "@/components/ui/PriceDisplay";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { Rating } from "@/components/ui/Rating";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
 import { useCartStore } from "@/lib/cart/store";
 import {
   defaultSelection,
@@ -40,6 +42,7 @@ export interface PurchasePanelProps {
  * message instead of silently using another variant's price.
  */
 export function PurchasePanel({ product, showStockCounts, reassurance }: PurchasePanelProps) {
+  const t = useMessages().product;
   const [selection, setSelection] = React.useState<VariantSelection>(() =>
     defaultSelection(product),
   );
@@ -80,15 +83,13 @@ export function PurchasePanel({ product, showStockCounts, reassurance }: Purchas
 
   const disabledReason = (() => {
     if (purchase.combinationUnavailable) {
-      return "That combination is not available. Choose a different option.";
+      return t.combinationUnavailable;
     }
     if (!purchase.selectionComplete) {
-      return "Choose an option to continue.";
+      return t.chooseOption;
     }
     if (outOfStock) {
-      return purchase.availability.state === "unavailable"
-        ? "This item is not available to buy."
-        : "This item is currently out of stock.";
+      return purchase.availability.state === "unavailable" ? t.notAvailable : t.outOfStock;
     }
     return null;
   })();
@@ -105,13 +106,13 @@ export function PurchasePanel({ product, showStockCounts, reassurance }: Purchas
         <div className="space-y-5">
           <div className="space-y-2">
             {product.brand ? (
-              <p className="text-xs font-semibold tracking-wide text-ink-subtle uppercase">
+              <p className="label-eyebrow">
                 {product.brand}
               </p>
             ) : null}
-            <h1 className="text-2xl font-semibold text-ink sm:text-3xl">{product.name}</h1>
+            <h1 className="text-headline-md text-ink sm:text-headline-lg">{product.name}</h1>
             {product.shortDescription ? (
-              <p className="text-base text-ink-muted">{product.shortDescription}</p>
+              <p className="text-body-lg text-ink-muted">{product.shortDescription}</p>
             ) : null}
             {/* Nothing is rendered when there are no approved reviews. */}
             <Rating rating={product.rating} href="#reviews" />
@@ -128,7 +129,7 @@ export function PurchasePanel({ product, showStockCounts, reassurance }: Purchas
               showStockCount={showStockCounts}
             />
             {purchase.sku ? (
-              <p className="text-xs text-ink-subtle">SKU {purchase.sku}</p>
+              <p className="text-body-sm text-ink-subtle">{fmt(t.sku, { sku: purchase.sku })}</p>
             ) : null}
           </div>
 
@@ -143,7 +144,7 @@ export function PurchasePanel({ product, showStockCounts, reassurance }: Purchas
 
           {purchase.combinationUnavailable ? (
             <Alert tone="warning" live>
-              That combination is not available. Pick a different option to continue.
+              {t.combinationAlert}
             </Alert>
           ) : null}
 
@@ -156,7 +157,7 @@ export function PurchasePanel({ product, showStockCounts, reassurance }: Purchas
               }}
               max={maxQuantity}
               disabled={!purchase.canAddToCart}
-              label={`Quantity for ${product.name}`}
+              label={fmt(t.quantityFor, { name: product.name })}
             />
             <Button
               size="lg"
@@ -167,31 +168,31 @@ export function PurchasePanel({ product, showStockCounts, reassurance }: Purchas
               {justAdded ? (
                 <>
                   <Check className="size-4.5" aria-hidden="true" />
-                  Added to cart
+                  {t.addedToCart}
                 </>
               ) : (
                 <>
                   <ShoppingBag className="size-4.5" aria-hidden="true" />
-                  Add to cart
+                  {t.addToCart}
                 </>
               )}
             </Button>
           </div>
 
           <div aria-live="polite" className="min-h-0">
-            {disabledReason ? <p className="text-sm text-ink-muted">{disabledReason}</p> : null}
+            {disabledReason ? <p className="text-body-md text-ink-muted">{disabledReason}</p> : null}
             {justAdded ? (
-              <p className="text-sm text-ink-muted">
-                Added to your cart.{" "}
+              <p className="text-body-md text-ink-muted">
+                {t.addedNotice}{" "}
                 <Link href="/cart" className="font-medium text-brand hover:underline">
-                  View cart
+                  {t.viewCart}
                 </Link>
               </p>
             ) : null}
           </div>
 
           {reassurance.length > 0 ? (
-            <ul className="space-y-1.5 border-t border-line pt-4 text-sm text-ink-muted">
+            <ul className="space-y-2 border-t border-line pt-5 text-body-md text-ink-muted">
               {reassurance.map((line) => (
                 <li key={line} className="flex gap-2">
                   <Check className="mt-0.5 size-4 shrink-0 text-success" aria-hidden="true" />
@@ -206,7 +207,7 @@ export function PurchasePanel({ product, showStockCounts, reassurance }: Purchas
       {/* Compact sticky bar, mobile only. `sticky` inside normal flow means it
           cannot overlap the footer, and it holds no focusable trap: the single
           button is the same action as above. */}
-      <div className="sticky bottom-0 z-30 -mx-4 mt-6 border-t border-line bg-surface/95 px-4 py-2.5 backdrop-blur-sm lg:hidden">
+      <div className="bottom-nav-bar sticky z-30 -mx-4 mt-6 border-t border-line bg-surface-container/95 px-4 py-3 backdrop-blur-md elevation-2 lg:hidden">
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <PriceDisplay
@@ -217,7 +218,7 @@ export function PurchasePanel({ product, showStockCounts, reassurance }: Purchas
             />
           </div>
           <Button onClick={addToCart} disabled={!purchase.canAddToCart} className="shrink-0">
-            {justAdded ? "Added" : "Add to cart"}
+            {justAdded ? t.added : t.addToCart}
           </Button>
         </div>
       </div>

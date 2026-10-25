@@ -106,12 +106,41 @@ from `POST /cart/validate`, and the local cart is replaced with the server's
 items on each response so `removedItems` and `adjustments` take effect.
 `shipping`/`tax` of `null` render as "Calculated at checkout", never `$0.00`.
 
-### Theming
+### Theming and the design system
 
-`globals.css` holds the locked design system (Tailwind v4 `@theme`, no
-`tailwind.config.js`). `ThemeStyle` injects `--brand*` custom properties
-derived from the admin's `theme.primaryColor`, validated with
-`/^#[0-9a-fA-F]{6}$/` and falling back to `#2563EB`. No gradients anywhere.
+`globals.css` holds the design system (Tailwind v4 `@theme`, no
+`tailwind.config.js`). It is **Material 3**:
+
+- **Tonal surfaces.** `canvas`, `surface`, `surface-low`, `surface-container`,
+  `surface-high` and `surface-highest` are mixed with the live brand colour via
+  `color-mix()`, so the neutrals follow the brand instead of being grey.
+- **Elevation** is five named levels (`elevation-1` … `elevation-5`,
+  `--shadow-level1` … `5`). The legacy `shadow-xs`/`sm`/`md`/`lg`/`xl` names
+  are aliases onto them.
+- **State layers.** `state-layer` paints `currentColor` over an interactive
+  element at 8% hover / 10% focus / 12% press, which is how every button, nav
+  item, chip and list row answers input. It sets `position: relative`, so it
+  must not be combined with `absolute`/`fixed`/`sticky`.
+- **Shape scale** 4 / 8 / 12 / 16 / 28px (`radius-xs` … `radius-xl`). Buttons,
+  chips and the search field are pills; cards and sheets use 12-16px.
+- **Type scale** `text-display-*`, `text-headline-*`, `text-title-*`,
+  `text-body-*`, `text-label-*` - each token carries its own line height,
+  tracking and (for title/label) weight, so no `font-*` class is needed with
+  them.
+- **Components.** `Button` covers the M3 types (`primary` filled, `secondary`
+  filled-tonal, `elevated`, `outline`, `ghost` text, plus `fab` /
+  `fab-extended` sizes); `Card` has `elevated` / `filled` / `outlined`; text
+  fields are filled, with the label kept above the control.
+- **Mobile.** `MobileNavBar` is the M3 navigation bar, phones only, hidden on
+  checkout and in the admin, and it reserves its own height with a spacer.
+  Listing filters open in a bottom sheet (`FilterSheet`) instead of pushing the
+  grid down the page.
+
+`ThemeStyle` injects `--brand*` custom properties derived from the admin's
+`theme.primaryColor`, validated with `/^#[0-9a-fA-F]{6}$/` and falling back to
+`#2563EB`; `--brand-container` / `--brand-on-container` are the M3 tonal pair,
+and `deriveBrandTokens` darkens `on-container` until it clears 4.5:1 on the
+container for whatever colour is chosen. No gradients anywhere.
 
 ## Deployment notes
 

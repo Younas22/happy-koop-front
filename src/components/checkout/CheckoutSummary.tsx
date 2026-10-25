@@ -6,7 +6,9 @@ import * as React from "react";
 
 import { CartChangeNotices } from "@/components/cart/CartChangeNotices";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { NOT_CALCULATED_LABEL, displayOrNotCalculated, formatMoney } from "@/lib/money";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
+import { displayOrNotCalculated, formatMoney } from "@/lib/money";
 import type { CartTotals, CartValidation, Money, ShippingOption } from "@/lib/types/api";
 import { cn } from "@/lib/utils/cn";
 
@@ -47,7 +49,7 @@ function Line({
       <dd
         className={cn(
           muted ? "text-right text-ink-muted" : "tabular-nums",
-          strong ? "text-base font-semibold text-ink" : !muted && "font-medium text-ink",
+          strong ? "text-title-md text-ink" : !muted && "font-medium text-ink",
         )}
       >
         {value}
@@ -70,21 +72,27 @@ function ShippingLine({
   totals: CartTotals;
   selectedOption: ShippingOption | null;
 }) {
+  const m = useMessages();
   if (selectedOption) {
     return (
-      <Line label={`Shipping (${selectedOption.label})`} value={formatMoney(selectedOption.price)} />
+      <Line
+        label={fmt(m.checkout.summary.shippingWith, { method: selectedOption.label })}
+        value={formatMoney(selectedOption.price)}
+      />
     );
   }
   return (
     <Line
-      label="Shipping"
-      value={displayOrNotCalculated(totals.shipping)}
+      label={m.cart.shipping}
+      value={displayOrNotCalculated(totals.shipping, m.common.calculatedAtCheckout)}
       muted={totals.shipping === null}
     />
   );
 }
 
 function SummaryBody({ validation, validating, selectedOption }: CheckoutSummaryProps) {
+  const m = useMessages();
+  const t = m.checkout.summary;
   if (!validation) {
     return (
       <div className="space-y-2" aria-hidden="true">
@@ -117,44 +125,50 @@ function SummaryBody({ validation, validating, selectedOption }: CheckoutSummary
       <ul className="divide-y divide-line">
         {items.map((item) => (
           <li key={item.key} className="flex gap-3 py-3 first:pt-0">
-            <div className="relative size-14 shrink-0 overflow-hidden rounded-md border border-line bg-sunken">
+            <div className="relative size-14 shrink-0 overflow-hidden rounded-md border border-line bg-surface-container">
               {item.imageUrl ? (
                 <Image src={item.imageUrl} alt="" fill sizes="56px" className="object-cover" />
               ) : null}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-ink">{item.name}</p>
+              <p className="truncate text-label-lg text-ink">{item.name}</p>
               {item.variantLabel ? (
-                <p className="text-xs text-ink-muted">{item.variantLabel}</p>
+                <p className="text-body-sm text-ink-muted">{item.variantLabel}</p>
               ) : null}
-              <p className="mt-0.5 text-xs text-ink-muted tabular-nums">
+              <p className="mt-0.5 text-body-sm text-ink-muted tabular-nums">
                 {item.quantity} × {formatMoney(item.unitPrice)}
               </p>
             </div>
-            <p className="shrink-0 text-sm font-medium text-ink tabular-nums">
+            <p className="shrink-0 text-label-lg text-ink tabular-nums">
               {formatMoney(item.lineTotal)}
             </p>
           </li>
         ))}
       </ul>
 
-      <dl className="space-y-2 border-t border-line pt-3 text-sm">
-        <Line label="Subtotal" value={formatMoney(totals.subtotal)} />
+      <dl className="space-y-2 border-t border-line pt-3 text-body-md">
+        <Line label={m.cart.subtotal} value={formatMoney(totals.subtotal)} />
 
         {totals.discount.amount > 0 ? (
           <Line
-            label={validation.coupon ? `Discount (${validation.coupon.code})` : "Discount"}
+            label={
+              validation.coupon ? fmt(t.discountWith, { code: validation.coupon.code }) : m.cart.discount
+            }
             value={`-${formatMoney(totals.discount)}`}
           />
         ) : null}
 
         <ShippingLine totals={totals} selectedOption={selectedOption} />
 
-        <Line label="Tax" value={displayOrNotCalculated(totals.tax)} muted={totals.tax === null} />
+        <Line
+          label={m.cart.tax}
+          value={displayOrNotCalculated(totals.tax, m.common.calculatedAtCheckout)}
+          muted={totals.tax === null}
+        />
 
         <div className="border-t border-line pt-2">
           <Line
-            label={estimatedWithShipping ? "Total (items + shipping)" : "Total"}
+            label={estimatedWithShipping ? t.totalWithShipping : m.cart.total}
             value={
               estimatedWithShipping && selectedOption
                 ? `${formatMoney(totals.total)} + ${formatMoney(selectedOption.price)}`
@@ -166,15 +180,14 @@ function SummaryBody({ validation, validating, selectedOption }: CheckoutSummary
       </dl>
 
       {totals.tax === null ? (
-        <p className="text-xs text-ink-subtle">
-          Tax shows as &ldquo;{NOT_CALCULATED_LABEL}&rdquo; because no tax calculation is configured
-          for this store. The amount you are charged is the total confirmed on the next step.
+        <p className="text-body-sm text-ink-subtle">
+          {fmt(t.taxHint, { label: m.common.calculatedAtCheckout })}
         </p>
       ) : null}
 
       {validating ? (
-        <p className="text-xs text-ink-muted" aria-live="polite">
-          Checking prices and availability…
+        <p className="text-body-sm text-ink-muted" aria-live="polite">
+          {t.checking}
         </p>
       ) : null}
     </div>
@@ -182,11 +195,12 @@ function SummaryBody({ validation, validating, selectedOption }: CheckoutSummary
 }
 
 export function CheckoutSummary(props: CheckoutSummaryProps) {
+  const t = useMessages().checkout.summary;
   const [openOnMobile, setOpenOnMobile] = React.useState(false);
   const total = props.validation?.totals.total ?? null;
 
   return (
-    <aside className="lg:sticky lg:top-22 lg:self-start" aria-label="Order summary">
+    <aside className="lg:sticky lg:top-22 lg:self-start" aria-label={t.label}>
       <div className="surface-card overflow-hidden">
         {/* Mobile disclosure */}
         <button
@@ -196,12 +210,12 @@ export function CheckoutSummary(props: CheckoutSummaryProps) {
           aria-controls="checkout-summary-body"
           className="tap-target flex w-full items-center justify-between gap-3 px-4 text-left lg:hidden"
         >
-          <span className="text-sm font-semibold text-ink">
-            {openOnMobile ? "Hide order summary" : "Show order summary"}
+          <span className="text-title-sm text-ink">
+            {openOnMobile ? t.hide : t.show}
           </span>
           <span className="flex items-center gap-2">
             {total ? (
-              <span className="text-sm font-semibold text-ink tabular-nums">
+              <span className="text-title-sm text-ink tabular-nums">
                 {formatMoney(total)}
               </span>
             ) : null}
@@ -212,7 +226,7 @@ export function CheckoutSummary(props: CheckoutSummaryProps) {
           </span>
         </button>
 
-        <h2 className="hidden px-4 pt-4 text-base font-semibold text-ink lg:block">Order summary</h2>
+        <h2 className="hidden px-4 pt-4 text-title-md text-ink lg:block">{t.label}</h2>
 
         <div
           id="checkout-summary-body"

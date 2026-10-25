@@ -77,6 +77,7 @@ const GROUPS: { heading: string; items: NavItem[] }[] = [
     heading: "Configuration",
     items: [
       { href: "/admin/settings/store", label: "Store settings", icon: Settings },
+      { href: "/admin/settings/navigation", label: "Navigation", icon: Menu },
       { href: "/admin/settings/payments", label: "Payments", icon: CreditCard },
       { href: "/admin/users", label: "Admin users", icon: UserCog },
       { href: "/admin/audit-logs", label: "Audit log", icon: ScrollText },
@@ -103,9 +104,7 @@ function NavList({
       {GROUPS.map((group) => (
         <div key={group.heading}>
           {!collapsed ? (
-            <p className="mb-1.5 px-3 text-2xs font-semibold tracking-wide text-ink-subtle uppercase">
-              {group.heading}
-            </p>
+            <p className="label-eyebrow mb-1.5 px-3">{group.heading}</p>
           ) : null}
           <ul className="space-y-0.5">
             {group.items.map((item) => {
@@ -119,9 +118,15 @@ function NavList({
                     aria-current={current ? "page" : undefined}
                     title={collapsed ? item.label : undefined}
                     className={cn(
-                      "tap-target flex items-center gap-2.5 rounded-md px-3 text-sm font-medium transition-colors",
+                      "relative flex min-h-10 items-center gap-2.5 rounded-md px-3 text-sm transition-colors",
+                      // A 3px marker on the inline-start edge. It survives the
+                      // collapse to icons, where the label is gone and the
+                      // background tint alone is easy to miss.
+                      "before:absolute before:inset-y-1.5 before:-left-px before:w-[3px] before:rounded-full before:bg-brand before:opacity-0 before:transition-opacity",
                       collapsed && "justify-center px-0",
-                      current ? "bg-brand-tint text-brand" : "text-ink hover:bg-sunken",
+                      current
+                        ? "bg-brand-surface font-semibold text-brand-active before:opacity-100"
+                        : "font-medium text-ink-muted hover:bg-sunken hover:text-ink",
                     )}
                   >
                     <Icon className="size-4 shrink-0" aria-hidden="true" />
@@ -174,7 +179,7 @@ export function AdminShell({
   return (
     <div className="min-h-dvh bg-canvas">
       {/* Admin top bar - visually distinct from the storefront header. */}
-      <header className="sticky top-0 z-30 border-b border-line bg-surface">
+      <header className="sticky top-0 z-30 border-b border-line bg-surface shadow-xs">
         <div className="flex h-14 items-center gap-2 px-3 sm:px-4">
           <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
             <DrawerTrigger asChild>
@@ -209,13 +214,22 @@ export function AdminShell({
             />
           </Button>
 
-          <Link href="/admin" className="text-sm font-semibold text-ink">
+          <Link
+            href="/admin"
+            className="flex items-center gap-2 rounded-md text-sm font-semibold tracking-tight text-ink"
+          >
+            <span className="flex size-6 items-center justify-center rounded-sm bg-brand text-brand-ink">
+              <LayoutDashboard className="size-3.5" aria-hidden="true" />
+            </span>
             Store admin
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
-            <span className="hidden text-xs text-ink-muted sm:inline">
-              {viewerName} · {viewerEmail}
+            {/* Identity of the signed-in administrator, so it is never
+                ambiguous whose session is acting. */}
+            <span className="hidden text-right text-xs leading-tight sm:block">
+              <span className="block font-medium text-ink">{viewerName}</span>
+              <span className="block text-ink-subtle">{viewerEmail}</span>
             </span>
             <Button asChild variant="secondary" size="sm">
               <Link href="/">View store</Link>
@@ -227,7 +241,7 @@ export function AdminShell({
       <div className="flex">
         <aside
           className={cn(
-            "hidden shrink-0 border-r border-line bg-surface lg:block",
+            "hidden shrink-0 border-r border-line bg-surface transition-[width] duration-200 ease-(--ease-out-soft) lg:block",
             collapsed ? "w-16" : "w-60",
           )}
         >
@@ -241,7 +255,9 @@ export function AdminShell({
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 px-3 py-5 sm:px-5 sm:py-6">
+        {/* The root layout's skip link targets `#main`; the admin renders
+            its own, because the storefront's is in the other route group. */}
+        <main id="main" className="min-w-0 flex-1 px-3 py-5 sm:px-6 sm:py-7">
           <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
       </div>

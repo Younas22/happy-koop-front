@@ -6,6 +6,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils/cn";
 
+/** Checkbox - M3: a 2px outline when unselected, filled brand when selected. */
 export const Checkbox = React.forwardRef<
   React.ComponentRef<typeof CheckboxPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
@@ -14,8 +15,9 @@ export const Checkbox = React.forwardRef<
     <CheckboxPrimitive.Root
       ref={ref}
       className={cn(
-        "peer flex size-5 shrink-0 items-center justify-center rounded-xs border border-line-strong bg-surface",
-        "transition-colors duration-150 ease-(--ease-in-out-soft)",
+        "peer flex size-5 shrink-0 items-center justify-center rounded-xs border-2 border-ink-subtle bg-transparent",
+        "transition-colors duration-200 ease-(--ease-standard)",
+        "hover:border-brand",
         "data-[state=checked]:border-brand data-[state=checked]:bg-brand data-[state=checked]:text-brand-ink",
         "data-[state=indeterminate]:border-brand data-[state=indeterminate]:bg-brand data-[state=indeterminate]:text-brand-ink",
         "disabled:cursor-not-allowed disabled:opacity-55",
@@ -40,12 +42,15 @@ export interface CheckboxFieldProps
   label: string;
 }
 
-/** Checkbox plus label in a 44px-tall row, so the whole row is a tap target. */
+/**
+ * Checkbox plus label in a 48px row. The whole row is the tap target, and it
+ * takes the M3 state layer so a touch anywhere on it is acknowledged.
+ */
 export function CheckboxField({ id, label, className, ...props }: CheckboxFieldProps) {
   return (
-    <div className={cn("flex min-h-11 items-center gap-2.5", className)}>
+    <div className={cn("flex min-h-12 items-center gap-3", className)}>
       <Checkbox id={id} {...props} />
-      <label htmlFor={id} className="cursor-pointer text-sm text-ink">
+      <label htmlFor={id} className="cursor-pointer text-body-md text-ink">
         {label}
       </label>
     </div>

@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { Rating, RatingDistribution } from "@/components/ui/Rating";
+import { renderWithI18n as render } from "@/test/i18n";
 
 describe("Rating", () => {
   it("renders nothing when the rating is null (zero approved reviews)", () => {
@@ -31,6 +32,13 @@ describe("Rating", () => {
   it("uses the singular for a single review", () => {
     render(<Rating rating={{ average: 5, count: 1 }} />);
     expect(screen.getByText("Rated 5.0 out of 5 from 1 review")).toBeInTheDocument();
+  });
+
+  it("labels the rating in the page's language", () => {
+    render(<Rating rating={{ average: 4.6, count: 23 }} />, { locale: "nl" });
+    expect(
+      screen.getByText("Beoordeeld met 4.6 van de 5 op basis van 23 reviews"),
+    ).toBeInTheDocument();
   });
 });
 

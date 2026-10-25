@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { replaceHomeSectionsAction } from "@/app/admin/actions";
 import { Alert } from "@/components/ui/Alert";
+import { MediaPickerField } from "@/components/admin/MediaPickerField";
 import { Button } from "@/components/ui/Button";
 import { CheckboxField } from "@/components/ui/Checkbox";
 import { FormField } from "@/components/ui/FormField";
@@ -94,11 +95,17 @@ export function HomeSectionsEditor({
   categories,
   products,
   media,
+  mediaTotal,
+  mediaTruncated,
 }: {
   sections: readonly AdminHomeSection[];
   categories: readonly AdminCategory[];
   products: readonly AdminProductSummary[];
   media: readonly AdminMediaAsset[];
+  /** The library's real size, which may exceed `media.length`. */
+  mediaTotal?: number;
+  /** True when the loader hit its page cap before the end of the library. */
+  mediaTruncated?: boolean;
 }) {
   const router = useRouter();
   const [drafts, setDrafts] = React.useState<Draft[]>(
@@ -303,36 +310,26 @@ export function HomeSectionsEditor({
                       />
                     )}
                   </FormField>
-                  <FormField
-                    id={`hero-image-${index}`}
-                    label="Image"
-                    className="sm:col-span-2"
-                    description={media.length === 0 ? "No media uploaded yet." : undefined}
-                  >
-                    {(field) => (
-                      <select
-                        {...field}
-                        className={selectClass}
-                        value={String(draft.config.imageMediaId ?? "")}
-                        onChange={(event) =>
-                          updateConfig(
-                            index,
-                            "imageMediaId",
-                            event.target.value === ""
-                              ? null
-                              : Number.parseInt(event.target.value, 10),
-                          )
-                        }
-                      >
-                        <option value="">No image</option>
-                        {media.map((asset) => (
-                          <option key={asset.id} value={asset.id}>
-                            {asset.originalFilename ?? asset.alt ?? `Media #${asset.id}`}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </FormField>
+                  <div className="sm:col-span-2">
+                    <MediaPickerField
+                      id={`hero-image-${index}`}
+                      label="Image"
+                      description={
+                        media.length === 0
+                          ? "No media uploaded yet. Upload images under Media first."
+                          : undefined
+                      }
+                      value={
+                        typeof draft.config.imageMediaId === "number"
+                          ? draft.config.imageMediaId
+                          : null
+                      }
+                      onChange={(next) => updateConfig(index, "imageMediaId", next)}
+                      media={media}
+                      total={mediaTotal}
+                      truncated={mediaTruncated}
+                    />
+                  </div>
                 </div>
               ) : null}
 

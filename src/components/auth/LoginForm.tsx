@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -13,13 +12,17 @@ import { Input } from "@/components/ui/Input";
 import { applyFieldErrors } from "@/lib/forms/api-errors";
 import { postSameOrigin } from "@/lib/http/same-origin";
 import type { SessionResult } from "@/lib/types/api";
+import { useLocalizedRouter, useMessages } from "@/i18n/client";
+import type { Messages } from "@/i18n/messages";
 
-const schema = z.object({
-  email: z.string().trim().min(1, "Enter your email address.").email("Enter a valid email address."),
-  password: z.string().min(1, "Enter your password."),
-});
+function createSchema(t: Messages["auth"]) {
+  return z.object({
+    email: z.string().trim().min(1, t.emailRequired).email(t.emailInvalid),
+    password: z.string().min(1, t.passwordRequired),
+  });
+}
 
-type Values = z.infer<typeof schema>;
+type Values = z.infer<ReturnType<typeof createSchema>>;
 
 const FIELDS = ["email", "password"] as const;
 
@@ -38,7 +41,9 @@ const FIELDS = ["email", "password"] as const;
  * (`safeInternalPath`), so it cannot be an off-site redirect.
  */
 export function LoginForm({ next }: { next: string }) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
+  const t = useMessages().auth;
+  const schema = React.useMemo(() => createSchema(t), [t]);
   const [formError, setFormError] = React.useState<string | null>(null);
 
   const form = useForm<Values>({
@@ -66,14 +71,14 @@ export function LoginForm({ next }: { next: string }) {
   return (
     <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
       {formError ? (
-        <Alert tone="danger" live title="We could not sign you in">
+        <Alert tone="danger" live title={t.login.failed}>
           {formError}
         </Alert>
       ) : null}
 
       <FormField
         id="login-email"
-        label="Email address"
+        label={t.email}
         required
         error={form.formState.errors.email?.message ?? null}
       >
@@ -91,7 +96,7 @@ export function LoginForm({ next }: { next: string }) {
 
       <FormField
         id="login-password"
-        label="Password"
+        label={t.password}
         required
         error={form.formState.errors.password?.message ?? null}
       >
@@ -105,8 +110,8 @@ export function LoginForm({ next }: { next: string }) {
         )}
       </FormField>
 
-      <Button type="submit" block size="lg" loading={submitting} loadingLabel="Signing in…">
-        Sign in
+      <Button type="submit" block size="lg" loading={submitting} loadingLabel={t.login.submitting}>
+        {t.login.submit}
       </Button>
     </form>
   );

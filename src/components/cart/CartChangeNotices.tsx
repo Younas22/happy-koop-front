@@ -1,4 +1,8 @@
+"use client";
+
 import { Alert } from "@/components/ui/Alert";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
 import type { CartValidation } from "@/lib/types/api";
 
 export interface CartChangeNoticesProps {
@@ -14,6 +18,7 @@ export interface CartChangeNoticesProps {
  * paraphrased or invented.
  */
 export function CartChangeNotices({ validation }: CartChangeNoticesProps) {
+  const t = useMessages().cart.notices;
   if (!validation) return null;
 
   const { removedItems, adjustments } = validation;
@@ -28,7 +33,7 @@ export function CartChangeNotices({ validation }: CartChangeNoticesProps) {
   return (
     <div className="space-y-2" aria-live="polite">
       {removedItems.length > 0 ? (
-        <Alert tone="warning" title="Some items were removed">
+        <Alert tone="warning" title={t.removed}>
           <ul className="space-y-1">
             {removedItems.map((removed) => (
               <li key={`${removed.productId}:${removed.variantId ?? ""}`}>{removed.message}</li>
@@ -38,7 +43,7 @@ export function CartChangeNotices({ validation }: CartChangeNoticesProps) {
       ) : null}
 
       {adjustments.length > 0 ? (
-        <Alert tone="warning" title="Some quantities changed">
+        <Alert tone="warning" title={t.adjusted}>
           <ul className="space-y-1">
             {adjustments.map((adjustment) => (
               <li key={`${adjustment.key}-${adjustment.field}`}>
@@ -46,7 +51,7 @@ export function CartChangeNotices({ validation }: CartChangeNoticesProps) {
                 {adjustment.field === "quantity" ? (
                   <>
                     {" "}
-                    Quantity reduced from {adjustment.from} to {adjustment.to}.
+                    {fmt(t.quantityReduced, { from: adjustment.from, to: adjustment.to })}
                   </>
                 ) : null}
               </li>
@@ -56,7 +61,7 @@ export function CartChangeNotices({ validation }: CartChangeNoticesProps) {
       ) : null}
 
       {itemIssues.length > 0 ? (
-        <Alert tone="info" title="Please check these items">
+        <Alert tone="info" title={t.check}>
           <ul className="space-y-1">
             {itemIssues.map(({ key, name, issue }) => (
               <li key={key}>

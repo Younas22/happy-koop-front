@@ -1,11 +1,13 @@
 import { PackageSearch } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/Link";
 
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Pagination } from "@/components/ui/Pagination";
+import { plural } from "@/i18n/format";
+import { getI18n } from "@/i18n/server";
 import { fetchProducts } from "@/lib/catalog/queries";
 import {
   buildListingHref,
@@ -34,9 +36,10 @@ export async function ProductListing({
   state,
   basePath,
   categoryOverride = null,
-  emptyTitle = "No products match these filters",
-  emptyDescription = "Try removing a filter or widening the price range.",
+  emptyTitle,
+  emptyDescription,
 }: ProductListingProps) {
+  const { locale, m } = await getI18n();
   const params = toProductListParams(state);
   if (categoryOverride !== null) {
     params.category = categoryOverride;
@@ -51,7 +54,7 @@ export async function ProductListing({
         unreachable={error?.isUnreachable()}
         action={
           <Button asChild variant="secondary">
-            <Link href={basePath}>Reload</Link>
+            <Link href={basePath}>{m.listing.reload}</Link>
           </Button>
         }
       />
@@ -62,11 +65,11 @@ export async function ProductListing({
     return (
       <EmptyState
         icon={PackageSearch}
-        title={emptyTitle}
-        description={emptyDescription}
+        title={emptyTitle ?? m.listing.emptyTitle}
+        description={emptyDescription ?? m.listing.emptyBody}
         action={
           <Button asChild variant="secondary">
-            <Link href={basePath}>Clear filters</Link>
+            <Link href={basePath}>{m.listing.clearFilters}</Link>
           </Button>
         }
       />
@@ -75,8 +78,8 @@ export async function ProductListing({
 
   return (
     <div className="space-y-6">
-      <p className="text-sm text-ink-muted" aria-live="polite">
-        {data.meta.total} {data.meta.total === 1 ? "product" : "products"}
+      <p className="text-body-md text-ink-muted" aria-live="polite">
+        {plural(locale, data.meta.total, m.listing.count)}
       </p>
 
       <ProductGrid products={data.data} priorityCount={4} />

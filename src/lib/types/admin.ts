@@ -361,6 +361,8 @@ export interface AdminProductDetail {
  * ------------------------------------------------------------------ */
 
 export interface AdminCategory extends Category {
+  /** The chosen library asset, for the picker; `imageUrl` is the resolved file. */
+  imageMediaId: number | null;
   isActive: boolean;
   seoTitle: string | null;
   seoDescription: string | null;

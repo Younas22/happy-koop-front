@@ -36,15 +36,15 @@ export const AccordionTrigger = React.forwardRef<
       <AccordionPrimitive.Trigger
         ref={ref}
         className={cn(
-          "group flex min-h-11 flex-1 items-center justify-between gap-3 py-3 text-left",
-          "text-sm font-medium text-ink transition-colors hover:text-brand",
+          "group flex min-h-12 flex-1 items-center justify-between gap-3 py-4 text-left",
+          "text-label-lg text-ink transition-colors hover:text-brand",
           className,
         )}
         {...props}
       >
         {children}
         <ChevronDown
-          className="size-4 shrink-0 text-ink-muted transition-transform duration-200 ease-(--ease-out-soft) group-data-[state=open]:rotate-180"
+          className="size-4 shrink-0 text-ink-muted transition-transform duration-200 ease-(--ease-standard) group-data-[state=open]:rotate-180"
           aria-hidden="true"
         />
       </AccordionPrimitive.Trigger>
@@ -59,7 +59,7 @@ export const AccordionContent = React.forwardRef<
   return (
     <AccordionPrimitive.Content
       ref={ref}
-      className={cn("overflow-hidden text-sm text-ink-muted", className)}
+      className={cn("overflow-hidden text-body-md text-ink-muted", className)}
       {...props}
     >
       <div className="pb-4">{children}</div>

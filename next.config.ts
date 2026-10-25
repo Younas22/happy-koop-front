@@ -40,6 +40,16 @@ const nextConfig: NextConfig = {
       { protocol: "http" as const, hostname, port: "8000", pathname: "/storage/**" },
       { protocol: "https" as const, hostname, pathname: "/storage/**" },
     ]),
+
+    // Next 16 refuses to let the image optimiser fetch a host that resolves to
+    // a private IP, as SSRF protection. Locally the Laravel API is on
+    // 127.0.0.1:8000, so without this every product, category and avatar image
+    // fails with "hostname resolved to private IP".
+    //
+    // Development only. In production the API is a public host, the optimiser
+    // has no reason to reach a private address, and leaving this on would let a
+    // misconfigured remotePattern probe the internal network.
+    dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
     // Sizes that match the storefront grid breakpoints.
     deviceSizes: [360, 480, 640, 768, 1024, 1280, 1536],
     imageSizes: [64, 96, 128, 192, 256, 384],

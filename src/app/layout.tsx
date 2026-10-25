@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { SiteHeader } from "@/components/layout/SiteHeader";
 import { ThemeStyle } from "@/components/layout/ThemeStyle";
-import { Alert } from "@/components/ui/Alert";
 import { TooltipProvider } from "@/components/ui/Tooltip";
+import { LocaleProvider } from "@/i18n/client";
+import { LOCALE_INFO } from "@/i18n/config";
+import { getI18n, getLocale } from "@/i18n/server";
 import { getRuntimeConfig } from "@/lib/runtime-config";
 import { buildRootMetadata } from "@/lib/utils/seo";
 
@@ -29,45 +29,54 @@ const sans = Inter({
  */
 export async function generateMetadata(): Promise<Metadata> {
   const config = await getRuntimeConfig();
-  return buildRootMetadata(config);
+  return buildRootMetadata(config, await getLocale());
 }
 
+/**
+ * The document shell, and nothing else.
+ *
+ * Deliberately free of application chrome: the storefront's header and footer
+ * live in the `(storefront)` route group and the admin's sidebar and top bar
+ * under `/admin`, so neither application can render inside the other. What
+ * stays here is what both need - the document, the typeface, the
+ * admin-managed brand tokens, the tooltip context and one toast outlet.
+ *
+ * The skip link stays here too, because every subtree below renders its own
+ * `#main`.
+ */
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const config = await getRuntimeConfig();
+  // The display language comes from the URL (via the proxy), not from the
+  // store's money locale: a Dutch page in a USD store is still `lang="nl"`.
+  const { locale, m } = await getI18n();
 
   return (
-    <html lang={config.locale.locale.split("-")[0] || "en"} className={`${sans.variable} h-full`}>
+    <html lang={LOCALE_INFO[locale].htmlLang} className={`${sans.variable} h-full`}>
       <head>
         {/* Brand tokens from store settings, injected before first paint. */}
         <ThemeStyle primaryColor={config.theme.primaryColor} />
       </head>
       <body className="flex min-h-full flex-col">
         <a href="#main" className="sr-only-focusable z-50 bg-brand px-4 py-2 text-brand-ink">
-          Skip to content
+          {m.common.skipToContent}
         </a>
 
-        <TooltipProvider delayDuration={200}>
-          <SiteHeader config={config} />
-
-          {config.degraded ? (
-            <div className="page-container pt-4">
-              <Alert tone="warning" title="Store settings are unavailable">
-                We could not load the store configuration, so some details may be missing. No
-                product data or prices are being shown from a stale copy.
-              </Alert>
-            </div>
-          ) : null}
-
-          <main id="main" className="flex-1">
+        {/* One dictionary - the page's own language - reaches the browser. */}
+        <LocaleProvider locale={locale} messages={m}>
+          <TooltipProvider delayDuration={200}>
             {children}
-          </main>
 
-          <SiteFooter config={config} />
-
-          {/* Form feedback. Position is bottom-centre so it never covers a
-              sticky mobile action bar on checkout. */}
-          <Toaster position="bottom-center" closeButton richColors />
-        </TooltipProvider>
+            {/* Form feedback. Bottom-centre, lifted clear of the M3 navigation
+                bar on a phone so a toast never sits under the bar or over a
+                sticky checkout action. */}
+            <Toaster
+              position="bottom-center"
+              closeButton
+              richColors
+              mobileOffset={{ bottom: "5.5rem" }}
+            />
+          </TooltipProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

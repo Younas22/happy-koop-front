@@ -6,6 +6,9 @@ import * as React from "react";
 
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { useLocale, useLocalizedHref, useMessages } from "@/i18n/client";
+import { LOCALE_INFO } from "@/i18n/config";
+import { fmt } from "@/i18n/format";
 import { formatMoney } from "@/lib/money";
 import type { Money } from "@/lib/types/api";
 
@@ -53,6 +56,8 @@ function StripeForm({
 }) {
   const stripe = useStripe();
   const elements = useElements();
+  const localize = useLocalizedHref();
+  const t = useMessages().checkout.stripe;
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [ready, setReady] = React.useState(false);
@@ -64,8 +69,10 @@ function StripeForm({
     setSubmitting(true);
     setError(null);
 
+    // The provider sends the customer back here, so it must be the success
+    // page in the language they were paying in.
     const returnUrl = new URL(
-      `/checkout/success?order=${encodeURIComponent(orderNumber)}`,
+      localize(`/checkout/success?order=${encodeURIComponent(orderNumber)}`),
       window.location.origin,
     ).toString();
 
@@ -76,7 +83,7 @@ function StripeForm({
 
     if (result.error) {
       // Stripe's message is customer-safe; no card data is ever logged.
-      setError(result.error.message ?? "The payment could not be completed. Nothing was charged.");
+      setError(result.error.message ?? t.failed);
       setSubmitting(false);
       return;
     }
@@ -89,13 +96,13 @@ function StripeForm({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {testMode ? (
-        <Alert tone="info" title="Test mode">
-          This store is in Stripe test mode. Real cards are not charged.
+        <Alert tone="info" title={t.testTitle}>
+          {t.testBody}
         </Alert>
       ) : null}
 
       {error ? (
-        <Alert tone="danger" live title="Payment not completed">
+        <Alert tone="danger" live title={t.failedTitle}>
           {error}
         </Alert>
       ) : null}
@@ -108,14 +115,13 @@ function StripeForm({
         size="lg"
         disabled={!stripe || !elements || !ready}
         loading={submitting}
-        loadingLabel="Processing payment…"
+        loadingLabel={t.processing}
       >
-        Pay {formatMoney(amount)}
+        {fmt(t.pay, { amount: formatMoney(amount) })}
       </Button>
 
-      <p className="text-xs text-ink-muted">
-        Your card details are entered directly into Stripe and never reach this store&rsquo;s
-        servers.
+      <p className="text-body-sm text-ink-muted">
+        {t.secure}
       </p>
     </form>
   );
@@ -128,6 +134,7 @@ export function StripePaymentStep({
   amount,
   testMode,
 }: StripePaymentStepProps) {
+  const locale = useLocale();
   // `loadStripe` returns null when the key is unusable; Elements then renders
   // nothing, so the explicit error below keeps the customer informed.
   const stripePromise = React.useMemo(() => getStripe(publishableKey), [publishableKey]);
@@ -137,6 +144,7 @@ export function StripePaymentStep({
       stripe={stripePromise}
       options={{
         clientSecret,
+        locale: LOCALE_INFO[locale].hreflang as "en" | "nl",
         appearance: {
           theme: "flat",
           variables: { borderRadius: "10px" },

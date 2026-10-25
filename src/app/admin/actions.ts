@@ -383,6 +383,28 @@ export async function saveStoreSettingsAction(body: unknown): Promise<AdminActio
 }
 
 /**
+ * Saves the header and footer navigation.
+ *
+ * Only `navigation` is sent, so a save here cannot disturb any other store
+ * setting, and the public runtime-config cache is refreshed so the storefront
+ * header and footer pick the new links up immediately (contract 3, rule 6).
+ */
+export async function saveNavigationAction(navigation: unknown): Promise<AdminActionResult> {
+  await requireAdmin("/admin/settings/navigation");
+
+  try {
+    await admin.updateStoreSettings({ navigation });
+  } catch (error) {
+    return fail(error);
+  }
+
+  revalidateRuntimeConfig();
+  revalidatePath("/admin/settings/navigation");
+  revalidatePath("/", "layout");
+  return ok();
+}
+
+/**
  * Saves payment settings.
  *
  * The payload is built client-side so that an untouched secret field is

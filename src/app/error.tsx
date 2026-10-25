@@ -1,10 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import * as React from "react";
 
 import { Button } from "@/components/ui/Button";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
+import { Link } from "@/i18n/Link";
 
 /**
  * Root error boundary.
@@ -20,6 +22,8 @@ export default function RootError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const m = useMessages();
+
   React.useEffect(() => {
     console.error("[storefront] unhandled error", error);
   }, [error]);
@@ -29,15 +33,17 @@ export default function RootError({
       <ErrorState
         action={
           <div className="flex flex-wrap justify-center gap-2">
-            <Button onClick={reset}>Try again</Button>
+            <Button onClick={reset}>{m.common.tryAgain}</Button>
             <Button asChild variant="secondary">
-              <Link href="/">Go to the home page</Link>
+              <Link href="/">{m.common.goHome}</Link>
             </Button>
           </div>
         }
       />
       {error.digest ? (
-        <p className="mt-4 text-center text-xs text-ink-subtle">Reference: {error.digest}</p>
+        <p className="mt-4 text-center text-body-sm text-ink-subtle">
+          {fmt(m.ui.reference, { reference: error.digest })}
+        </p>
       ) : null}
     </div>
   );

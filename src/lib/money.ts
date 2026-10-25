@@ -10,7 +10,12 @@ import type { Money } from "@/lib/types/api";
  *  - `null` money means "not yet determined" and must never render as $0.00.
  */
 
-/** The single string shown when a monetary value is not yet determined. */
+/**
+ * The English string shown when a monetary value is not yet determined. Pages
+ * pass the dictionary's `common.calculatedAtCheckout` instead, so the label is
+ * in the page's language; this remains the default for callers that have no
+ * dictionary to hand.
+ */
 export const NOT_CALCULATED_LABEL = "Calculated at checkout";
 
 /**
@@ -25,8 +30,11 @@ export function formatMoney(m: Money): string {
  * (shipping before a method is chosen, tax before a provider is configured),
  * so it renders as "Calculated at checkout" - NEVER as a zero amount.
  */
-export function displayOrNotCalculated(m: Money | null): string {
-  return m === null ? NOT_CALCULATED_LABEL : m.formatted;
+export function displayOrNotCalculated(
+  m: Money | null,
+  notCalculatedLabel: string = NOT_CALCULATED_LABEL,
+): string {
+  return m === null ? notCalculatedLabel : m.formatted;
 }
 
 /**

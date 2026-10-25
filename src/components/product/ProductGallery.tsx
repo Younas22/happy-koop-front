@@ -7,6 +7,8 @@ import * as React from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/Dialog";
 import type { MediaItem } from "@/lib/types/api";
 import { cn } from "@/lib/utils/cn";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
 
 export interface ProductGalleryProps {
   media: readonly MediaItem[];
@@ -26,6 +28,7 @@ export interface ProductGalleryProps {
  * it never shows a stand-in product photo.
  */
 export function ProductGallery({ media, productName, activeMediaId = null }: ProductGalleryProps) {
+  const t = useMessages().product;
   const items = React.useMemo(
     () => [...media].sort((a, b) => a.sortOrder - b.sortOrder),
     [media],
@@ -60,7 +63,7 @@ export function ProductGallery({ media, productName, activeMediaId = null }: Pro
 
   if (items.length === 0 || !active) {
     return (
-      <div className="surface-card flex aspect-square items-center justify-center bg-sunken">
+      <div className="surface-card flex aspect-square items-center justify-center bg-surface-container">
         <ImageOff className="size-8 text-ink-subtle" aria-hidden="true" />
         <span className="sr-only">No product images available</span>
       </div>
@@ -69,7 +72,7 @@ export function ProductGallery({ media, productName, activeMediaId = null }: Pro
 
   return (
     <div className="space-y-3">
-      <div className="surface-card relative aspect-square overflow-hidden bg-sunken">
+      <div className="surface-card relative aspect-square overflow-hidden bg-surface-container">
         {active.type === "video" ? (
           <video
             key={active.id}
@@ -78,7 +81,7 @@ export function ProductGallery({ media, productName, activeMediaId = null }: Pro
             controls
             preload="metadata"
             className="size-full object-contain"
-            aria-label={active.alt ?? `${productName} video`}
+            aria-label={active.alt ?? fmt(t.video, { name: productName })}
           />
         ) : (
           <>
@@ -94,8 +97,8 @@ export function ProductGallery({ media, productName, activeMediaId = null }: Pro
             <button
               type="button"
               onClick={() => setLightboxOpen(true)}
-              className="tap-target absolute right-2 bottom-2 inline-flex items-center justify-center rounded-md border border-line bg-surface/90 text-ink shadow-xs transition-colors hover:bg-surface"
-              aria-label="View larger image"
+              className="tap-target absolute right-3 bottom-3 inline-flex items-center justify-center rounded-full border border-line bg-surface/90 text-ink elevation-2 transition-colors duration-200 ease-(--ease-standard) hover:bg-surface-high"
+              aria-label={t.viewLarger}
             >
               <ZoomIn className="size-4.5" aria-hidden="true" />
             </button>
@@ -106,7 +109,7 @@ export function ProductGallery({ media, productName, activeMediaId = null }: Pro
       {items.length > 1 ? (
         <ul
           className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]"
-          aria-label="Product media"
+          aria-label={t.media}
         >
           {items.map((item, itemIndex) => (
             <li key={item.id} className="shrink-0">
@@ -116,12 +119,12 @@ export function ProductGallery({ media, productName, activeMediaId = null }: Pro
                 aria-current={itemIndex === safeIndex ? "true" : undefined}
                 aria-label={
                   item.type === "video"
-                    ? `Show video ${itemIndex + 1}`
-                    : `Show image ${itemIndex + 1}`
+                    ? fmt(t.showVideo, { n: itemIndex + 1 })
+                    : fmt(t.showImage, { n: itemIndex + 1 })
                 }
                 className={cn(
-                  "relative block size-18 overflow-hidden rounded-md border bg-sunken transition-colors sm:size-20",
-                  itemIndex === safeIndex ? "border-brand" : "border-line hover:border-line-strong",
+                  "relative block size-18 overflow-hidden rounded-sm border-2 bg-surface-container transition-colors duration-200 ease-(--ease-standard) sm:size-20",
+                  itemIndex === safeIndex ? "border-brand" : "border-transparent hover:border-line-strong",
                 )}
               >
                 {item.thumbnailUrl || item.type === "image" ? (
@@ -147,7 +150,7 @@ export function ProductGallery({ media, productName, activeMediaId = null }: Pro
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-[min(56rem,calc(100vw-2rem))] p-0">
           <DialogTitle className="sr-only">{active.alt ?? productName}</DialogTitle>
-          <div className="relative aspect-square w-full bg-sunken">
+          <div className="relative aspect-square w-full bg-surface-container">
             <Image
               src={active.url}
               alt={active.alt ?? productName}

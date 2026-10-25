@@ -1,4 +1,7 @@
+"use client";
+
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { useMessages } from "@/i18n/client";
 import type { OrderStatus, PaymentStatus, ReviewModerationStatus } from "@/lib/types/api";
 
 /**
@@ -42,28 +45,31 @@ export function humanizeStatus(value: string): string {
 }
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
+  const t = useMessages().status;
   return (
     <Badge tone={ORDER_TONES[status] ?? "neutral"}>
-      <span className="sr-only">Order status: </span>
-      {humanizeStatus(status)}
+      <span className="sr-only">{t.orderLabel} </span>
+      {t.order[status] ?? humanizeStatus(status)}
     </Badge>
   );
 }
 
 export function PaymentStatusBadge({ status }: { status: PaymentStatus }) {
+  const t = useMessages().status;
   return (
     <Badge tone={PAYMENT_TONES[status] ?? "neutral"}>
-      <span className="sr-only">Payment status: </span>
-      {humanizeStatus(status)}
+      <span className="sr-only">{t.paymentLabel} </span>
+      {t.payment[status] ?? humanizeStatus(status)}
     </Badge>
   );
 }
 
 export function ReviewStatusBadge({ status }: { status: ReviewModerationStatus }) {
+  const t = useMessages().status;
   return (
     <Badge tone={REVIEW_TONES[status] ?? "neutral"}>
-      <span className="sr-only">Moderation status: </span>
-      {humanizeStatus(status)}
+      <span className="sr-only">{t.moderationLabel} </span>
+      {t.review[status] ?? humanizeStatus(status)}
     </Badge>
   );
 }

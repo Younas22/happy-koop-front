@@ -1,5 +1,6 @@
 import { ProductGrid, ProductGridSkeleton } from "@/components/product/ProductGrid";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { getMessages } from "@/i18n/server";
 import { fetchRelatedProducts } from "@/lib/catalog/queries";
 
 export interface RelatedProductsProps {
@@ -18,10 +19,11 @@ export async function RelatedProducts({ slug, limit = 4 }: RelatedProductsProps)
   const { data } = await fetchRelatedProducts(slug, limit);
 
   if (!data || data.length === 0) return null;
+  const { product: t } = await getMessages();
 
   return (
     <section className="border-t border-line pt-8">
-      <h2 className="text-lg font-semibold text-ink sm:text-xl">You might also like</h2>
+      <h2 className="text-title-lg text-ink sm:text-xl">{t.sections.related}</h2>
       <ProductGrid products={data} className="mt-4" />
     </section>
   );

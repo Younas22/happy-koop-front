@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { DEFAULT_LOCALE, LOCALE_INFO, LOCALES, type Locale } from "@/i18n/config";
+import { localizePath } from "@/i18n/paths";
 import type { ResolvedRuntimeConfig } from "@/lib/types/api";
 import { stripTrailingSlash } from "@/lib/utils/url";
 
@@ -38,10 +40,32 @@ export interface PageSeoInput {
   noindex?: boolean;
   /** `website` for listings, `article` for CMS pages. */
   ogType?: "website" | "article";
+  /**
+   * The page's language. The canonical points at this language's own URL and
+   * every language is listed as an `hreflang` alternate, so a Dutch page is
+   * never declared a duplicate of its English twin.
+   */
+  locale?: Locale;
+}
+
+/**
+ * `hreflang` alternates for a locale-free path: one entry per language plus
+ * `x-default`, which is the unprefixed default-language URL.
+ */
+export function languageAlternates(path: string): Record<string, string> {
+  const languages: Record<string, string> = {};
+  for (const locale of LOCALES) {
+    languages[LOCALE_INFO[locale].hreflang] = localizePath(path, locale);
+  }
+  languages["x-default"] = localizePath(path, DEFAULT_LOCALE);
+  return languages;
 }
 
 /** Root metadata: title template, canonical base, favicon and OG defaults. */
-export function buildRootMetadata(config: ResolvedRuntimeConfig): Metadata {
+export function buildRootMetadata(
+  config: ResolvedRuntimeConfig,
+  locale: Locale = DEFAULT_LOCALE,
+): Metadata {
   const siteUrl = getSiteUrl(config);
   const { seo, store } = config;
 
@@ -52,11 +76,11 @@ export function buildRootMetadata(config: ResolvedRuntimeConfig): Metadata {
       template: seo.titleTemplate && seo.titleTemplate.includes("%s") ? seo.titleTemplate : `%s | ${store.name}`,
     },
     applicationName: store.name,
-    alternates: { canonical: "/" },
+    alternates: { canonical: localizePath("/", locale), languages: languageAlternates("/") },
     openGraph: {
       type: "website",
       siteName: store.name,
-      url: siteUrl,
+      url: new URL(localizePath("/", locale), `${siteUrl}/`).toString(),
       title: seo.defaultTitle || store.name,
       ...(seo.defaultDescription ? { description: seo.defaultDescription } : {}),
       ...(seo.defaultOgImageUrl ? { images: [{ url: seo.defaultOgImageUrl }] } : {}),
@@ -96,12 +120,18 @@ export function buildPageMetadata(config: ResolvedRuntimeConfig, input: PageSeoI
     metadata.description = description;
   }
 
-  if (input.canonicalPath) {
-    metadata.alternates = { canonical: input.canonicalPath };
+  const locale = input.locale ?? DEFAULT_LOCALE;
+  const canonical = input.canonicalPath ? localizePath(input.canonicalPath, locale) : null;
+
+  if (input.canonicalPath && canonical) {
+    metadata.alternates = {
+      canonical,
+      languages: languageAlternates(input.canonicalPath),
+    };
   }
 
   const ogImage = absoluteUrl(config, input.ogImageUrl ?? null) ?? config.seo.defaultOgImageUrl;
-  const ogUrl = absoluteUrl(config, input.canonicalPath ?? null);
+  const ogUrl = absoluteUrl(config, canonical);
 
   metadata.openGraph = {
     type: input.ogType ?? "website",

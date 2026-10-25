@@ -1,20 +1,13 @@
-import Link from "next/link";
+import { Link } from "@/i18n/Link";
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { PRODUCT_SORTS, type ProductSort } from "@/lib/catalog/queries";
+import { localizePath } from "@/i18n/paths";
+import { getI18n } from "@/i18n/server";
 import type { Category } from "@/lib/types/api";
 import { cn } from "@/lib/utils/cn";
-
-const SORT_LABELS: Record<ProductSort, string> = {
-  relevance: "Relevance",
-  newest: "Newest",
-  price_asc: "Price: low to high",
-  price_desc: "Price: high to low",
-  name_asc: "Name: A to Z",
-  name_desc: "Name: Z to A",
-};
 
 export interface ShopFiltersState {
   q: string | null;
@@ -24,6 +17,18 @@ export interface ShopFiltersState {
   maxPriceText: string | null;
   inStock: boolean;
   sort: ProductSort | null;
+}
+
+/** How many filters are actually narrowing the listing right now. */
+export function countActiveFilters(state: ShopFiltersState): number {
+  return [
+    Boolean(state.q),
+    Boolean(state.category),
+    Boolean(state.minPriceText),
+    Boolean(state.maxPriceText),
+    state.inStock,
+    Boolean(state.sort),
+  ].filter(Boolean).length;
 }
 
 export interface ShopFiltersProps {
@@ -37,6 +42,14 @@ export interface ShopFiltersProps {
   /** Hides the search box when the page already is the search results. */
   showSearch?: boolean;
   currencySymbol: string;
+  /**
+   * Prefix for every control id. The panel is rendered twice on a listing
+   * page - once in the sidebar, once inside the mobile sheet - so the two
+   * copies must not produce duplicate ids for the same label.
+   */
+  idPrefix?: string;
+  /** Drops the card shell, for when the panel is already inside a sheet. */
+  bare?: boolean;
   className?: string;
 }
 
@@ -44,44 +57,52 @@ export interface ShopFiltersProps {
  * Filter panel.
  *
  * A plain GET form, so filtering works without JavaScript and every state is a
- * shareable URL. Submitting resets to page 1 by simply not carrying `page`.
+ * shareable URL - posted to the listing of the language being read, because a
+ * form `action` is not a `Link` and would otherwise drop a Dutch visitor back
+ * on the English page. Submitting resets to page 1 by simply not carrying `page`.
  * The sort options are exactly the backend allowlist (contract 4) - an invalid
  * value would be a 422, so none can be constructed here.
  */
-export function ShopFilters({
+export async function ShopFilters({
   action,
   state,
   categories,
   showCategory = true,
   showSearch = true,
   currencySymbol,
+  idPrefix = "filter",
+  bare = false,
   className,
 }: ShopFiltersProps) {
-  const hasActiveFilters =
-    Boolean(state.q) ||
-    Boolean(state.category) ||
-    Boolean(state.minPriceText) ||
-    Boolean(state.maxPriceText) ||
-    state.inStock ||
-    Boolean(state.sort);
+  const { locale, m } = await getI18n();
+  const t = m.filters;
+  const hasActiveFilters = countActiveFilters(state) > 0;
+  const id = (name: string) => `${idPrefix}-${name}`;
+
+  /** Native select, styled to match the M3 filled text field. */
+  const selectClasses = cn(
+    "h-12 w-full appearance-none rounded-md border border-line-strong bg-surface-low px-4 text-body-md text-ink",
+    "transition-[background-color,border-color] duration-200 ease-(--ease-standard)",
+    "hover:border-ink-subtle hover:bg-surface-container focus:border-brand focus:bg-surface",
+  );
 
   return (
     <form
-      action={action}
+      action={localizePath(action, locale)}
       method="get"
-      className={cn("surface-card space-y-4 p-4", className)}
-      aria-label="Product filters"
+      className={cn("space-y-5", !bare && "surface-card p-5", className)}
+      aria-label={t.form}
     >
       {showSearch ? (
-        <div className="space-y-1.5">
-          <Label htmlFor="filter-q">Search</Label>
+        <div className="space-y-2">
+          <Label htmlFor={id("q")}>{t.search}</Label>
           <Input
-            id="filter-q"
+            id={id("q")}
             type="search"
             name="q"
             maxLength={100}
             defaultValue={state.q ?? ""}
-            placeholder="Product name or SKU"
+            placeholder={t.searchPlaceholder}
           />
         </div>
       ) : (
@@ -89,15 +110,15 @@ export function ShopFilters({
       )}
 
       {showCategory && categories && categories.length > 0 ? (
-        <div className="space-y-1.5">
-          <Label htmlFor="filter-category">Category</Label>
+        <div className="space-y-2">
+          <Label htmlFor={id("category")}>{t.category}</Label>
           <select
-            id="filter-category"
+            id={id("category")}
             name="category"
             defaultValue={state.category ?? ""}
-            className="h-11 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink"
+            className={selectClasses}
           >
-            <option value="">All categories</option>
+            <option value="">{t.allCategories}</option>
             {categories.map((category) => (
               <option key={category.id} value={category.slug}>
                 {category.name}
@@ -108,71 +129,71 @@ export function ShopFilters({
         </div>
       ) : null}
 
-      <fieldset className="space-y-1.5">
-        <legend className="text-sm font-medium text-ink">
-          Price <span className="font-normal text-ink-muted">({currencySymbol})</span>
+      <fieldset className="space-y-2">
+        <legend className="text-label-lg text-ink">
+          {t.price} <span className="font-normal text-ink-muted">({currencySymbol})</span>
         </legend>
         <div className="flex items-center gap-2">
           <div className="flex-1">
-            <label htmlFor="filter-min-price" className="sr-only">
-              Minimum price
+            <label htmlFor={id("min-price")} className="sr-only">
+              {t.minPrice}
             </label>
             <Input
-              id="filter-min-price"
+              id={id("min-price")}
               name="min"
               type="text"
               inputMode="decimal"
               pattern="[0-9]*\.?[0-9]*"
               defaultValue={state.minPriceText ?? ""}
-              placeholder="Min"
+              placeholder={t.min}
             />
           </div>
           <span aria-hidden="true" className="text-ink-subtle">
             &ndash;
           </span>
           <div className="flex-1">
-            <label htmlFor="filter-max-price" className="sr-only">
-              Maximum price
+            <label htmlFor={id("max-price")} className="sr-only">
+              {t.maxPrice}
             </label>
             <Input
-              id="filter-max-price"
+              id={id("max-price")}
               name="max"
               type="text"
               inputMode="decimal"
               pattern="[0-9]*\.?[0-9]*"
               defaultValue={state.maxPriceText ?? ""}
-              placeholder="Max"
+              placeholder={t.max}
             />
           </div>
         </div>
       </fieldset>
 
-      <div className="flex min-h-11 items-center gap-2.5">
+      <div className="flex min-h-12 items-center gap-3">
         <input
-          id="filter-in-stock"
+          id={id("in-stock")}
           type="checkbox"
           name="in_stock"
           value="1"
           defaultChecked={state.inStock}
-          className="size-5 rounded-xs border-line-strong accent-brand"
+          className="size-5 rounded-xs border-2 border-ink-subtle accent-brand"
         />
-        <label htmlFor="filter-in-stock" className="text-sm text-ink">
-          In stock only
+        <label htmlFor={id("in-stock")} className="text-body-md text-ink">
+          {t.inStock}
         </label>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="filter-sort">Sort by</Label>
+      <div className="space-y-2">
+        <Label htmlFor={id("sort")}>{t.sortBy}</Label>
         <select
-          id="filter-sort"
+          id={id("sort")}
           name="sort"
           defaultValue={state.sort ?? ""}
-          className="h-11 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink"
+          className={selectClasses}
         >
-          <option value="">Default</option>
+          <option value="">{t.sortDefault}</option>
           {PRODUCT_SORTS.map((sort) => (
             <option key={sort} value={sort}>
-              {SORT_LABELS[sort]}
+              {t.sort[sort]}
             </option>
           ))}
         </select>
@@ -180,11 +201,11 @@ export function ShopFilters({
 
       <div className="flex flex-wrap gap-2 pt-1">
         <Button type="submit" block className="sm:w-auto sm:flex-1">
-          Apply filters
+          {t.apply}
         </Button>
         {hasActiveFilters ? (
           <Button asChild variant="ghost" className="sm:w-auto">
-            <Link href={action}>Clear</Link>
+            <Link href={action}>{t.clear}</Link>
           </Button>
         ) : null}
       </div>

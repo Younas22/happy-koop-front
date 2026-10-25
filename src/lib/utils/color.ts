@@ -75,30 +75,71 @@ export function relativeLuminance(hex: string): number {
   return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
 }
 
+/** WCAG 2.1 contrast ratio between two colours, 1..21. */
+export function contrastRatio(a: string, b: string): number {
+  const first = relativeLuminance(a);
+  const second = relativeLuminance(b);
+  const lighter = Math.max(first, second);
+  const darker = Math.min(first, second);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
 /**
  * Picks white or near-black text for a brand background, so a light brand
  * colour does not end up with unreadable white labels.
  */
 export function readableInk(hex: string): string {
-  return relativeLuminance(hex) > 0.5 ? "#1A1A19" : "#FFFFFF";
+  return relativeLuminance(hex) > 0.5 ? "#0F172A" : "#FFFFFF";
+}
+
+/**
+ * Darkens `hex` in small steps until it clears 4.5:1 against `against`.
+ *
+ * This is what keeps the Material tonal pair honest: `on-container` has to be
+ * readable on `container` for *any* brand colour an administrator picks, and
+ * a fixed darken factor cannot promise that for a colour that starts out very
+ * light (yellow) or very dark (navy). Falls back to the near-black ink, which
+ * clears 4.5:1 on every container this function can produce.
+ */
+function darkenUntilReadable(hex: string, against: string): string {
+  for (let step = 0; step <= 18; step += 1) {
+    const candidate = darken(hex, step * 0.05);
+    if (contrastRatio(candidate, against) >= 4.5) return candidate;
+  }
+  return "#11182A";
 }
 
 export interface BrandTokens {
   brand: string;
   brandHover: string;
   brandActive: string;
+  /** Accent chip behind small marks: active nav, brand badges. */
   brandTint: string;
+  /** One step lighter than the tint, for whole panels and table heads. */
+  brandSurface: string;
+  /**
+   * M3 primary-container: the filled tonal surface behind a secondary button,
+   * a selected chip or an active nav item.
+   */
+  brandContainer: string;
+  /** M3 on-primary-container: text and icons drawn on `brandContainer`. */
+  brandOnContainer: string;
   brandInk: string;
 }
 
 /** Derives the full brand token set from a single admin-chosen colour. */
 export function deriveBrandTokens(primaryColor: string | null | undefined): BrandTokens {
   const brand = normalizeBrandHex(primaryColor);
+  const brandContainer = lighten(brand, 0.8);
+
   return {
     brand,
     brandHover: darken(brand, 0.12),
     brandActive: darken(brand, 0.24),
-    brandTint: lighten(brand, 0.92),
+    brandTint: lighten(brand, 0.84),
+    brandSurface: lighten(brand, 0.94),
+    brandContainer,
+    brandOnContainer: darkenUntilReadable(brand, brandContainer),
     brandInk: readableInk(brand),
   };
 }

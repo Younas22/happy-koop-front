@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/Link";
 import * as React from "react";
 
 /**
@@ -19,12 +19,12 @@ export function AuthShell({
   return (
     <div className="page-container py-10 sm:py-14">
       <div className="mx-auto w-full max-w-md">
-        <h1 className="text-2xl font-semibold text-ink sm:text-3xl">{title}</h1>
-        {description ? <p className="mt-2 text-sm text-ink-muted">{description}</p> : null}
+        <h1 className="text-headline-sm text-ink sm:text-headline-md">{title}</h1>
+        {description ? <p className="mt-2 text-body-md text-ink-muted">{description}</p> : null}
 
-        <div className="surface-card mt-6 p-4 sm:p-6">{children}</div>
+        <div className="surface-card mt-6 p-5 sm:p-7">{children}</div>
 
-        {footer ? <div className="mt-5 text-sm text-ink-muted">{footer}</div> : null}
+        {footer ? <div className="mt-5 text-body-md text-ink-muted">{footer}</div> : null}
       </div>
     </div>
   );

@@ -55,7 +55,7 @@ export function FormField({
       </Label>
 
       {description ? (
-        <p id={descriptionId} className="text-xs text-ink-muted">
+        <p id={descriptionId} className="text-body-sm text-ink-muted">
           {description}
         </p>
       ) : null}
@@ -70,7 +70,7 @@ export function FormField({
 
       <div aria-live="polite">
         {error ? (
-          <p id={errorId} className="text-xs font-medium text-danger">
+          <p id={errorId} className="text-label-md text-danger">
             {error}
           </p>
         ) : null}

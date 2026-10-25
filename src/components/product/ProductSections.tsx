@@ -7,6 +7,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/Accordion";
+import { fmt } from "@/i18n/format";
+import { getMessages } from "@/i18n/server";
 import { formatMoney } from "@/lib/money";
 import type { ProductDetail } from "@/lib/types/api";
 
@@ -30,22 +32,28 @@ function SectionShell({
 }) {
   return (
     <section id={id} className="border-t border-line pt-8">
-      <h2 className="text-lg font-semibold text-ink sm:text-xl">{heading}</h2>
+      <h2 className="text-title-lg text-ink sm:text-xl">{heading}</h2>
       <div className="mt-4">{children}</div>
     </section>
   );
 }
 
-export function ValueProps({ product }: { product: ProductDetail }) {
+/** Section headings, in the page's language. */
+async function sectionLabels() {
+  return (await getMessages()).product.sections;
+}
+
+export async function ValueProps({ product }: { product: ProductDetail }) {
   if (product.valueProps.length === 0) return null;
+  const t = await sectionLabels();
 
   return (
-    <SectionShell heading="Why you might like it">
+    <SectionShell heading={t.valueProps}>
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
         {product.valueProps.map((prop) => (
           <li key={prop.title} className="surface-card p-4">
-            <h3 className="text-sm font-semibold text-ink">{prop.title}</h3>
-            {prop.body ? <p className="mt-1.5 text-sm text-ink-muted">{prop.body}</p> : null}
+            <h3 className="text-title-sm text-ink">{prop.title}</h3>
+            {prop.body ? <p className="mt-1.5 text-body-md text-ink-muted">{prop.body}</p> : null}
           </li>
         ))}
       </ul>
@@ -57,20 +65,21 @@ export function ValueProps({ product }: { product: ProductDetail }) {
  * Product-in-use media: everything after the first image, plus any video.
  * Shown only when there is genuinely more media than the gallery needs.
  */
-export function InUseMedia({ product }: { product: ProductDetail }) {
+export async function InUseMedia({ product }: { product: ProductDetail }) {
   const extra = [...product.media].sort((a, b) => a.sortOrder - b.sortOrder).slice(1);
   const images = extra.filter((item) => item.type === "image");
   const videos = extra.filter((item) => item.type === "video");
 
   if (images.length === 0 && videos.length === 0) return null;
+  const { product: p } = await getMessages();
 
   return (
-    <SectionShell heading="In use">
+    <SectionShell heading={p.sections.inUse}>
       <div className="space-y-4">
         {images.length > 0 ? (
           <ul className="grid grid-cols-2 gap-3 lg:grid-cols-3 sm:gap-4">
             {images.map((item) => (
-              <li key={item.id} className="surface-card relative aspect-4/3 overflow-hidden bg-sunken">
+              <li key={item.id} className="surface-card relative aspect-4/3 overflow-hidden bg-surface-container">
                 <Image
                   src={item.url}
                   alt={item.alt ?? ""}
@@ -92,7 +101,7 @@ export function InUseMedia({ product }: { product: ProductDetail }) {
             controls
             preload="none"
             className="surface-card w-full"
-            aria-label={item.alt ?? `${product.name} video`}
+            aria-label={item.alt ?? fmt(p.video, { name: product.name })}
           />
         ))}
       </div>
@@ -100,12 +109,13 @@ export function InUseMedia({ product }: { product: ProductDetail }) {
   );
 }
 
-export function WhatsIncluded({ product }: { product: ProductDetail }) {
+export async function WhatsIncluded({ product }: { product: ProductDetail }) {
   if (product.whatsIncluded.length === 0) return null;
+  const t = await sectionLabels();
 
   return (
-    <SectionShell heading="What's in the box">
-      <ul className="space-y-2 text-sm text-ink-muted">
+    <SectionShell heading={t.included}>
+      <ul className="space-y-2 text-body-md text-ink-muted">
         {product.whatsIncluded.map((entry) => (
           <li key={entry} className="flex gap-2.5">
             <Package className="mt-0.5 size-4 shrink-0 text-ink-subtle" aria-hidden="true" />
@@ -117,11 +127,12 @@ export function WhatsIncluded({ product }: { product: ProductDetail }) {
   );
 }
 
-export function Description({ product }: { product: ProductDetail }) {
+export async function Description({ product }: { product: ProductDetail }) {
   if (!product.description) return null;
+  const t = await sectionLabels();
 
   return (
-    <SectionShell heading="Product details">
+    <SectionShell heading={t.details}>
       {/* Sanitized server-side (contract 4). */}
       <div
         className="prose-hk max-w-prose"
@@ -135,15 +146,16 @@ export function Description({ product }: { product: ProductDetail }) {
  * Specifications, grouped exactly as `specificationGroups` defines them.
  * Groups with no items are dropped, and a group's own ordering is respected.
  */
-export function Specifications({ product }: { product: ProductDetail }) {
+export async function Specifications({ product }: { product: ProductDetail }) {
   const groups = [...product.specificationGroups]
     .filter((group) => group.items.length > 0)
     .sort((a, b) => a.sortOrder - b.sortOrder);
 
   if (groups.length === 0) return null;
+  const t = await sectionLabels();
 
   return (
-    <SectionShell id="specifications" heading="Specifications">
+    <SectionShell id="specifications" heading={t.specifications}>
       <Accordion
         type="multiple"
         defaultValue={[groups[0].group]}
@@ -159,8 +171,8 @@ export function Specifications({ product }: { product: ProductDetail }) {
                     key={`${group.group}-${item.label}`}
                     className="grid grid-cols-1 gap-0.5 py-2 sm:grid-cols-[12rem_1fr] sm:gap-4"
                   >
-                    <dt className="text-sm text-ink-muted">{item.label}</dt>
-                    <dd className="text-sm font-medium text-ink">
+                    <dt className="text-body-md text-ink-muted">{item.label}</dt>
+                    <dd className="text-label-lg text-ink">
                       {item.value}
                       {item.unit ? <span className="ml-1 font-normal">{item.unit}</span> : null}
                     </dd>
@@ -179,7 +191,7 @@ export function Specifications({ product }: { product: ProductDetail }) {
  * Shipping information. Only renders configured text; `estimateText` is
  * omitted when null, because a delivery estimate is never invented.
  */
-export function ShippingInfo({
+export async function ShippingInfo({
   product,
   storeShippingSummary,
 }: {
@@ -191,10 +203,11 @@ export function ShippingInfo({
   const hasAnything = Boolean(summary || info?.estimateText || info?.freeShippingThreshold);
 
   if (!hasAnything) return null;
+  const t = await sectionLabels();
 
   return (
-    <SectionShell heading="Shipping &amp; delivery">
-      <div className="surface-card space-y-2.5 p-4 text-sm text-ink-muted">
+    <SectionShell heading={t.shipping}>
+      <div className="surface-card space-y-2.5 p-4 text-body-md text-ink-muted">
         {summary ? (
           <p className="flex gap-2.5">
             <Truck className="mt-0.5 size-4 shrink-0 text-ink-subtle" aria-hidden="true" />
@@ -210,7 +223,7 @@ export function ShippingInfo({
         {info?.freeShippingThreshold ? (
           <p className="flex gap-2.5">
             <Check className="mt-0.5 size-4 shrink-0 text-ink-subtle" aria-hidden="true" />
-            <span>Free shipping on orders over {formatMoney(info.freeShippingThreshold)}.</span>
+            <span>{fmt(t.freeShippingOn, { amount: formatMoney(info.freeShippingThreshold) })}</span>
           </p>
         ) : null}
       </div>
@@ -219,7 +232,7 @@ export function ShippingInfo({
 }
 
 /** Returns and warranty, only as the store configured them. */
-export function ReturnsInfo({
+export async function ReturnsInfo({
   product,
   storeReturnsSummary,
 }: {
@@ -231,16 +244,15 @@ export function ReturnsInfo({
   const hasAnything = Boolean(summary || info?.windowDays || info?.warrantyText);
 
   if (!hasAnything) return null;
+  const t = await sectionLabels();
 
   return (
-    <SectionShell heading="Returns &amp; warranty">
-      <div className="surface-card space-y-2.5 p-4 text-sm text-ink-muted">
+    <SectionShell heading={t.returns}>
+      <div className="surface-card space-y-2.5 p-4 text-body-md text-ink-muted">
         {info?.windowDays ? (
           <p className="flex gap-2.5">
             <RotateCcw className="mt-0.5 size-4 shrink-0 text-ink-subtle" aria-hidden="true" />
-            <span>
-              {info.windowDays}-day returns window.
-            </span>
+            <span>{fmt(t.returnsWindow, { days: info.windowDays })}</span>
           </p>
         ) : null}
         {summary ? <p>{summary}</p> : null}
@@ -250,12 +262,13 @@ export function ReturnsInfo({
   );
 }
 
-export function Faqs({ product }: { product: ProductDetail }) {
+export async function Faqs({ product }: { product: ProductDetail }) {
   const faqs = [...product.faqs].sort((a, b) => a.sortOrder - b.sortOrder);
   if (faqs.length === 0) return null;
+  const t = await sectionLabels();
 
   return (
-    <SectionShell id="faqs" heading="Questions">
+    <SectionShell id="faqs" heading={t.questions}>
       <Accordion type="multiple" className="surface-card divide-y divide-line px-4">
         {faqs.map((faq) => (
           <AccordionItem key={faq.id} value={String(faq.id)}>

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
 import {
   fetchAdminCategories,
-  fetchAdminMedia,
+  fetchAllAdminMedia,
   fetchAdminProduct,
   fetchAdminProducts,
 } from "@/lib/admin/queries";
@@ -45,7 +45,7 @@ export default async function AdminEditProductPage({ params }: PageProps<"/admin
   const [product, categories, media, candidates] = await Promise.all([
     fetchAdminProduct(productId),
     fetchAdminCategories(),
-    fetchAdminMedia({ type: "image" }),
+    fetchAllAdminMedia({ type: "image" }),
     fetchAdminProducts({ perPage: 60, sort: "name_asc" }),
   ]);
 
@@ -106,7 +106,7 @@ export default async function AdminEditProductPage({ params }: PageProps<"/admin
         <ProductForm
           product={detail}
           categories={categories.data ?? []}
-          media={media.data?.data ?? []}
+          media={media.data?.assets ?? []}
           currency={config.locale.currency}
           minorUnitExponent={config.locale.minorUnitExponent}
         />

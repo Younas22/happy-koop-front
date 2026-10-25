@@ -1,11 +1,12 @@
 import { ImageOff } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/Link";
 
 import { PriceDisplay } from "@/components/ui/PriceDisplay";
 import { Badge, resolveBadgeTone } from "@/components/ui/Badge";
 import { Rating } from "@/components/ui/Rating";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { getMessages } from "@/i18n/server";
 import type { ProductCard as ProductCardData } from "@/lib/types/api";
 import { cn } from "@/lib/utils/cn";
 
@@ -22,30 +23,36 @@ const DEFAULT_SIZES =
   "(min-width: 1280px) 20rem, (min-width: 1024px) 23vw, (min-width: 640px) 30vw, 45vw";
 
 /**
- * Product card.
+ * Product card - a Material 3 elevated card.
+ *
+ * It rests at elevation 1 and rises to 3 on hover (`surface-card-interactive`),
+ * the image sits in a tonal well so a photograph with a white background still
+ * has an edge, and the price is the largest thing in the body because that is
+ * what the card is for.
  *
  * Every element is conditional on real data: no rating row at zero reviews, no
  * compare-at price unless the backend supplied one, no badge unless an
  * administrator set it, and no placeholder image text pretending to be a photo.
  */
-export function ProductCard({
+export async function ProductCard({
   product,
   priority = false,
   sizes = DEFAULT_SIZES,
   className,
 }: ProductCardProps) {
+  const { productCard: t } = await getMessages();
   const soldOut = !product.availability.inStock;
 
   return (
     <article
       className={cn(
-        "group surface-card flex h-full flex-col overflow-hidden transition-shadow duration-200 ease-(--ease-out-soft) hover:shadow-md",
+        "group surface-card-interactive flex h-full flex-col overflow-hidden",
         className,
       )}
     >
       <Link
         href={`/product/${product.slug}`}
-        className="relative block aspect-square overflow-hidden bg-sunken"
+        className="relative block aspect-square overflow-hidden rounded-t-[calc(var(--radius-lg)-1px)] bg-surface-container"
         tabIndex={-1}
         aria-hidden="true"
       >
@@ -56,20 +63,25 @@ export function ProductCard({
             fill
             sizes={sizes}
             priority={priority}
-            className="object-cover transition-transform duration-300 ease-(--ease-out-soft) group-hover:scale-[1.02]"
+            className="object-cover transition-transform duration-500 ease-(--ease-emphasized-decelerate) group-hover:scale-[1.04]"
           />
         ) : (
           <span className="flex h-full items-center justify-center">
-            <ImageOff className="size-7 text-ink-subtle" aria-hidden="true" />
-            <span className="sr-only">No image available</span>
+            <ImageOff className="size-7 text-ink-subtle/70" aria-hidden="true" />
+            <span className="sr-only">{t.noImage}</span>
           </span>
         )}
 
-        {(product.badges.length > 0 || soldOut) ? (
-          <div className="absolute top-2 left-2 flex flex-wrap gap-1">
-            {soldOut ? <Badge tone="neutral">Sold out</Badge> : null}
+        {product.badges.length > 0 || soldOut ? (
+          // Raised, because a flat tint disappears into a photograph.
+          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+            {soldOut ? (
+              <Badge tone="neutral" raised>
+                {t.soldOut}
+              </Badge>
+            ) : null}
             {product.badges.map((badge) => (
-              <Badge key={badge.label} tone={resolveBadgeTone(badge.tone)}>
+              <Badge key={badge.label} tone={resolveBadgeTone(badge.tone)} raised>
                 {badge.label}
               </Badge>
             ))}
@@ -77,21 +89,24 @@ export function ProductCard({
         ) : null}
       </Link>
 
-      <div className="flex flex-1 flex-col gap-1.5 p-3 sm:p-4">
-        <h3 className="text-sm font-medium text-ink">
-          <Link href={`/product/${product.slug}`} className="rounded-xs hover:underline">
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <h3 className="text-title-sm leading-snug text-ink">
+          <Link
+            href={`/product/${product.slug}`}
+            className="rounded-xs transition-colors group-hover:text-brand"
+          >
             {product.name}
           </Link>
         </h3>
 
         {product.shortDescription ? (
-          <p className="line-clamp-2 text-xs text-ink-muted">{product.shortDescription}</p>
+          <p className="line-clamp-2 text-body-sm text-ink-muted">{product.shortDescription}</p>
         ) : null}
 
         {/* Rating renders nothing when there are no approved reviews. */}
         <Rating rating={product.rating} size="sm" className="mt-0.5" />
 
-        <div className="mt-auto pt-2">
+        <div className="mt-auto pt-3">
           <PriceDisplay price={product.price} compareAtPrice={product.compareAtPrice} size="md" />
         </div>
       </div>
@@ -104,7 +119,7 @@ export function ProductCardSkeleton() {
   return (
     <div className="surface-card overflow-hidden">
       <Skeleton shape="block" className="aspect-square rounded-none" />
-      <div className="space-y-2 p-3 sm:p-4">
+      <div className="space-y-2 p-4">
         <Skeleton className="h-4 w-4/5" />
         <Skeleton className="h-3 w-3/5" />
         <Skeleton className="h-5 w-20" />

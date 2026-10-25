@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { CheckboxField } from "@/components/ui/Checkbox";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
-import { updateProfileAction } from "@/app/account/actions";
+import { updateProfileAction } from "@/app/(storefront)/account/actions";
 import { applyFieldErrors } from "@/lib/forms/api-errors";
 import type { CustomerProfile } from "@/lib/types/api";
 
@@ -107,7 +107,7 @@ export function ProfileForm({ profile }: { profile: CustomerProfile }) {
           Save changes
         </Button>
         {form.formState.isDirty ? (
-          <span className="text-xs text-ink-muted">You have unsaved changes.</span>
+          <span className="text-body-sm text-ink-muted">You have unsaved changes.</span>
         ) : null}
       </div>
     </form>

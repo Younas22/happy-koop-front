@@ -1,8 +1,27 @@
+import {
+  BadgeCheck,
+  Box,
+  GripHorizontal,
+  Leaf,
+  LifeBuoy,
+  Lock,
+  MoveHorizontal,
+  Package,
+  RefreshCw,
+  Ruler,
+  ShieldCheck,
+  Sparkles,
+  Truck,
+  Undo2,
+  Wrench,
+} from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/Link";
 
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { Button } from "@/components/ui/Button";
+import { plural } from "@/i18n/format";
+import { getI18n } from "@/i18n/server";
 import type {
   HomeBenefitsSection,
   HomeCategoryTilesSection,
@@ -21,8 +40,51 @@ import type {
  * renders nothing when its own payload is empty - no empty headings.
  */
 
+/**
+ * Benefit icons.
+ *
+ * `item.icon` is a free-form string an administrator typed, so it is matched
+ * against this allowlist rather than used to look a component up dynamically:
+ * an unknown name must not be able to reach for an arbitrary export, and the
+ * bundle should only carry the glyphs that can actually render. An
+ * unrecognised or absent name falls back to a neutral mark, so a benefit never
+ * loses its tile over a typo.
+ */
+const BENEFIT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  "badge-check": BadgeCheck,
+  box: Box,
+  "grip-horizontal": GripHorizontal,
+  leaf: Leaf,
+  "life-buoy": LifeBuoy,
+  lock: Lock,
+  "move-horizontal": MoveHorizontal,
+  package: Package,
+  "refresh-cw": RefreshCw,
+  ruler: Ruler,
+  "shield-check": ShieldCheck,
+  sparkles: Sparkles,
+  truck: Truck,
+  "undo-2": Undo2,
+  wrench: Wrench,
+};
+
+function BenefitIcon({ name }: { name: string | null }) {
+  const Icon = BENEFIT_ICONS[(name ?? "").trim().toLowerCase()] ?? Sparkles;
+
+  return (
+    <span
+      className="flex size-12 items-center justify-center rounded-full bg-brand-container text-brand-on-container"
+      aria-hidden="true"
+    >
+      <Icon className="size-6" />
+    </span>
+  );
+}
+
 function SectionHeading({ children }: { children: string }) {
-  return <h2 className="text-xl font-semibold text-ink sm:text-2xl">{children}</h2>;
+  return (
+    <h2 className="text-headline-sm text-ink sm:text-headline-md">{children}</h2>
+  );
 }
 
 function Hero({ hero }: { hero: HomeHero }) {
@@ -30,12 +92,18 @@ function Hero({ hero }: { hero: HomeHero }) {
 
   return (
     <section className="page-container pt-6 sm:pt-8">
-      <div className="surface-card overflow-hidden">
+      <div className="surface-card overflow-hidden rounded-xl elevation-2">
         <div className="grid items-stretch lg:grid-cols-2">
-          <div className="flex flex-col justify-center gap-4 p-6 sm:p-10">
-            <h1 className="text-2xl font-semibold text-ink sm:text-4xl">{hero.headline}</h1>
+          {/* The M3 primary-container, so the hero reads as one tonal block
+              against the canvas without a gradient or a tinted image wash. */}
+          <div className="flex flex-col justify-center gap-5 bg-brand-container p-6 sm:p-10 lg:p-14">
+            <h1 className="text-headline-md text-brand-on-container text-balance sm:text-display-sm">
+              {hero.headline}
+            </h1>
             {hero.subheadline ? (
-              <p className="max-w-prose text-base text-ink-muted">{hero.subheadline}</p>
+              <p className="max-w-prose text-body-lg text-brand-on-container sm:text-title-md sm:font-normal">
+                {hero.subheadline}
+              </p>
             ) : null}
             {hasCta ? (
               <div>
@@ -47,7 +115,7 @@ function Hero({ hero }: { hero: HomeHero }) {
           </div>
 
           {hero.imageUrl ? (
-            <div className="relative order-first aspect-4/3 bg-sunken lg:order-last lg:aspect-auto lg:min-h-80">
+            <div className="relative order-first aspect-4/3 bg-surface-container lg:order-last lg:aspect-auto lg:min-h-100">
               <Image
                 src={hero.imageUrl}
                 alt=""
@@ -64,37 +132,38 @@ function Hero({ hero }: { hero: HomeHero }) {
   );
 }
 
-function CategoryTiles({ section }: { section: HomeCategoryTilesSection }) {
+async function CategoryTiles({ section }: { section: HomeCategoryTilesSection }) {
   if (section.categories.length === 0) return null;
+  const { locale, m } = await getI18n();
 
   return (
-    <section className="page-container pt-10 sm:pt-14">
+    <section className="page-container pt-12 sm:pt-16">
       {section.heading ? <SectionHeading>{section.heading}</SectionHeading> : null}
-      <ul className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+      <ul className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {section.categories.map((category) => (
           <li key={category.id}>
             <Link
               href={`/category/${category.slug}`}
-              className="surface-card group flex h-full flex-col overflow-hidden transition-shadow duration-200 hover:shadow-md"
+              className="surface-card-interactive group flex h-full flex-col overflow-hidden"
             >
               {category.imageUrl ? (
-                <span className="relative block aspect-3/2 bg-sunken">
+                <span className="relative block aspect-3/2 overflow-hidden rounded-t-[calc(var(--radius-lg)-1px)] bg-surface-container">
                   <Image
                     src={category.imageUrl}
                     alt=""
                     fill
                     sizes="(min-width: 1024px) 23vw, 45vw"
-                    className="object-cover"
+                    className="object-cover transition-transform duration-500 ease-(--ease-emphasized-decelerate) group-hover:scale-[1.04]"
                   />
                 </span>
               ) : null}
-              <span className="flex flex-1 flex-col gap-0.5 p-3 sm:p-4">
-                <span className="text-sm font-medium text-ink group-hover:underline">
+              <span className="flex flex-1 flex-col gap-0.5 p-4">
+                <span className="text-title-sm text-ink transition-colors group-hover:text-brand">
                   {category.name}
                 </span>
                 {category.productCount > 0 ? (
-                  <span className="text-xs text-ink-muted">
-                    {category.productCount} {category.productCount === 1 ? "product" : "products"}
+                  <span className="text-body-sm text-ink-muted">
+                    {plural(locale, category.productCount, m.home.productCount)}
                   </span>
                 ) : null}
               </span>
@@ -110,9 +179,9 @@ function ProductGridSection({ section }: { section: HomeProductGridSection }) {
   if (section.products.length === 0) return null;
 
   return (
-    <section className="page-container pt-10 sm:pt-14">
+    <section className="page-container pt-12 sm:pt-16">
       {section.heading ? <SectionHeading>{section.heading}</SectionHeading> : null}
-      <ProductGrid products={section.products} className="mt-4" priorityCount={2} />
+      <ProductGrid products={section.products} className="mt-5" priorityCount={2} />
     </section>
   );
 }
@@ -121,13 +190,16 @@ function Benefits({ section }: { section: HomeBenefitsSection }) {
   if (section.items.length === 0) return null;
 
   return (
-    <section className="page-container pt-10 sm:pt-14">
+    <section className="page-container pt-12 sm:pt-16">
       {section.heading ? <SectionHeading>{section.heading}</SectionHeading> : null}
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
+      <ul className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {section.items.map((item) => (
-          <li key={item.title} className="surface-card p-4">
-            <h3 className="text-sm font-semibold text-ink">{item.title}</h3>
-            {item.body ? <p className="mt-1.5 text-sm text-ink-muted">{item.body}</p> : null}
+          <li key={item.title} className="surface-card p-5 sm:p-6">
+            <BenefitIcon name={item.icon} />
+            <h3 className="mt-4 text-title-sm text-ink">{item.title}</h3>
+            {item.body ? (
+              <p className="mt-1.5 text-body-md leading-relaxed text-ink-muted">{item.body}</p>
+            ) : null}
           </li>
         ))}
       </ul>
@@ -139,11 +211,11 @@ function RichText({ section }: { section: HomeRichTextSection }) {
   if (!section.html) return null;
 
   return (
-    <section className="page-container pt-10 sm:pt-14">
+    <section className="page-container pt-12 sm:pt-16">
       {section.heading ? <SectionHeading>{section.heading}</SectionHeading> : null}
       {/* Sanitized server-side (contract 4). */}
       <div
-        className="prose-hk mt-4 max-w-prose"
+        className="prose-hk mt-5 max-w-prose"
         dangerouslySetInnerHTML={{ __html: section.html }}
       />
     </section>

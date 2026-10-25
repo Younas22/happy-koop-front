@@ -1,10 +1,10 @@
 "use client";
 
 import { Home, MapPin, Package, UserCog } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link } from "@/i18n/Link";
 
 import { cn } from "@/lib/utils/cn";
+import { usePathnameWithoutLocale } from "@/i18n/client";
 
 const ITEMS = [
   { href: "/account", label: "Overview", icon: Home },
@@ -21,7 +21,7 @@ const ITEMS = [
  * horizontal scroll. The current item is marked with `aria-current`.
  */
 export function AccountNav() {
-  const pathname = usePathname();
+  const pathname = usePathnameWithoutLocale();
 
   function isCurrent(href: string): boolean {
     if (href === "/account") return pathname === "/account";
@@ -46,11 +46,11 @@ export function AccountNav() {
                 href={item.href}
                 aria-current={current ? "page" : undefined}
                 className={cn(
-                  "tap-target flex items-center gap-2 rounded-md border px-3 text-sm font-medium transition-colors",
+                  "tap-target flex items-center gap-2 rounded-md border px-3 text-label-lg transition-colors",
                   "lg:w-full",
                   current
-                    ? "border-brand bg-brand-tint text-brand"
-                    : "border-transparent text-ink hover:bg-sunken",
+                    ? "border-brand bg-brand-container text-brand-on-container"
+                    : "state-layer border-transparent text-ink",
                 )}
               >
                 <Icon className="size-4 shrink-0" aria-hidden="true" />

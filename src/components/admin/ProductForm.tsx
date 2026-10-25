@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -231,6 +231,9 @@ export function ProductForm({
   const [formError, setFormError] = React.useState<string | null>(null);
 
   const [categoryIds, setCategoryIds] = React.useState<number[]>(product?.categoryIds ?? []);
+  /** Filters the attach-media grid. Selection is unaffected by it. */
+  const [mediaQuery, setMediaQuery] = React.useState("");
+
   const [mediaIds, setMediaIds] = React.useState<number[]>(
     product?.media.map((item) => item.id) ?? [],
   );
@@ -256,6 +259,16 @@ export function ProductForm({
     const parsed = Number.parseInt(trimmed, 10);
     return Number.isSafeInteger(parsed) ? parsed : null;
   }
+
+  const visibleMedia = React.useMemo(() => {
+    const needle = mediaQuery.trim().toLowerCase();
+    if (!needle) return media;
+    return media.filter((asset) =>
+      [asset.originalFilename, asset.alt, asset.folder, String(asset.id)].some((value) =>
+        (value ?? "").toLowerCase().includes(needle),
+      ),
+    );
+  }, [media, mediaQuery]);
 
   async function onSubmit(values: Values) {
     setFormError(null);
@@ -551,8 +564,33 @@ export function ProductForm({
                 Select the images for this product and mark one as the primary image. Selection
                 order is the display order.
               </p>
+
+              {/* The library can run to hundreds of uploads, so it is
+                  searchable here too - by filename, alt text, folder or id. */}
+              <div className="relative max-w-sm">
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-subtle"
+                  aria-hidden="true"
+                />
+                <label htmlFor="product-media-search" className="sr-only">
+                  Search the media library
+                </label>
+                <Input
+                  id="product-media-search"
+                  type="search"
+                  value={mediaQuery}
+                  onChange={(event) => setMediaQuery(event.target.value)}
+                  placeholder="Search images"
+                  className="pl-11"
+                />
+              </div>
+
+              {visibleMedia.length === 0 ? (
+                <p className="text-sm text-ink-muted">No image matches that search.</p>
+              ) : null}
+
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-                {media.map((asset) => {
+                {visibleMedia.map((asset) => {
                   const selected = mediaIds.includes(asset.id);
                   const position = mediaIds.indexOf(asset.id);
                   return (

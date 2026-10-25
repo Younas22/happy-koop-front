@@ -1,5 +1,9 @@
+"use client";
+
 import { Star } from "lucide-react";
 
+import { useI18n } from "@/i18n/client";
+import { fmt, plural } from "@/i18n/format";
 import type { Rating as RatingValue } from "@/lib/types/api";
 import { cn } from "@/lib/utils/cn";
 
@@ -28,12 +32,11 @@ const sizeClasses = {
  * reviews do.
  */
 export function Rating({ rating, size = "md", showCount = true, href, className }: RatingProps) {
+  const { locale, m } = useI18n();
   if (rating === null || rating.count <= 0) return null;
 
   const average = Math.max(0, Math.min(5, rating.average));
-  const label = `Rated ${average.toFixed(1)} out of 5 from ${rating.count} ${
-    rating.count === 1 ? "review" : "reviews"
-  }`;
+  const label = plural(locale, rating.count, m.ui.rated, { average: average.toFixed(1) });
 
   const stars = (
     <span className="relative inline-flex shrink-0" aria-hidden="true">
@@ -61,7 +64,7 @@ export function Rating({ rating, size = "md", showCount = true, href, className 
       {stars}
       <span className="sr-only">{label}</span>
       {showCount ? (
-        <span aria-hidden="true" className="text-xs text-ink-muted">
+        <span aria-hidden="true" className="text-body-sm text-ink-muted">
           {average.toFixed(1)} ({rating.count})
         </span>
       ) : null}
@@ -93,6 +96,7 @@ export interface RatingDistributionProps {
 
 /** Distribution bars, built only from real counts. */
 export function RatingDistribution({ distribution, total, className }: RatingDistributionProps) {
+  const { m } = useI18n();
   if (total <= 0) return null;
 
   return (
@@ -101,12 +105,12 @@ export function RatingDistribution({ distribution, total, className }: RatingDis
         const count = distribution[bucket] ?? 0;
         const percent = total > 0 ? Math.round((count / total) * 100) : 0;
         return (
-          <li key={bucket} className="flex items-center gap-2 text-xs text-ink-muted">
+          <li key={bucket} className="flex items-center gap-2 text-body-sm text-ink-muted">
             <span className="w-8 shrink-0 tabular-nums">{bucket} ★</span>
             <span
-              className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-sunken"
+              className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-surface-container"
               role="img"
-              aria-label={`${bucket} stars: ${count} of ${total} reviews`}
+              aria-label={fmt(m.ui.starBucket, { bucket, count, total })}
             >
               <span className="block h-full rounded-full bg-warning" style={{ width: `${percent}%` }} />
             </span>

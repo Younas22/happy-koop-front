@@ -1,3 +1,7 @@
+"use client";
+
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
 import type { Availability, DetailedAvailability } from "@/lib/types/api";
 import { cn } from "@/lib/utils/cn";
 
@@ -23,6 +27,7 @@ export function AvailabilityPill({
   showStockCount = false,
   className,
 }: AvailabilityPillProps) {
+  const { availability: t } = useMessages();
   const quantity =
     showStockCount && "quantity" in availability && availability.policy === "track"
       ? availability.quantity
@@ -31,26 +36,53 @@ export function AvailabilityPill({
   const config = (() => {
     switch (availability.state) {
       case "in_stock":
-        return { label: "In stock", dot: "bg-success", text: "text-success" };
+        return {
+          label: t.in_stock,
+          dot: "bg-success",
+          chip: "border-success-line bg-success-tint text-success",
+        };
       case "low_stock":
-        return { label: "Low stock", dot: "bg-warning", text: "text-warning" };
+        return {
+          label: t.low_stock,
+          dot: "bg-warning",
+          chip: "border-warning-line bg-warning-tint text-warning",
+        };
       case "out_of_stock":
-        return { label: "Out of stock", dot: "bg-ink-subtle", text: "text-ink-muted" };
+        return {
+          label: t.out_of_stock,
+          dot: "bg-ink-subtle",
+          chip: "border-line bg-surface-high text-ink-muted",
+        };
       case "preorder":
-        return { label: "Available to pre-order", dot: "bg-info", text: "text-info" };
+        return {
+          label: t.preorder,
+          dot: "bg-info",
+          chip: "border-info-line bg-info-tint text-info",
+        };
       case "unavailable":
       default:
-        return { label: "Unavailable", dot: "bg-ink-subtle", text: "text-ink-muted" };
+        return {
+          label: t.unavailable,
+          dot: "bg-ink-subtle",
+          chip: "border-line bg-surface-high text-ink-muted",
+        };
     }
   })();
 
   return (
-    <p className={cn("inline-flex items-center gap-1.5 text-sm font-medium", config.text, className)}>
+    // A tonal M3 chip: the state reads at a glance even without the dot.
+    <p
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-sm border px-2.5 py-1 text-label-lg",
+        config.chip,
+        className,
+      )}
+    >
       <span className={cn("size-2 shrink-0 rounded-full", config.dot)} aria-hidden="true" />
       {config.label}
       {quantity !== null && quantity > 0 ? (
         <span className="font-normal text-ink-muted">
-          &mdash; {quantity} left
+          &mdash; {fmt(t.left, { count: quantity })}
         </span>
       ) : null}
     </p>

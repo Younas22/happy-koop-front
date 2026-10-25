@@ -1,7 +1,6 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { useRouter } from "next/navigation";
 import * as React from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -14,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
+import { useLocalizedRouter, useMessages } from "@/i18n/client";
 
 export interface SearchDialogProps {
   open: boolean;
@@ -23,12 +23,13 @@ export interface SearchDialogProps {
 /**
  * Search entry point.
  *
- * It only navigates to `/search?q=...`; it never renders invented suggestions
- * or a fabricated "popular searches" list. Results come from the backend on
- * the search page.
+ * It only navigates to `/search?q=...` - in the language being read - and
+ * never renders invented suggestions or a fabricated "popular searches" list.
+ * Results come from the backend on the search page.
  */
 export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
-  const router = useRouter();
+  const router = useLocalizedRouter();
+  const m = useMessages();
   const [term, setTerm] = React.useState("");
   const inputId = React.useId();
 
@@ -50,13 +51,13 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>Search</DialogTitle>
-          <DialogDescription>Find products by name, description or SKU.</DialogDescription>
+          <DialogTitle>{m.search.title}</DialogTitle>
+          <DialogDescription>{m.search.description}</DialogDescription>
         </DialogHeader>
         <DialogBody>
           <form onSubmit={submit} className="flex gap-2" role="search">
             <label htmlFor={inputId} className="sr-only">
-              Search products
+              {m.header.searchProducts}
             </label>
             <Input
               id={inputId}
@@ -65,12 +66,12 @@ export function SearchDialog({ open, onOpenChange }: SearchDialogProps) {
               value={term}
               maxLength={100}
               autoFocus
-              placeholder="What are you looking for?"
+              placeholder={m.search.placeholder}
               onChange={(event) => setTerm(event.target.value)}
             />
             <Button type="submit" disabled={term.trim().length === 0}>
               <Search className="size-4" aria-hidden="true" />
-              <span>Search</span>
+              <span>{m.search.submit}</span>
             </Button>
           </form>
         </DialogBody>

@@ -12,7 +12,7 @@ import {
   deleteAddressAction,
   saveAddressAction,
   setDefaultAddressAction,
-} from "@/app/account/actions";
+} from "@/app/(storefront)/account/actions";
 import { AddressFields } from "@/components/address/AddressFields";
 import { AddressBlock } from "@/components/orders/OrderParts";
 import { Alert } from "@/components/ui/Alert";

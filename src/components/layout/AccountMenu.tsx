@@ -1,7 +1,6 @@
 "use client";
 
 import { LogOut, Package, Settings, User as UserIcon } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
@@ -13,6 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
+import { useMessages } from "@/i18n/client";
+import { Link } from "@/i18n/Link";
 import type { SessionResult, User } from "@/lib/types/api";
 
 /**
@@ -30,6 +31,7 @@ import type { SessionResult, User } from "@/lib/types/api";
  */
 export function AccountMenu() {
   const router = useRouter();
+  const m = useMessages();
   const [viewer, setViewer] = React.useState<User | null>(null);
   const [loaded, setLoaded] = React.useState(false);
   const [signingOut, setSigningOut] = React.useState(false);
@@ -70,19 +72,21 @@ export function AccountMenu() {
     return (
       <Link
         href="/login"
-        className="tap-target inline-flex items-center justify-center gap-1.5 rounded-md px-2 text-sm font-medium text-ink transition-colors hover:bg-sunken"
+        className="state-layer tap-target inline-flex items-center justify-center gap-1.5 rounded-full px-3 text-label-lg text-ink"
       >
         <UserIcon className="size-5" aria-hidden="true" />
-        <span className="hidden lg:inline">Sign in</span>
+        <span className="hidden xl:inline">{m.header.signIn}</span>
+        <span className="sr-only xl:hidden">{m.header.signIn}</span>
       </Link>
     );
   }
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="tap-target inline-flex items-center justify-center gap-1.5 rounded-md px-2 text-sm font-medium text-ink transition-colors hover:bg-sunken">
+      <DropdownMenuTrigger className="state-layer tap-target inline-flex items-center justify-center gap-1.5 rounded-full px-3 text-label-lg text-ink">
         <UserIcon className="size-5" aria-hidden="true" />
-        <span className="hidden max-w-24 truncate lg:inline">{viewer.name}</span>
+        <span className="hidden max-w-24 truncate xl:inline">{viewer.name}</span>
+        <span className="sr-only xl:hidden">{m.header.account}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>{viewer.email}</DropdownMenuLabel>
@@ -90,27 +94,27 @@ export function AccountMenu() {
         <DropdownMenuItem asChild>
           <Link href="/account">
             <UserIcon className="size-4" aria-hidden="true" />
-            Account
+            {m.header.account}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href="/account/orders">
             <Package className="size-4" aria-hidden="true" />
-            Orders
+            {m.header.orders}
           </Link>
         </DropdownMenuItem>
         {viewer.isAdmin ? (
           <DropdownMenuItem asChild>
             <Link href="/admin">
               <Settings className="size-4" aria-hidden="true" />
-              Admin
+              {m.header.admin}
             </Link>
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void signOut()} disabled={signingOut}>
           <LogOut className="size-4" aria-hidden="true" />
-          {signingOut ? "Signing out…" : "Sign out"}
+          {signingOut ? m.header.signingOut : m.header.signOut}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

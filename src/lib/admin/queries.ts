@@ -372,6 +372,53 @@ export function fetchAdminMedia(
   );
 }
 
+/**
+ * Every image in the library, for the pickers.
+ *
+ * The media picker searches and previews the whole library, so one page is not
+ * enough - but neither is an unbounded loop against a store with thousands of
+ * uploads. It walks pages until the API says there are no more, up to
+ * `MEDIA_PICKER_PAGE_CAP` requests, and reports whether anything was left
+ * behind so the picker can say so instead of pretending the list is complete.
+ */
+export const MEDIA_PICKER_PAGE_CAP = 8;
+
+export interface AllAdminMedia {
+  assets: AdminMediaAsset[];
+  /** Total the API reports, which may exceed what was fetched. */
+  total: number;
+  /** True when the cap stopped the walk before the last page. */
+  truncated: boolean;
+}
+
+export async function fetchAllAdminMedia(
+  params: { type?: "image" | "video" | null; folder?: string | null } = {},
+): Promise<Result<AllAdminMedia>> {
+  const first = await fetchAdminMedia(params);
+  if (!first.data) return { data: null, error: first.error };
+
+  const assets = [...first.data.data];
+  const lastPage = first.data.meta.lastPage;
+  const reachable = Math.min(lastPage, MEDIA_PICKER_PAGE_CAP);
+
+  for (let page = 2; page <= reachable; page += 1) {
+    const next = await fetchAdminMedia({ ...params, page });
+    // A failed later page is not worth failing the whole screen over: the
+    // picker shows what did load and says the list is incomplete.
+    if (!next.data) return { data: { assets, total: first.data.meta.total, truncated: true }, error: null };
+    assets.push(...next.data.data);
+  }
+
+  return {
+    data: {
+      assets,
+      total: first.data.meta.total,
+      truncated: lastPage > reachable,
+    },
+    error: null,
+  };
+}
+
 export function deleteAdminMedia(id: number): Promise<void> {
   return apiDelete<void>(`/admin/media/${id}`, AUTH);
 }

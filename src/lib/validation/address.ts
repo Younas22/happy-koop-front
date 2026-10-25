@@ -14,22 +14,51 @@ import type { Address } from "@/lib/types/api";
  * which is what the API expects for "no value" (contract 1.7).
  */
 
-export const addressSchema = z.object({
-  firstName: z.string().trim().min(1, "Enter a first name.").max(120),
-  lastName: z.string().trim().min(1, "Enter a last name.").max(120),
-  company: z.string().trim().max(160),
-  line1: z.string().trim().min(1, "Enter a street address.").max(255),
-  line2: z.string().trim().max(255),
-  city: z.string().trim().min(1, "Enter a city.").max(120),
-  region: z.string().trim().max(120),
-  postalCode: z.string().trim().min(1, "Enter a postal code.").max(32),
-  countryCode: z
-    .string()
-    .trim()
-    .min(1, "Select a country.")
-    .refine((value) => isCountryCode(value), "Select a country."),
-  phone: z.string().trim().max(32),
-});
+/** The validation messages, supplied by the caller in the page's language. */
+export interface AddressErrorMessages {
+  firstName: string;
+  lastName: string;
+  line1: string;
+  city: string;
+  postalCode: string;
+  country: string;
+}
+
+const ENGLISH_ERRORS: AddressErrorMessages = {
+  firstName: "Enter a first name.",
+  lastName: "Enter a last name.",
+  line1: "Enter a street address.",
+  city: "Enter a city.",
+  postalCode: "Enter a postal code.",
+  country: "Select a country.",
+};
+
+/**
+ * The address schema with messages in a given language. Forms build it from
+ * the dictionary (`m.address.errors`) so a Dutch visitor reads Dutch errors;
+ * the rules themselves are identical in every language.
+ */
+export function createAddressSchema(t: AddressErrorMessages = ENGLISH_ERRORS) {
+  return z.object({
+    firstName: z.string().trim().min(1, t.firstName).max(120),
+    lastName: z.string().trim().min(1, t.lastName).max(120),
+    company: z.string().trim().max(160),
+    line1: z.string().trim().min(1, t.line1).max(255),
+    line2: z.string().trim().max(255),
+    city: z.string().trim().min(1, t.city).max(120),
+    region: z.string().trim().max(120),
+    postalCode: z.string().trim().min(1, t.postalCode).max(32),
+    countryCode: z
+      .string()
+      .trim()
+      .min(1, t.country)
+      .refine((value) => isCountryCode(value), t.country),
+    phone: z.string().trim().max(32),
+  });
+}
+
+/** The English schema, for callers without a dictionary. */
+export const addressSchema = createAddressSchema();
 
 export type AddressFormValues = z.infer<typeof addressSchema>;
 

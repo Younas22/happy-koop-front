@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { fetchCategories, fetchPage, fetchProducts } from "@/lib/catalog/queries";
+import { fetchCategories, fetchPages, fetchProducts } from "@/lib/catalog/queries";
 import { getRuntimeConfig } from "@/lib/runtime-config";
 import { getSiteUrl } from "@/lib/utils/seo";
 
@@ -18,26 +18,7 @@ import { getSiteUrl } from "@/lib/utils/seo";
  */
 
 /** Pages the storefront serves itself, independent of the catalog. */
-const STATIC_PATHS = ["/", "/shop"] as const;
-
-/**
- * CMS slugs worth probing. Each is only included when
- * `GET /pages/{slug}` actually returns a published page, so this is a
- * candidate list rather than an assertion that they exist.
- *
- * The contract exposes no "list pages" endpoint on the public API, so there is
- * no way to enumerate them without admin credentials, which a sitemap request
- * does not have.
- */
-const CANDIDATE_PAGE_SLUGS = [
-  "about",
-  "contact",
-  "shipping",
-  "returns",
-  "privacy",
-  "terms",
-  "faq",
-] as const;
+const STATIC_PATHS = ["/", "/shop", "/pages"] as const;
 
 const PRODUCT_LIMIT = 60;
 
@@ -62,7 +43,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [categories, products, pages] = await Promise.all([
     fetchCategories(),
     fetchProducts({ perPage: PRODUCT_LIMIT, sort: "newest" }),
-    Promise.all(CANDIDATE_PAGE_SLUGS.map((slug) => fetchPage(slug))),
+    // Every published page, from `GET /pages`. This used to probe a list of
+    // likely slugs, which silently omitted any page an administrator added.
+    fetchPages(),
   ]);
 
   for (const category of categories.data ?? []) {
@@ -86,9 +69,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  for (const result of pages) {
-    const page = result.data;
-    if (!page || page.seo.noindex) continue;
+  // The index already excludes `noindex` pages, so everything it returns
+  // belongs in the sitemap.
+  for (const page of pages.data ?? []) {
     const lastModified = page.updatedAt ? new Date(page.updatedAt) : now;
     entries.push({
       url: `${siteUrl}/pages/${page.slug}`,

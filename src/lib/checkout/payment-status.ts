@@ -30,7 +30,9 @@ export interface PaymentOutcomeView {
   description: string;
 }
 
-export function describePaymentStatus(status: PaymentStatus): PaymentOutcomeView {
+type PaymentOutcomeFlags = Omit<PaymentOutcomeView, "title" | "description">;
+
+function outcomeFlags(status: PaymentStatus): PaymentOutcomeFlags {
   switch (status) {
     case "paid":
       return {
@@ -39,8 +41,6 @@ export function describePaymentStatus(status: PaymentStatus): PaymentOutcomeView
         mayClearCart: true,
         canRetry: false,
         showRefresh: false,
-        title: "Payment confirmed",
-        description: "Your payment has been confirmed and your order is being prepared.",
       };
 
     case "authorized":
@@ -50,9 +50,6 @@ export function describePaymentStatus(status: PaymentStatus): PaymentOutcomeView
         mayClearCart: true,
         canRetry: false,
         showRefresh: true,
-        title: "Payment authorized",
-        description:
-          "Your payment is authorized and will be captured when the order is prepared. Nothing further is needed from you.",
       };
 
     case "partially_refunded":
@@ -62,8 +59,6 @@ export function describePaymentStatus(status: PaymentStatus): PaymentOutcomeView
         mayClearCart: true,
         canRetry: false,
         showRefresh: false,
-        title: "Partially refunded",
-        description: "Part of this order has been refunded. The amounts below are from our records.",
       };
 
     case "refunded":
@@ -73,8 +68,6 @@ export function describePaymentStatus(status: PaymentStatus): PaymentOutcomeView
         mayClearCart: true,
         canRetry: false,
         showRefresh: false,
-        title: "Refunded",
-        description: "This order has been refunded in full.",
       };
 
     case "failed":
@@ -84,9 +77,6 @@ export function describePaymentStatus(status: PaymentStatus): PaymentOutcomeView
         mayClearCart: false,
         canRetry: true,
         showRefresh: true,
-        title: "Payment failed",
-        description:
-          "The payment did not go through, so the order has not been placed. You can try paying again - nothing has been charged.",
       };
 
     case "cancelled":
@@ -96,8 +86,6 @@ export function describePaymentStatus(status: PaymentStatus): PaymentOutcomeView
         mayClearCart: false,
         canRetry: true,
         showRefresh: false,
-        title: "Payment cancelled",
-        description: "The payment was cancelled, so the order has not been placed.",
       };
 
     case "unpaid":
@@ -108,14 +96,30 @@ export function describePaymentStatus(status: PaymentStatus): PaymentOutcomeView
         mayClearCart: false,
         canRetry: true,
         showRefresh: true,
-        title: "Payment not confirmed yet",
-        description:
-          "We have not received confirmation from the payment provider. This can take a moment - refresh to check again. Your order is not complete until it is confirmed.",
       };
   }
 }
 
+/** The page copy for each status, from the dictionary (`m.paymentStatus`). */
+export type PaymentStatusCopy = Record<PaymentStatus, { title: string; description: string }>;
+
+/**
+ * The outcome for a status, worded in the page's language.
+ *
+ * The decision - success or not, clear the cart or not - comes from the
+ * status alone and is identical in every language; only the title and
+ * description are taken from `copy`. An unknown status reads as `unpaid`,
+ * which is the safe reading: never a receipt.
+ */
+export function describePaymentStatus(
+  status: PaymentStatus,
+  copy: PaymentStatusCopy,
+): PaymentOutcomeView {
+  const text = copy[status] ?? copy.unpaid;
+  return { ...outcomeFlags(status), title: text.title, description: text.description };
+}
+
 /** Convenience guard used by the success page and its tests. */
 export function isPaymentSuccessful(status: PaymentStatus): boolean {
-  return describePaymentStatus(status).isSuccess;
+  return outcomeFlags(status).isSuccess;
 }

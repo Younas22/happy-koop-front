@@ -87,13 +87,20 @@ export type FieldErrors = Record<string, string[]>;
  * 3. Public runtime config
  * ------------------------------------------------------------------ */
 
+/**
+ * `label` is the default-language text and the fallback; `labels` holds the
+ * other languages an admin has filled in. A missing translation falls back to
+ * `label` rather than leaving a blank link.
+ */
 export interface NavLink {
   label: string;
   href: string;
+  labels?: Partial<Record<"en" | "nl", string | null>> | null;
 }
 
 export interface FooterNavGroup {
   heading: string;
+  headings?: Partial<Record<"en" | "nl", string | null>> | null;
   links: NavLink[];
 }
 
@@ -525,6 +532,18 @@ export interface CreateReviewResult {
  * ------------------------------------------------------------------ */
 
 /** `GET /pages/{slug}` (contract 4). */
+/**
+ * An entry from `GET /pages`: enough to build a link, with no body. Used for
+ * the footer's automatic page list.
+ */
+export interface PageSummary {
+  id: number;
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  updatedAt: string | null;
+}
+
 export interface Page {
   id: number;
   slug: string;

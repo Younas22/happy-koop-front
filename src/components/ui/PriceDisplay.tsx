@@ -1,5 +1,9 @@
+"use client";
+
 import { discountPercent, formatMoney } from "@/lib/money";
 import type { Money } from "@/lib/types/api";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
 import { cn } from "@/lib/utils/cn";
 
 export interface PriceDisplayProps {
@@ -18,17 +22,17 @@ export interface PriceDisplayProps {
 }
 
 const priceSizes = {
-  sm: "text-sm font-semibold",
-  md: "text-base font-semibold",
-  lg: "text-xl font-semibold",
-  xl: "text-2xl font-semibold sm:text-3xl",
+  sm: "text-title-sm",
+  md: "text-title-md",
+  lg: "text-title-lg",
+  xl: "text-headline-sm sm:text-headline-md",
 } as const;
 
 const compareSizes = {
-  sm: "text-xs",
-  md: "text-sm",
-  lg: "text-sm",
-  xl: "text-base",
+  sm: "text-body-sm",
+  md: "text-body-md",
+  lg: "text-body-md",
+  xl: "text-body-lg",
 } as const;
 
 /**
@@ -45,6 +49,7 @@ export function PriceDisplay({
   showDiscount = true,
   className,
 }: PriceDisplayProps) {
+  const { price: t } = useMessages();
   const percent = discountPercent(price, compareAtPrice);
   const hasCompare = compareAtPrice !== null && percent !== null;
 
@@ -58,12 +63,12 @@ export function PriceDisplay({
             {formatMoney(compareAtPrice)}
           </span>
           <span className="sr-only">
-            reduced from {formatMoney(compareAtPrice)} to {formatMoney(price)}
+            {fmt(t.reduced, { from: formatMoney(compareAtPrice), to: formatMoney(price) })}
           </span>
           {showDiscount ? (
             <span
               className={cn(
-                "rounded-sm bg-success-tint px-1.5 py-0.5 text-2xs font-semibold text-success",
+                "rounded-sm bg-success-tint px-1.5 py-0.5 text-label-sm font-semibold text-success",
               )}
             >
               &minus;{percent}%

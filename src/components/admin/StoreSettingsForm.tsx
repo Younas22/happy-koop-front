@@ -3,11 +3,13 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Info } from "lucide-react";
 import * as React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { saveStoreSettingsAction } from "@/app/admin/actions";
+import { ColorField } from "@/components/admin/ColorField";
+import { MediaPickerField } from "@/components/admin/MediaPickerField";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -174,11 +176,17 @@ function toValues(settings: AdminStoreSettingsResponse): Values {
 export function StoreSettingsForm({
   settings,
   media,
+  mediaTotal,
+  mediaTruncated,
   allowedApiHosts,
   bootstrapUrl,
 }: {
   settings: AdminStoreSettingsResponse;
   media: readonly AdminMediaAsset[];
+  /** The library's real size, which may exceed `media.length`. */
+  mediaTotal?: number;
+  /** True when the loader hit its page cap before the end of the library. */
+  mediaTruncated?: boolean;
   /** The frontend's deployment-time host allowlist, for the API URL note. */
   allowedApiHosts: readonly string[];
   /** The frontend's stable bootstrap origin, which this form cannot change. */
@@ -190,6 +198,40 @@ export function StoreSettingsForm({
     resolver: zodResolver(schema),
     defaultValues: toValues(settings),
   });
+
+  /**
+   * The image and colour fields are controlled: a picker and a swatch write a
+   * value instead of typing it, so they need the current one to render. Only
+   * these six names are watched - watching the whole form would re-render
+   * every field on every keystroke - and `useWatch` is used rather than
+   * `form.watch()` because the latter returns a function the React Compiler
+   * refuses to memoize.
+   */
+  const [
+    logoMediaId,
+    logoDarkMediaId,
+    faviconMediaId,
+    seoDefaultOgImageMediaId,
+    primaryColor,
+    accentColor,
+  ] = useWatch({
+    control: form.control,
+    name: [
+      "logoMediaId",
+      "logoDarkMediaId",
+      "faviconMediaId",
+      "seoDefaultOgImageMediaId",
+      "primaryColor",
+      "accentColor",
+    ],
+  });
+
+  const mediaValues: Record<string, string> = {
+    logoMediaId,
+    logoDarkMediaId,
+    faviconMediaId,
+    seoDefaultOgImageMediaId,
+  };
 
   function mediaId(value: string): number | null {
     const parsed = Number.parseInt(value, 10);
@@ -259,20 +301,28 @@ export function StoreSettingsForm({
     toast.success("Settings saved. The storefront configuration cache has been refreshed.");
   }
 
-  const mediaSelect = (name: keyof Values, label: string, description?: string) => (
-    <FormField id={`setting-${String(name)}`} label={label} description={description}>
-      {(field) => (
-        <select {...field} className={selectClass} {...form.register(name)}>
-          <option value="">Not set</option>
-          {media.map((asset) => (
-            <option key={asset.id} value={asset.id}>
-              {asset.originalFilename ?? asset.alt ?? `Media #${asset.id}`}
-            </option>
-          ))}
-        </select>
-      )}
-    </FormField>
-  );
+  const mediaSelect = (name: keyof Values, label: string, description?: string) => {
+    const raw = mediaValues[String(name)];
+    const current = typeof raw === "string" && raw !== "" ? Number.parseInt(raw, 10) : null;
+
+    return (
+      <MediaPickerField
+        id={`setting-${String(name)}`}
+        label={label}
+        description={description}
+        value={Number.isNaN(current as number) ? null : current}
+        onChange={(next) =>
+          form.setValue(name, next === null ? "" : String(next), {
+            shouldDirty: true,
+            shouldValidate: true,
+          })
+        }
+        media={media}
+        total={mediaTotal}
+        truncated={mediaTruncated}
+      />
+    );
+  };
 
   return (
     <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -341,22 +391,27 @@ export function StoreSettingsForm({
           <CardTitle>Appearance</CardTitle>
         </CardHeader>
         <CardBody className="grid gap-4 sm:grid-cols-3">
-          <FormField
+          <ColorField
             id="setting-primary-color"
             label="Primary colour"
-            description="Hex, e.g. #2563EB."
+            description="Pick a colour, or type a hex code such as #2563EB. This drives the whole storefront palette."
             error={form.formState.errors.primaryColor?.message ?? null}
-          >
-            {(field) => <Input {...field} {...form.register("primaryColor")} />}
-          </FormField>
+            value={primaryColor}
+            onChange={(next) =>
+              form.setValue("primaryColor", next, { shouldDirty: true, shouldValidate: true })
+            }
+          />
 
-          <FormField
+          <ColorField
             id="setting-accent-color"
             label="Accent colour"
+            description="Optional. Leave empty to use the primary colour."
             error={form.formState.errors.accentColor?.message ?? null}
-          >
-            {(field) => <Input {...field} {...form.register("accentColor")} />}
-          </FormField>
+            value={accentColor}
+            onChange={(next) =>
+              form.setValue("accentColor", next, { shouldDirty: true, shouldValidate: true })
+            }
+          />
 
           <FormField id="setting-radius" label="Corner rounding">
             {(field) => (

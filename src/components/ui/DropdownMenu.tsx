@@ -37,8 +37,9 @@ export const DropdownMenuItem = React.forwardRef<
     <DropdownMenuPrimitive.Item
       ref={ref}
       className={cn(
-        "flex min-h-10 cursor-pointer items-center gap-2 rounded-sm px-2.5 text-sm text-ink outline-none select-none",
-        "data-highlighted:bg-sunken data-disabled:pointer-events-none data-disabled:opacity-55",
+        "flex min-h-10 cursor-pointer items-center gap-2 rounded-sm px-2.5 text-body-md text-ink outline-none select-none",
+        "data-highlighted:bg-brand-container data-highlighted:text-brand-on-container",
+        "data-disabled:pointer-events-none data-disabled:opacity-55",
         className,
       )}
       {...props}
@@ -53,7 +54,7 @@ export const DropdownMenuLabel = React.forwardRef<
   return (
     <DropdownMenuPrimitive.Label
       ref={ref}
-      className={cn("px-2.5 py-2 text-xs text-ink-subtle", className)}
+      className={cn("px-2.5 py-2 text-body-sm text-ink-subtle", className)}
       {...props}
     />
   );

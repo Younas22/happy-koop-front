@@ -1,6 +1,7 @@
 "use client";
 
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { ImageIcon, Pencil, Plus, Trash2 } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import { toast } from "sonner";
 import { deleteCategoryAction, saveCategoryAction } from "@/app/admin/actions";
 import { AdminTableWrap, Td, Th } from "@/components/admin/AdminParts";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { MediaPickerField } from "@/components/admin/MediaPickerField";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -26,7 +28,7 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { flattenFieldErrors } from "@/lib/forms/api-errors";
-import type { AdminCategory } from "@/lib/types/api";
+import type { AdminCategory, AdminMediaAsset } from "@/lib/types/api";
 
 /**
  * Category list with create / edit / delete.
@@ -41,6 +43,7 @@ interface Draft {
   slug: string;
   parentId: string;
   description: string;
+  imageMediaId: number | null;
   isActive: boolean;
   sortOrder: string;
   seoTitle: string;
@@ -54,6 +57,7 @@ function toDraft(category: AdminCategory | null): Draft {
       slug: "",
       parentId: "",
       description: "",
+      imageMediaId: null,
       isActive: true,
       sortOrder: "0",
       seoTitle: "",
@@ -65,6 +69,7 @@ function toDraft(category: AdminCategory | null): Draft {
     slug: category.slug,
     parentId: category.parentId === null ? "" : String(category.parentId),
     description: category.description ?? "",
+    imageMediaId: category.imageMediaId,
     isActive: category.isActive,
     sortOrder: String(category.sortOrder),
     seoTitle: category.seoTitle ?? "",
@@ -75,7 +80,17 @@ function toDraft(category: AdminCategory | null): Draft {
 const selectClass =
   "h-11 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink";
 
-export function CategoryManager({ categories }: { categories: readonly AdminCategory[] }) {
+export function CategoryManager({
+  categories,
+  media,
+  mediaTotal,
+  mediaTruncated,
+}: {
+  categories: readonly AdminCategory[];
+  media: readonly AdminMediaAsset[];
+  mediaTotal?: number;
+  mediaTruncated?: boolean;
+}) {
   const router = useRouter();
 
   const [editing, setEditing] = React.useState<{ open: boolean; category: AdminCategory | null }>({
@@ -113,6 +128,7 @@ export function CategoryManager({ categories }: { categories: readonly AdminCate
       slug: draft.slug || null,
       parentId: Number.isFinite(parentId as number) ? parentId : null,
       description: draft.description || null,
+      imageMediaId: draft.imageMediaId,
       isActive: draft.isActive,
       sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
       seoTitle: draft.seoTitle || null,
@@ -169,6 +185,9 @@ export function CategoryManager({ categories }: { categories: readonly AdminCate
         <AdminTableWrap>
           <thead>
             <tr>
+              <Th className="w-16">
+                <span className="sr-only">Image</span>
+              </Th>
               <Th>Name</Th>
               <Th>Parent</Th>
               <Th className="text-right">Products</Th>
@@ -182,6 +201,23 @@ export function CategoryManager({ categories }: { categories: readonly AdminCate
           <tbody>
             {categories.map((category) => (
               <tr key={category.id}>
+                <Td>
+                  <span className="relative block size-10 overflow-hidden rounded-md border border-line bg-sunken">
+                    {category.imageUrl ? (
+                      <Image
+                        src={category.imageUrl}
+                        alt=""
+                        fill
+                        sizes="40px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-full items-center justify-center">
+                        <ImageIcon className="size-4 text-ink-subtle" aria-hidden="true" />
+                      </span>
+                    )}
+                  </span>
+                </Td>
                 <Td>
                   <span className="font-medium text-ink">{category.name}</span>
                   <span className="block text-xs text-ink-muted">/{category.slug}</span>
@@ -309,6 +345,17 @@ export function CategoryManager({ categories }: { categories: readonly AdminCate
                 />
               )}
             </FormField>
+
+            <MediaPickerField
+              id="category-image"
+              label="Category image"
+              description="Used by the home page's category tiles section. The category page itself does not show it."
+              value={draft.imageMediaId}
+              onChange={(next) => setDraft((current) => ({ ...current, imageMediaId: next }))}
+              media={media}
+              total={mediaTotal}
+              truncated={mediaTruncated}
+            />
 
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField id="category-sort" label="Sort order">

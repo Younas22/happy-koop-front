@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AdminError, AdminPageHeader } from "@/components/admin/AdminParts";
 import { CategoryManager } from "@/components/admin/CategoryManager";
 import { Button } from "@/components/ui/Button";
-import { fetchAdminCategories } from "@/lib/admin/queries";
+import { fetchAdminCategories, fetchAllAdminMedia } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/session";
 import { getRuntimeConfig } from "@/lib/runtime-config";
 import { buildPageMetadata } from "@/lib/utils/seo";
@@ -20,7 +20,12 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AdminCategoriesPage() {
   await requireAdmin("/admin/categories");
-  const { data, error } = await fetchAdminCategories();
+
+  const [{ data, error }, media] = await Promise.all([
+    fetchAdminCategories(),
+    // The whole library, so the image picker can search it.
+    fetchAllAdminMedia({ type: "image" }),
+  ]);
 
   return (
     <>
@@ -39,7 +44,12 @@ export default async function AdminCategoriesPage() {
           }
         />
       ) : (
-        <CategoryManager categories={data ?? []} />
+        <CategoryManager
+          categories={data ?? []}
+          media={media.data?.assets ?? []}
+          mediaTotal={media.data?.total}
+          mediaTruncated={media.data?.truncated}
+        />
       )}
     </>
   );

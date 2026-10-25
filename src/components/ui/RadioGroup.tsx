@@ -48,20 +48,20 @@ export function RadioCard({ id, value, title, description, trailing, disabled }:
     <label
       htmlFor={id}
       className={cn(
-        "flex min-h-11 cursor-pointer items-start gap-3 rounded-md border border-line bg-surface p-3",
-        "transition-colors duration-150 ease-(--ease-in-out-soft) hover:bg-sunken",
-        "has-data-[state=checked]:border-brand has-data-[state=checked]:bg-brand-tint",
+        "flex min-h-12 cursor-pointer items-start gap-3 rounded-md border border-line bg-surface p-4",
+        "state-layer transition-colors duration-200 ease-(--ease-standard)",
+        "has-data-[state=checked]:border-brand has-data-[state=checked]:bg-brand-container",
         disabled && "cursor-not-allowed opacity-55 hover:bg-surface",
       )}
     >
       <RadioGroupItem id={id} value={value} disabled={disabled} className="mt-0.5" />
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium text-ink">{title}</span>
+        <span className="block text-label-lg text-ink">{title}</span>
         {description ? (
-          <span className="mt-0.5 block text-xs text-ink-muted">{description}</span>
+          <span className="mt-0.5 block text-body-sm text-ink-muted">{description}</span>
         ) : null}
       </span>
-      {trailing ? <span className="shrink-0 text-sm font-medium text-ink">{trailing}</span> : null}
+      {trailing ? <span className="shrink-0 text-label-lg text-ink">{trailing}</span> : null}
     </label>
   );
 }

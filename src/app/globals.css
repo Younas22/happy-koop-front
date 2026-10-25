@@ -1,66 +1,109 @@
 @import "tailwindcss";
 
 /* ===========================================================================
-   HappyKoop design system
+   HappyKoop design system - Material 3
    ---------------------------------------------------------------------------
-   Modern, premium, material-inspired. Product photography is the focus.
-   Rules enforced here:
-     - NO gradients anywhere. Flat surfaces only, separated by borders and
-       restrained elevation.
-     - Light neutral base (warm white), dark readable text.
-     - #2563EB is the default accent. It is overridden at runtime by the
-       admin-managed theme colour, injected as --brand-* custom properties
-       on <html> by ThemeStyle. Never hardcode the hex in a component -
-       always use the token.
+   The visual language is Material 3, adapted for a storefront:
+
+     - Tonal surfaces. Every neutral is mixed with the brand hue at a low
+       percentage, so the whole UI sits in one colour family instead of
+       reading as grey boxes. The mix is done with `color-mix()` against the
+       live --brand token, so a green brand produces green-tinted surfaces
+       without a second palette being maintained.
+     - Elevation is a system, not decoration: five named levels, used to say
+       which surface sits above which. A raised surface may still carry a
+       hairline outline, but it never needs one to be legible.
+     - State layers. Interactive surfaces express hover / focus / press as an
+       `on`-colour overlay at 8% / 10% / 12% (M3 spec), applied through the
+       `state-layer` utility rather than by swapping background colours.
+     - Shape scale: 4 / 8 / 12 / 16 / 28px. Buttons, chips and search fields
+       are fully rounded; cards and sheets use the 12-16px steps.
+     - Still NO gradients. Tone and elevation carry the depth.
+     - Every text token clears WCAG AA (4.5:1) on --color-surface and on
+       --color-canvas, including the subtlest tier and the tonal containers.
    ========================================================================= */
 
 @theme {
-  /* --- Surfaces (warm neutrals, not pure grey) --- */
-  --color-canvas: #faf9f7;
+  /* --- Tonal surfaces -----------------------------------------------------
+     The M3 surface-container roles. `canvas` is the page, `surface` the card,
+     and the container steps are for nested strips that must separate from a
+     card body without another border. The brand percentage climbs with the
+     step, exactly as a tonal palette would. */
+  --color-canvas: color-mix(in oklab, var(--color-brand) 5%, #f7f8fb);
   --color-surface: #ffffff;
-  --color-sunken: #f3f2ef;
+  --color-surface-low: color-mix(in oklab, var(--color-brand) 4%, #ffffff);
+  --color-surface-container: color-mix(in oklab, var(--color-brand) 7%, #ffffff);
+  --color-surface-high: color-mix(in oklab, var(--color-brand) 10%, #ffffff);
+  --color-surface-highest: color-mix(in oklab, var(--color-brand) 13%, #ffffff);
 
-  /* --- Text --- */
-  --color-ink: #1a1a19;
-  --color-ink-muted: #5c5c57;
-  --color-ink-subtle: #8a8a83;
+  /* Legacy names, kept so existing markup keeps working - now tonal. */
+  --color-sunken: color-mix(in oklab, var(--color-brand) 6%, #ffffff);
+  --color-sunken-strong: color-mix(in oklab, var(--color-brand) 11%, #ffffff);
+
+  /* --- Text. Contrast on #ffffff / canvas noted per tier. --- */
+  --color-ink: #11182a; /* 15.9:1 - headings, primary copy */
+  --color-ink-muted: #44506b; /* 7.9:1  - body prose, secondary copy */
+  --color-ink-subtle: #5f6b85; /* 5.2:1  - labels, metadata, placeholders */
   --color-ink-inverse: #ffffff;
 
-  /* --- Lines --- */
-  --color-line: #e6e4df;
-  --color-line-strong: #d3d1ca;
+  /* --- Lines. M3 outline / outline-variant, tinted with the brand. --- */
+  --color-line: color-mix(in oklab, var(--color-brand) 10%, #e3e7ef);
+  --color-line-strong: color-mix(in oklab, var(--color-brand) 14%, #c6cddc);
 
-  /* --- Brand (runtime-overridable, see ThemeStyle) --- */
+  /* --- Brand (runtime-overridable, see ThemeStyle) ---
+     `container` is the M3 primary-container: a filled tonal surface for
+     secondary buttons, active nav items and brand chips, with `on-container`
+     as its text colour (checked for 4.5:1 in deriveBrandTokens). `tint` and
+     `surface` are the older, lighter pair, still used for washes. */
   --color-brand: var(--brand, #2563eb);
   --color-brand-hover: var(--brand-hover, #1d4ed8);
   --color-brand-active: var(--brand-active, #1e40af);
-  --color-brand-tint: var(--brand-tint, #eef3fe);
+  --color-brand-tint: var(--brand-tint, #dbe7fe);
+  --color-brand-surface: var(--brand-surface, #eff6ff);
+  --color-brand-container: var(--brand-container, #dbe7fe);
+  --color-brand-on-container: var(--brand-on-container, #10306f);
   --color-brand-ink: var(--brand-ink, #ffffff);
 
-  /* --- Semantic --- */
+  /* --- Semantic. One readable ink, one pale container each. --- */
   --color-success: #15803d;
-  --color-success-tint: #eef7f0;
+  --color-success-tint: #f0fdf4;
+  --color-success-line: #bbf7d0;
   --color-warning: #b45309;
-  --color-warning-tint: #fdf4e8;
+  --color-warning-tint: #fffbeb;
+  --color-warning-line: #fde68a;
   --color-danger: #b91c1c;
-  --color-danger-tint: #fdf0f0;
+  --color-danger-tint: #fef2f2;
+  --color-danger-line: #fecaca;
   --color-info: #1d4ed8;
-  --color-info-tint: #eef3fe;
+  --color-info-tint: #eff6ff;
+  --color-info-line: #bfdbfe;
 
-  /* --- Radii: material-ish, generous but not pill-shaped --- */
+  /* --- Shape scale (M3): 4 / 8 / 12 / 16 / 28 --- */
   --radius-xs: 0.25rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.875rem;
-  --radius-xl: 1.25rem;
-  --radius-2xl: 1.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.75rem;
+  --radius-2xl: 2rem;
 
-  /* --- Elevation: tight, low-opacity, layered. Never coloured. --- */
-  --shadow-xs: 0 1px 2px 0 rgb(26 26 25 / 0.05);
-  --shadow-sm: 0 1px 3px 0 rgb(26 26 25 / 0.06), 0 1px 2px -1px rgb(26 26 25 / 0.06);
-  --shadow-md: 0 4px 10px -2px rgb(26 26 25 / 0.08), 0 2px 4px -2px rgb(26 26 25 / 0.05);
-  --shadow-lg: 0 12px 28px -6px rgb(26 26 25 / 0.12), 0 4px 10px -4px rgb(26 26 25 / 0.06);
-  --shadow-xl: 0 24px 56px -12px rgb(26 26 25 / 0.18);
+  /* --- Elevation: the five M3 levels, tinted with the slate ink rather than
+         pure black so a shadow over a tonal surface does not go grey-brown.
+         Level 0 is "no shadow", declared so a component can animate back to
+         it. --- */
+  --shadow-level0: 0 0 #0000;
+  --shadow-level1: 0 1px 2px 0 rgb(17 24 42 / 0.12), 0 1px 3px 1px rgb(17 24 42 / 0.07);
+  --shadow-level2: 0 1px 2px 0 rgb(17 24 42 / 0.12), 0 2px 6px 2px rgb(17 24 42 / 0.09);
+  --shadow-level3: 0 1px 3px 0 rgb(17 24 42 / 0.12), 0 4px 8px 3px rgb(17 24 42 / 0.1);
+  --shadow-level4: 0 2px 3px 0 rgb(17 24 42 / 0.12), 0 6px 10px 4px rgb(17 24 42 / 0.1);
+  --shadow-level5: 0 4px 4px 0 rgb(17 24 42 / 0.12), 0 8px 12px 6px rgb(17 24 42 / 0.11);
+
+  /* Legacy shadow names map onto the levels, so existing `shadow-xs` markup
+     picks up the new elevation system instead of the old hairline shadows. */
+  --shadow-xs: var(--shadow-level1);
+  --shadow-sm: var(--shadow-level1);
+  --shadow-md: var(--shadow-level2);
+  --shadow-lg: var(--shadow-level3);
+  --shadow-xl: var(--shadow-level5);
 
   /* --- Typography --- */
   --font-sans: var(--font-hk-sans), ui-sans-serif, system-ui, -apple-system,
@@ -70,12 +113,80 @@
   --text-2xs: 0.6875rem;
   --text-2xs--line-height: 1rem;
 
-  /* --- Motion: purposeful and short. No bouncing, no attention-grabbing. --- */
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  /* The M3 type scale. Display and headline carry negative tracking; label
+     and body keep the small positive Material tracking that stops dense UI
+     text from looking cramped. */
+  --text-display-lg: 3.5rem;
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--letter-spacing: -0.025em;
+  --text-display-md: 2.8125rem;
+  --text-display-md--line-height: 1.12;
+  --text-display-md--letter-spacing: -0.02em;
+  --text-display-sm: 2.25rem;
+  --text-display-sm--line-height: 1.16;
+  --text-display-sm--letter-spacing: -0.018em;
+
+  --text-headline-lg: 2rem;
+  --text-headline-lg--line-height: 1.2;
+  --text-headline-lg--letter-spacing: -0.016em;
+  --text-headline-md: 1.75rem;
+  --text-headline-md--line-height: 1.22;
+  --text-headline-md--letter-spacing: -0.014em;
+  --text-headline-sm: 1.5rem;
+  --text-headline-sm--line-height: 1.26;
+  --text-headline-sm--letter-spacing: -0.012em;
+
+  --text-title-lg: 1.375rem;
+  --text-title-lg--line-height: 1.28;
+  --text-title-lg--letter-spacing: -0.008em;
+  --text-title-md: 1.0625rem;
+  --text-title-md--line-height: 1.4;
+  --text-title-md--letter-spacing: 0.009em;
+  --text-title-md--font-weight: 600;
+  --text-title-sm: 0.875rem;
+  --text-title-sm--line-height: 1.43;
+  --text-title-sm--letter-spacing: 0.007em;
+  --text-title-sm--font-weight: 600;
+
+  --text-body-lg: 1rem;
+  --text-body-lg--line-height: 1.5;
+  --text-body-lg--letter-spacing: 0.009em;
+  --text-body-md: 0.875rem;
+  --text-body-md--line-height: 1.43;
+  --text-body-md--letter-spacing: 0.016em;
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.33;
+  --text-body-sm--letter-spacing: 0.025em;
+
+  --text-label-lg: 0.875rem;
+  --text-label-lg--line-height: 1.43;
+  --text-label-lg--letter-spacing: 0.007em;
+  --text-label-lg--font-weight: 500;
+  --text-label-md: 0.75rem;
+  --text-label-md--line-height: 1.33;
+  --text-label-md--letter-spacing: 0.04em;
+  --text-label-md--font-weight: 500;
+  --text-label-sm: 0.6875rem;
+  --text-label-sm--line-height: 1.45;
+  --text-label-sm--letter-spacing: 0.04em;
+  --text-label-sm--font-weight: 500;
+
+  /* --- Motion: the M3 easing set. Emphasized for anything entering or
+         leaving the screen, standard for a state change in place. --- */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  /* Older aliases, still referenced in component markup. */
+  --ease-out-soft: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-in-out-soft: cubic-bezier(0.2, 0, 0, 1);
 
   /* --- Layout --- */
   --container-page: 80rem;
+
+  /* Height of the mobile navigation bar, so sticky bars and page bottoms can
+     reserve exactly as much room as it occupies. */
+  --spacing-nav-bar: 4.5rem;
 }
 
 /* ===========================================================================
@@ -88,7 +199,10 @@
   --brand: #2563eb;
   --brand-hover: #1d4ed8;
   --brand-active: #1e40af;
-  --brand-tint: #eef3fe;
+  --brand-tint: #dbe7fe;
+  --brand-surface: #eff6ff;
+  --brand-container: #dbe7fe;
+  --brand-on-container: #10306f;
   --brand-ink: #ffffff;
 }
 
@@ -101,6 +215,11 @@
 html {
   -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
+}
+
+::selection {
+  background-color: var(--color-brand-container);
+  color: var(--color-brand-on-container);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -120,6 +239,8 @@ body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-size: var(--text-body-md);
+  line-height: var(--text-body-md--line-height);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   /* Never allow a stray wide element to produce horizontal page scroll. */
@@ -131,12 +252,20 @@ h1,
 h2,
 h3,
 h4 {
-  letter-spacing: -0.021em;
+  letter-spacing: -0.016em;
   text-wrap: balance;
 }
 
 p {
   text-wrap: pretty;
+}
+
+/* Prices, counts and table figures: fixed-width digits so a changing value
+   never shifts the column it sits in. */
+th,
+td,
+output {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ===========================================================================
@@ -173,17 +302,176 @@ p {
   }
 }
 
-/* A flat card. Border does the separating; shadow only hints elevation. */
+/* --- Elevation ------------------------------------------------------------
+   Named levels, so a component says "level 2" rather than picking a shadow. */
+@utility elevation-0 {
+  box-shadow: var(--shadow-level0);
+}
+@utility elevation-1 {
+  box-shadow: var(--shadow-level1);
+}
+@utility elevation-2 {
+  box-shadow: var(--shadow-level2);
+}
+@utility elevation-3 {
+  box-shadow: var(--shadow-level3);
+}
+@utility elevation-4 {
+  box-shadow: var(--shadow-level4);
+}
+@utility elevation-5 {
+  box-shadow: var(--shadow-level5);
+}
+
+/* --- State layer ---------------------------------------------------------
+   The M3 interaction model: an overlay of the element's own `on` colour at
+   8% hover / 10% focus / 12% press, instead of swapping the background.
+   Because the overlay is `currentColor`, the same utility works on a filled
+   brand button (white over blue) and on a text button (ink over nothing),
+   with no variant needing to declare its own hover colour.
+
+   The utility positions the element itself, so it must not be combined with
+   `absolute`, `fixed` or `sticky` - an element that is already positioned
+   should use an ordinary tonal hover instead. Anything with a child that
+   would paint over the overlay also needs `overflow-hidden`. */
+@utility state-layer {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 120ms var(--ease-standard);
+  }
+  @media (hover: hover) {
+    &:hover:not(:disabled):not([aria-disabled="true"])::after {
+      opacity: 0.08;
+    }
+  }
+  &:focus-visible::after {
+    opacity: 0.1;
+  }
+  &:active:not(:disabled):not([aria-disabled="true"])::after {
+    opacity: 0.12;
+  }
+}
+
+/* --- Cards --------------------------------------------------------------- */
+
+/* Resting card: a surface at elevation 1 with a hairline outline. */
 @utility surface-card {
   background-color: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-level1);
 }
 
-/* Minimum 44x44 hit area for touch controls. */
+/* Elevated card, pressable. Rests at level 1 and rises to level 3, the M3
+   hover elevation for a card. The lift is 2px - enough to read as pressable
+   without shifting the grid around it. */
+@utility surface-card-interactive {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-level1);
+  transition:
+    box-shadow 200ms var(--ease-standard),
+    border-color 200ms var(--ease-standard),
+    transform 200ms var(--ease-emphasized-decelerate);
+  &:hover {
+    border-color: var(--color-line-strong);
+    box-shadow: var(--shadow-level3);
+  }
+  &:active {
+    box-shadow: var(--shadow-level1);
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    &:hover {
+      transform: translateY(-2px);
+    }
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* A recessed strip inside a card: table heads, toolbars, summary rows. Reads
+   as a separate band without needing its own border. */
+@utility surface-panel {
+  background-color: var(--color-surface-container);
+  border-bottom: 1px solid var(--color-line);
+}
+
+/* --- Components ---------------------------------------------------------- */
+
+/* M3 filter / assist chip. Outlined at rest; the selected (tonal) state is
+   applied by the component that uses it, not here. */
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.25rem;
+  padding-inline: 0.875rem;
+  border: 1px solid var(--color-line-strong);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  font-size: var(--text-label-lg);
+  line-height: var(--text-label-lg--line-height);
+  letter-spacing: var(--text-label-lg--letter-spacing);
+  font-weight: 500;
+  color: var(--color-ink);
+  white-space: nowrap;
+  transition:
+    background-color 150ms var(--ease-standard),
+    border-color 150ms var(--ease-standard),
+    color 150ms var(--ease-standard);
+}
+
+/* The horizontal chip rail used for filters on a phone: one swipeable row
+   with the scrollbar hidden, bleeding into the page gutter so the first and
+   last chip sit flush with the page text. Wraps normally from `sm` up. */
+@utility chip-rail {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  padding-block: 0.125rem;
+  margin-inline: -1rem;
+  padding-inline: 1rem;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  & > * {
+    scroll-snap-align: start;
+    flex: none;
+  }
+  @media (width >= 40rem) {
+    margin-inline: 0;
+    padding-inline: 0;
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+}
+
+/* Section eyebrow / column label. One place for the uppercase micro-type so
+   it does not drift between the storefront and the admin. */
+@utility label-eyebrow {
+  font-size: var(--text-label-sm);
+  line-height: var(--text-label-sm--line-height);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-subtle);
+}
+
+/* Minimum 48x48 hit area for touch controls (M3 raises this from 44). */
 @utility tap-target {
-  min-height: 2.75rem;
-  min-width: 2.75rem;
+  min-height: 3rem;
+  min-width: 3rem;
 }
 
 /* Visually hidden until focused - for skip links. */
@@ -207,11 +495,28 @@ p {
   }
 }
 
+/* Reserves room for the mobile navigation bar, including the iOS home-bar
+   inset. A no-op from `md` up, where the bar is not rendered. */
+@utility pb-nav-bar {
+  padding-bottom: calc(var(--spacing-nav-bar) + env(safe-area-inset-bottom, 0px));
+  @media (width >= 48rem) {
+    padding-bottom: 0;
+  }
+}
+
+/* The same offset, for anything sticky that must clear the bar. */
+@utility bottom-nav-bar {
+  bottom: calc(var(--spacing-nav-bar) + env(safe-area-inset-bottom, 0px));
+  @media (width >= 48rem) {
+    bottom: 0;
+  }
+}
+
 /* Skeleton placeholder. Opacity pulse only - no moving gradient sweep. */
 @utility skeleton {
-  background-color: var(--color-sunken);
+  background-color: var(--color-surface-high);
   border-radius: var(--radius-sm);
-  animation: hk-pulse 1.6s var(--ease-in-out-soft) infinite;
+  animation: hk-pulse 1.6s var(--ease-standard) infinite;
 }
 
 @keyframes hk-pulse {
@@ -231,6 +536,7 @@ p {
 
 @utility prose-hk {
   color: var(--color-ink-muted);
+  font-size: var(--text-body-lg);
   line-height: 1.7;
 
   & > * + * {
@@ -239,14 +545,15 @@ p {
 
   & h2 {
     color: var(--color-ink);
-    font-size: 1.25rem;
+    font-size: var(--text-title-lg);
     font-weight: 600;
+    letter-spacing: -0.008em;
     margin-top: 2rem;
   }
 
   & h3 {
     color: var(--color-ink);
-    font-size: 1.0625rem;
+    font-size: var(--text-title-md);
     font-weight: 600;
     margin-top: 1.5rem;
   }
@@ -286,7 +593,7 @@ p {
   & table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.875rem;
+    font-size: var(--text-body-md);
   }
 
   & th,
@@ -297,7 +604,7 @@ p {
   }
 
   & th {
-    background-color: var(--color-sunken);
+    background-color: var(--color-surface-container);
     color: var(--color-ink);
     font-weight: 600;
   }

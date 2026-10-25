@@ -4,23 +4,32 @@ import * as React from "react";
 import { cn } from "@/lib/utils/cn";
 
 /**
- * Badge. Only ever used for administrator-set, factual labels (contract 4) -
- * never for invented urgency, "hot" markers or fake scarcity.
+ * Badge - a Material 3 label chip, non-interactive.
+ *
+ * Only ever used for administrator-set, factual labels (contract 4) - never
+ * for invented urgency, "hot" markers or fake scarcity. Sentence case rather
+ * than all-caps: M3 reserves uppercase for the eyebrow micro-type, and a
+ * shouted "SOLD OUT" over a photograph reads as marketing noise.
  */
 const badgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-sm border px-1.5 py-0.5 text-2xs font-semibold tracking-wide uppercase",
+  "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-label-md font-semibold whitespace-nowrap",
   {
     variants: {
       tone: {
-        neutral: "border-line bg-sunken text-ink-muted",
-        brand: "border-transparent bg-brand-tint text-brand",
-        success: "border-transparent bg-success-tint text-success",
-        warning: "border-transparent bg-warning-tint text-warning",
-        danger: "border-transparent bg-danger-tint text-danger",
-        info: "border-transparent bg-info-tint text-info",
+        neutral: "border-line bg-surface-high text-ink-muted",
+        brand: "border-transparent bg-brand-container text-brand-on-container",
+        success: "border-success-line bg-success-tint text-success",
+        warning: "border-warning-line bg-warning-tint text-warning",
+        danger: "border-danger-line bg-danger-tint text-danger",
+        info: "border-info-line bg-info-tint text-info",
+      },
+      /** Raises the badge off a photograph, where a flat tint disappears. */
+      raised: {
+        true: "elevation-1",
+        false: "",
       },
     },
-    defaultVariants: { tone: "neutral" },
+    defaultVariants: { tone: "neutral", raised: false },
   },
 );
 
@@ -41,6 +50,6 @@ export interface BadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>,
     VariantProps<typeof badgeVariants> {}
 
-export function Badge({ className, tone, ...props }: BadgeProps) {
-  return <span className={cn(badgeVariants({ tone }), className)} {...props} />;
+export function Badge({ className, tone, raised, ...props }: BadgeProps) {
+  return <span className={cn(badgeVariants({ tone, raised }), className)} {...props} />;
 }

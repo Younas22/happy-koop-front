@@ -13,6 +13,7 @@ import type {
   CategoryDetail,
   HomeContent,
   Page,
+  PageSummary,
   Paginated,
   ProductCard,
   ProductDetail,
@@ -191,6 +192,21 @@ export function fetchCategory(slug: string): Promise<Result<CategoryDetail>> {
 /* ------------------------------------------------------------------ *
  * CMS pages
  * ------------------------------------------------------------------ */
+
+/**
+ * Published CMS pages, titles only.
+ *
+ * Cached with the same tag as the pages themselves, so publishing or renaming
+ * a page in the admin refreshes the footer list along with the page.
+ */
+export function fetchPages(): Promise<Result<PageSummary[]>> {
+  return tryApi(() =>
+    apiGet<PageSummary[]>("/pages", {
+      revalidate: REVALIDATE_PAGE,
+      tags: [CACHE_TAGS.pages],
+    }),
+  );
+}
 
 export function fetchPage(slug: string): Promise<Result<Page>> {
   return tryApi(() =>

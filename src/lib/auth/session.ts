@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { apiGet, tryApi } from "@/lib/api/client";
 import { getSessionToken } from "@/lib/auth/session-token";
 import type { User } from "@/lib/types/api";
+import { localized } from "@/i18n/server";
 
 /**
  * Server-only session helpers.
@@ -44,7 +45,8 @@ export async function getViewer(): Promise<User | null> {
 export async function requireViewer(nextPath: string): Promise<User> {
   const viewer = await getViewer();
   if (!viewer) {
-    redirect(`/login?next=${encodeURIComponent(nextPath)}`);
+    // Both the sign-in page and the way back stay in the visitor's language.
+    redirect(await localized(`/login?next=${encodeURIComponent(await localized(nextPath))}`));
   }
   return viewer;
 }

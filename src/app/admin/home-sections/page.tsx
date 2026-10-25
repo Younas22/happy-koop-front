@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import {
   fetchAdminCategories,
   fetchAdminHomeSections,
-  fetchAdminMedia,
+  fetchAllAdminMedia,
   fetchAdminProducts,
 } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/session";
@@ -30,7 +30,8 @@ export default async function AdminHomeSectionsPage() {
     fetchAdminHomeSections(),
     fetchAdminCategories(),
     fetchAdminProducts({ perPage: 60, status: "published", sort: "name_asc" }),
-    fetchAdminMedia({ type: "image" }),
+    // The whole library, so the media picker can search it.
+    fetchAllAdminMedia({ type: "image" }),
   ]);
 
   return (
@@ -59,7 +60,9 @@ export default async function AdminHomeSectionsPage() {
           sections={sections.data ?? []}
           categories={categories.data ?? []}
           products={products.data?.data ?? []}
-          media={media.data?.data ?? []}
+          media={media.data?.assets ?? []}
+          mediaTotal={media.data?.total}
+          mediaTruncated={media.data?.truncated}
         />
       )}
     </>

@@ -26,6 +26,9 @@ export function ThemeStyle({ primaryColor }: ThemeStyleProps) {
     `--brand-hover:${tokens.brandHover};`,
     `--brand-active:${tokens.brandActive};`,
     `--brand-tint:${tokens.brandTint};`,
+    `--brand-surface:${tokens.brandSurface};`,
+    `--brand-container:${tokens.brandContainer};`,
+    `--brand-on-container:${tokens.brandOnContainer};`,
     `--brand-ink:${tokens.brandInk};`,
     "}",
   ].join("");

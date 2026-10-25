@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import * as React from "react";
 
 import { DialogOverlay, DialogPortal } from "@/components/ui/Dialog";
+import { useMessages } from "@/i18n/client";
 import { cn } from "@/lib/utils/cn";
 
 /**
@@ -22,8 +23,8 @@ export const DrawerTitle = DialogPrimitive.Title;
 export const DrawerDescription = DialogPrimitive.Description;
 
 const sideClasses = {
-  right: "inset-y-0 right-0 h-dvh w-[min(26rem,calc(100vw-2rem))] border-l",
-  left: "inset-y-0 left-0 h-dvh w-[min(22rem,calc(100vw-3rem))] border-r",
+  right: "inset-y-0 right-0 h-dvh w-[min(26rem,calc(100vw-2rem))] border-l sm:rounded-l-xl",
+  left: "inset-y-0 left-0 h-dvh w-[min(22rem,calc(100vw-3rem))] border-r sm:rounded-r-xl",
   bottom: "inset-x-0 bottom-0 max-h-[85dvh] w-full border-t rounded-t-xl",
 } as const;
 
@@ -37,23 +38,31 @@ export const DrawerContent = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Content>,
   DrawerContentProps
 >(function DrawerContent({ className, children, side = "right", hideClose, ...props }, ref) {
+  const { ui } = useMessages();
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          "fixed z-50 flex flex-col border-line bg-surface shadow-xl",
+          "fixed z-50 flex flex-col border-line bg-surface elevation-3",
           sideClasses[side],
           className,
         )}
         {...props}
       >
+        {/* M3 bottom sheets carry a drag handle, so the sheet reads as
+            something that came up from the edge of the screen. */}
+        {side === "bottom" ? (
+          <div className="flex shrink-0 justify-center pt-3 pb-1" aria-hidden="true">
+            <span className="h-1 w-8 rounded-full bg-line-strong" />
+          </div>
+        ) : null}
         {children}
         {hideClose ? null : (
           <DialogPrimitive.Close
-            className="tap-target absolute top-2.5 right-2.5 inline-flex items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-sunken hover:text-ink"
-            aria-label="Close"
+            className="tap-target absolute top-2 right-2 inline-flex items-center justify-center rounded-full text-ink-muted transition-colors duration-200 ease-(--ease-standard) hover:bg-surface-high hover:text-ink"
+            aria-label={ui.close}
           >
             <X className="size-5" aria-hidden="true" />
           </DialogPrimitive.Close>

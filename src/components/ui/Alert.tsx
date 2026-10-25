@@ -4,18 +4,22 @@ import * as React from "react";
 import { cn } from "@/lib/utils/cn";
 
 const tones = {
-  info: { wrap: "border-info/25 bg-info-tint text-ink", icon: Info, iconClass: "text-info" },
+  info: { wrap: "border-info-line bg-info-tint text-ink", icon: Info, iconClass: "text-info" },
   success: {
-    wrap: "border-success/25 bg-success-tint text-ink",
+    wrap: "border-success-line bg-success-tint text-ink",
     icon: CheckCircle2,
     iconClass: "text-success",
   },
   warning: {
-    wrap: "border-warning/25 bg-warning-tint text-ink",
+    wrap: "border-warning-line bg-warning-tint text-ink",
     icon: AlertTriangle,
     iconClass: "text-warning",
   },
-  danger: { wrap: "border-danger/25 bg-danger-tint text-ink", icon: XCircle, iconClass: "text-danger" },
+  danger: {
+    wrap: "border-danger-line bg-danger-tint text-ink",
+    icon: XCircle,
+    iconClass: "text-danger",
+  },
 } as const;
 
 export interface AlertProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
@@ -25,7 +29,7 @@ export interface AlertProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "
   live?: boolean;
 }
 
-/** Flat tinted panel with a border. No gradient, no coloured shadow. */
+/** M3 banner: a tonal panel with a leading status icon. No gradient. */
 export function Alert({ className, tone = "info", title, live, children, ...props }: AlertProps) {
   const config = tones[tone];
   const Icon = config.icon;
@@ -33,7 +37,7 @@ export function Alert({ className, tone = "info", title, live, children, ...prop
     <div
       role={tone === "danger" ? "alert" : "status"}
       aria-live={live ? (tone === "danger" ? "assertive" : "polite") : undefined}
-      className={cn("flex gap-3 rounded-md border p-3 text-sm", config.wrap, className)}
+      className={cn("flex gap-3 rounded-md border p-4 text-body-md", config.wrap, className)}
       {...props}
     >
       <Icon className={cn("mt-0.5 size-4.5 shrink-0", config.iconClass)} aria-hidden="true" />

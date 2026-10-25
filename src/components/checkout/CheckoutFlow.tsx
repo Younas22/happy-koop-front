@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, ShoppingBag } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/Link";
 import * as React from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -21,6 +21,9 @@ import { Input } from "@/components/ui/Input";
 import { RadioCard, RadioGroup } from "@/components/ui/RadioGroup";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Textarea } from "@/components/ui/Textarea";
+import { useMessages } from "@/i18n/client";
+import { fmt } from "@/i18n/format";
+import type { Messages } from "@/i18n/messages";
 import { useCartStore } from "@/lib/cart/store";
 import { useCartValidation } from "@/lib/cart/use-cart-validation";
 import { newIdempotencyKey } from "@/lib/checkout/idempotency";
@@ -29,7 +32,7 @@ import { isTestMode } from "@/lib/checkout/payment-methods";
 import { applyFieldErrors } from "@/lib/forms/api-errors";
 import type { CountryOption } from "@/lib/geo/countries";
 import { requestSameOrigin, postSameOrigin } from "@/lib/http/same-origin";
-import { addressSchema, emptyAddress, toAddressPayload } from "@/lib/validation/address";
+import { createAddressSchema, emptyAddress, toAddressPayload } from "@/lib/validation/address";
 import type {
   CheckoutInitializeResult,
   Order,
@@ -58,15 +61,18 @@ import type {
  * No price, total or payment status is ever decided here.
  */
 
-const contactSchema = z.object({
-  email: z.string().trim().min(1, "Enter your email address.").email("Enter a valid email address."),
-  phone: z.string().trim().max(32),
-  shippingAddress: addressSchema,
-  customerNote: z.string().trim().max(2000),
-  acceptsMarketing: z.boolean(),
-});
+/** Built from the dictionary, so every validation message is in the page's language. */
+function createContactSchema(m: Messages) {
+  return z.object({
+    email: z.string().trim().min(1, m.checkout.emailRequired).email(m.checkout.emailInvalid),
+    phone: z.string().trim().max(32),
+    shippingAddress: createAddressSchema(m.address.errors),
+    customerNote: z.string().trim().max(2000),
+    acceptsMarketing: z.boolean(),
+  });
+}
 
-type FormValues = z.infer<typeof contactSchema>;
+type FormValues = z.infer<ReturnType<typeof createContactSchema>>;
 
 const KNOWN_FIELDS = [
   "email",
@@ -111,14 +117,14 @@ function Section({
   return (
     <section className="surface-card p-4 sm:p-5" aria-labelledby={`checkout-step-${step}`}>
       <div className="mb-4 flex items-start gap-3">
-        <span className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-sunken text-xs font-semibold text-ink-muted">
+        <span className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-container text-label-md font-semibold text-ink-muted">
           {step}
         </span>
         <div className="min-w-0">
-          <h2 id={`checkout-step-${step}`} className="text-base font-semibold text-ink">
+          <h2 id={`checkout-step-${step}`} className="text-title-md text-ink">
             {title}
           </h2>
-          {description ? <p className="mt-0.5 text-sm text-ink-muted">{description}</p> : null}
+          {description ? <p className="mt-0.5 text-body-md text-ink-muted">{description}</p> : null}
         </div>
       </div>
       {children}
@@ -166,6 +172,9 @@ export function CheckoutFlow({
   initialCountryCode,
   currency,
 }: CheckoutFlowProps) {
+  const m = useMessages();
+  const t = m.checkout;
+  const contactSchema = React.useMemo(() => createContactSchema(m), [m]);
   const lines = useCartStore((state) => state.lines);
   const hydrated = useCartStore((state) => state.hydrated);
   const { validation, validating, error: cartError, revalidate } = useCartValidation();
@@ -265,11 +274,11 @@ export function CheckoutFlow({
     return (
       <EmptyState
         icon={ShoppingBag}
-        title="Your cart is empty"
-        description="Add something to your cart before checking out."
+        title={t.emptyTitle}
+        description={t.emptyBody}
         action={
           <Button asChild>
-            <Link href="/shop">Browse the shop</Link>
+            <Link href="/shop">{m.common.browseShop}</Link>
           </Button>
         }
       />
@@ -280,11 +289,11 @@ export function CheckoutFlow({
     return (
       <EmptyState
         icon={Lock}
-        title="Sign in to check out"
-        description="This store requires an account to place an order."
+        title={t.signInTitle}
+        description={t.signInBody}
         action={
           <Button asChild>
-            <Link href="/login?next=%2Fcheckout">Sign in</Link>
+            <Link href="/login?next=%2Fcheckout">{t.signIn}</Link>
           </Button>
         }
       />
@@ -301,9 +310,13 @@ export function CheckoutFlow({
     return (
       <div className="grid gap-6 lg:grid-cols-[1fr_22rem] lg:gap-8">
         <div className="min-w-0 space-y-4">
-          <Section step={4} title="Payment" description={`Order ${order.orderNumber}`}>
+          <Section
+            step={4}
+            title={t.steps.payment}
+            description={fmt(t.orderN, { number: order.orderNumber })}
+          >
             {formError ? (
-              <Alert tone="danger" live title="Payment could not be started" className="mb-4">
+              <Alert tone="danger" live title={t.paymentStartFailed} className="mb-4">
                 {formError}
               </Alert>
             ) : null}
@@ -327,15 +340,14 @@ export function CheckoutFlow({
             ) : (
               <div className="space-y-3">
                 <Skeleton className="h-28" />
-                <p className="text-sm text-ink-muted" aria-live="polite">
-                  Preparing the payment form…
+                <p className="text-body-md text-ink-muted" aria-live="polite">
+                  {t.preparing}
                 </p>
               </div>
             )}
 
-            <p className="mt-4 text-xs text-ink-muted">
-              Your order is reserved but not complete until the payment is confirmed by the payment
-              provider. We never mark an order paid from this page.
+            <p className="mt-4 text-body-sm text-ink-muted">
+              {t.reservedNotice}
             </p>
           </Section>
         </div>
@@ -414,9 +426,7 @@ export function CheckoutFlow({
       }
 
       if (result.error.code === "PAYMENT_NOT_CONFIGURED") {
-        setFormError(
-          "That payment method is no longer available. Reload the page to see the current options.",
-        );
+        setFormError(t.providerGone);
         return;
       }
 
@@ -448,37 +458,33 @@ export function CheckoutFlow({
     <div className="grid gap-6 lg:grid-cols-[1fr_22rem] lg:gap-8">
       <div className="min-w-0">
         {cartError ? (
-          <Alert tone="danger" live title="We could not check your cart" className="mb-4">
+          <Alert tone="danger" live title={m.cart.checkFailedTitle} className="mb-4">
             {cartError}{" "}
             <button
               type="button"
               onClick={revalidate}
               className="font-medium text-brand underline hover:no-underline"
             >
-              Try again
+              {m.common.tryAgain}
             </button>
           </Alert>
         ) : null}
 
         {cartChanged ? (
-          <Alert tone="warning" live title="Your cart changed before payment" className="mb-4">
+          <Alert tone="warning" live title={t.cartChangedTitle} className="mb-4">
             <p>{cartChanged}</p>
-            <p className="mt-1">
-              The summary now shows the current prices and availability. Review it, then confirm to
-              continue. Nothing has been charged.
-            </p>
+            <p className="mt-1">{t.cartChangedBody}</p>
             <div className="mt-3">
               <Button size="sm" variant="secondary" onClick={() => setReconfirmed(true)}>
-                I have reviewed the changes
+                {t.reviewed}
               </Button>
             </div>
           </Alert>
         ) : null}
 
         {noPaymentConfigured ? (
-          <Alert tone="danger" title="Online payment is not configured" className="mb-4">
-            This store has no payment provider enabled, so an order cannot be completed right now.
-            Nothing you enter below would be charged. Please contact the store to place your order.
+          <Alert tone="danger" title={t.notConfiguredTitle} className="mb-4">
+            {t.notConfiguredBody}
           </Alert>
         ) : null}
 
@@ -486,13 +492,13 @@ export function CheckoutFlow({
           <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <Section
               step={1}
-              title="Contact"
-              description="We use this to send your order confirmation."
+              title={t.steps.contact}
+              description={t.steps.contactBody}
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   id="checkout-email"
-                  label="Email address"
+                  label={t.email}
                   required
                   error={form.formState.errors.email?.message ?? null}
                 >
@@ -511,8 +517,8 @@ export function CheckoutFlow({
 
                 <FormField
                   id="checkout-phone"
-                  label="Phone"
-                  description="Optional."
+                  label={t.phone}
+                  description={t.phoneOptional}
                   error={form.formState.errors.phone?.message ?? null}
                 >
                   {(field) => (
@@ -522,20 +528,20 @@ export function CheckoutFlow({
               </div>
 
               {!viewer ? (
-                <p className="mt-3 text-xs text-ink-muted">
-                  Checking out as a guest.{" "}
+                <p className="mt-3 text-body-sm text-ink-muted">
+                  {t.guestPrefix}{" "}
                   <Link
                     href="/login?next=%2Fcheckout"
                     className="font-medium text-brand underline-offset-2 hover:underline"
                   >
-                    Sign in
+                    {t.guestSignIn}
                   </Link>{" "}
-                  to use a saved address.
+                  {t.guestSuffix}
                 </p>
               ) : null}
             </Section>
 
-            <Section step={2} title="Delivery address">
+            <Section step={2} title={t.steps.address}>
               <AddressFields
                 idPrefix="checkout-shipping"
                 prefix="shippingAddress"
@@ -550,15 +556,15 @@ export function CheckoutFlow({
                 }
               />
 
-              <p className="mt-3 text-xs text-ink-muted">
-                Billing address is the same as the delivery address.
+              <p className="mt-3 text-body-sm text-ink-muted">
+                {t.billingSame}
               </p>
             </Section>
 
             <Section
               step={3}
-              title="Delivery method"
-              description="Rates come from the store's configured shipping zones."
+              title={t.steps.method}
+              description={t.steps.methodBody}
             >
               <ShippingMethodPicker
                 countryCode={countryCode}
@@ -590,16 +596,16 @@ export function CheckoutFlow({
                       )
                     }
                   >
-                    Check delivery options for this country
+                    {t.checkCountry}
                   </Button>
                 </div>
               ) : null}
             </Section>
 
-            <Section step={4} title="Payment">
+            <Section step={4} title={t.steps.payment}>
               {noPaymentConfigured ? (
-                <p className="text-sm text-ink-muted">
-                  No payment provider is enabled for this store.
+                <p className="text-body-md text-ink-muted">
+                  {t.noProvider}
                 </p>
               ) : (
                 <RadioGroup
@@ -607,19 +613,18 @@ export function CheckoutFlow({
                   onValueChange={(value) => setProvider(value as "stripe" | "paypal")}
                   disabled={submitting}
                   className="space-y-2"
-                  aria-label="Payment method"
+                  aria-label={t.paymentMethod}
                 >
                   {methods.map((method) => (
                     <RadioCard
                       key={method.provider}
                       id={`payment-${method.provider}`}
                       value={method.provider}
-                      title={method.label}
+                      title={method.provider === "paypal" ? t.paypalLabel : t.cardLabel}
                       description={
                         isTestMode(method) ? (
                           <span className="block">
-                            {method.provider === "stripe" ? "Test mode" : "Sandbox mode"} - no real
-                            charge
+                            {method.provider === "stripe" ? t.stripeTest : t.paypalSandbox}
                           </span>
                         ) : undefined
                       }
@@ -632,8 +637,8 @@ export function CheckoutFlow({
               <div className="mt-4 space-y-4">
                 <FormField
                   id="checkout-note"
-                  label="Order note"
-                  description="Optional. Anything we should know about this order."
+                  label={t.note}
+                  description={t.noteHint}
                   error={form.formState.errors.customerNote?.message ?? null}
                 >
                   {(field) => <Textarea {...field} rows={3} {...form.register("customerNote")} />}
@@ -641,7 +646,7 @@ export function CheckoutFlow({
 
                 <CheckboxField
                   id="checkout-accepts-marketing"
-                  label="Email me occasional store updates"
+                  label={t.marketing}
                   checked={form.watch("acceptsMarketing") === true}
                   onCheckedChange={(checked) =>
                     form.setValue("acceptsMarketing", checked === true)
@@ -651,7 +656,7 @@ export function CheckoutFlow({
             </Section>
 
             {formError ? (
-              <Alert tone="danger" live title="We could not place your order">
+              <Alert tone="danger" live title={t.placeFailed}>
                 {formError}
               </Alert>
             ) : null}
@@ -663,25 +668,25 @@ export function CheckoutFlow({
                 size="lg"
                 disabled={!canSubmit}
                 loading={submitting}
-                loadingLabel="Placing your order…"
+                loadingLabel={t.placing}
               >
-                Continue to payment
+                {t.continue}
               </Button>
 
               {destinationBlocked ? (
-                <p className="mt-2 text-xs text-warning">
-                  Choose a country we can deliver to in order to continue.
+                <p className="mt-2 text-body-sm text-warning">
+                  {t.blocked}
                 </p>
               ) : null}
 
               {!reconfirmed ? (
-                <p className="mt-2 text-xs text-warning">
-                  Confirm the cart changes above before continuing.
+                <p className="mt-2 text-body-sm text-warning">
+                  {t.confirmChanges}
                 </p>
               ) : null}
 
-              <p className="mt-2 text-xs text-ink-muted">
-                You will enter payment details on the next step. Nothing is charged until then.
+              <p className="mt-2 text-body-sm text-ink-muted">
+                {t.nextStepNotice}
               </p>
             </div>
           </form>

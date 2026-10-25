@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/Button";
 import { RadioCard, RadioGroup } from "@/components/ui/RadioGroup";
 import { Spinner } from "@/components/ui/Spinner";
 import { formatMoney } from "@/lib/money";
+import { useI18n } from "@/i18n/client";
+import type { Locale } from "@/i18n/config";
+import { fmt, plural } from "@/i18n/format";
+import type { Messages } from "@/i18n/messages";
 import type { ShippingOption } from "@/lib/types/api";
 
 /**
@@ -29,14 +33,18 @@ export interface ShippingMethodPickerProps {
   disabled?: boolean;
 }
 
-function estimateText(option: ShippingOption): string | null {
+function estimateText(
+  option: ShippingOption,
+  locale: Locale,
+  t: Messages["checkout"]["shipping"],
+): string | null {
   const { estimateMinDays: min, estimateMaxDays: max } = option;
   if (min === null && max === null) return null;
   if (min !== null && max !== null) {
-    return min === max ? `${min} business days` : `${min}-${max} business days`;
+    return min === max ? plural(locale, min, t.days) : fmt(t.range, { min, max });
   }
   const single = min ?? max;
-  return single === null ? null : `${single} business days`;
+  return single === null ? null : plural(locale, single, t.days);
 }
 
 export function ShippingMethodPicker({
@@ -49,30 +57,33 @@ export function ShippingMethodPicker({
   onRetry,
   disabled,
 }: ShippingMethodPickerProps) {
+  const { locale, m } = useI18n();
+  const t = m.checkout.shipping;
+
   if (!countryCode) {
     return (
-      <p className="text-sm text-ink-muted">
-        Choose a delivery country above to see the available delivery options.
+      <p className="text-body-md text-ink-muted">
+        {t.chooseCountry}
       </p>
     );
   }
 
   if (loading) {
     return (
-      <p className="flex items-center gap-2 text-sm text-ink-muted" aria-live="polite">
+      <p className="flex items-center gap-2 text-body-md text-ink-muted" aria-live="polite">
         <Spinner size="sm" />
-        Checking delivery options…
+        {t.checking}
       </p>
     );
   }
 
   if (error) {
     return (
-      <Alert tone="danger" live title="We could not load delivery options">
+      <Alert tone="danger" live title={t.loadFailed}>
         {error}
         <div className="mt-2">
           <Button size="sm" variant="secondary" onClick={onRetry}>
-            Try again
+            {m.common.tryAgain}
           </Button>
         </div>
       </Alert>
@@ -81,9 +92,8 @@ export function ShippingMethodPicker({
 
   if (options.length === 0) {
     return (
-      <Alert tone="warning" live title="We cannot deliver to this country yet">
-        No delivery rate is configured for this destination, so this order cannot be completed.
-        Choose a different delivery country, or contact us to ask about delivery there.
+      <Alert tone="warning" live title={t.blockedTitle}>
+        {t.blockedBody}
       </Alert>
     );
   }
@@ -94,10 +104,10 @@ export function ShippingMethodPicker({
       onValueChange={onSelect}
       disabled={disabled}
       className="space-y-2"
-      aria-label="Delivery method"
+      aria-label={t.label}
     >
       {options.map((option) => {
-        const estimate = estimateText(option);
+        const estimate = estimateText(option, locale, t);
         return (
           <RadioCard
             key={option.id}
@@ -111,7 +121,7 @@ export function ShippingMethodPicker({
               </>
             }
             trailing={
-              <span className="text-sm font-semibold text-ink tabular-nums">
+              <span className="text-title-sm text-ink tabular-nums">
                 {formatMoney(option.price)}
               </span>
             }

@@ -3,6 +3,7 @@
 import { Minus, Plus } from "lucide-react";
 import * as React from "react";
 
+import { useMessages } from "@/i18n/client";
 import { cn } from "@/lib/utils/cn";
 
 export interface QuantityStepperProps {
@@ -18,9 +19,10 @@ export interface QuantityStepperProps {
 }
 
 /**
- * Quantity stepper.
+ * Quantity stepper, shaped as a Material 3 segmented control: one tonal pill
+ * with two circular icon buttons on it, each carrying a state layer.
  *
- * - Both buttons and the field are 44px tall touch targets.
+ * - Both buttons and the field are 48px tall touch targets.
  * - Fully keyboard operable: the number input accepts typing and arrow keys,
  *   and the buttons are real buttons.
  * - `max` is only applied when the backend gave a real tracked quantity, so
@@ -32,9 +34,11 @@ export function QuantityStepper({
   min = 1,
   max = null,
   disabled = false,
-  label = "Quantity",
+  label,
   className,
 }: QuantityStepperProps) {
+  const { ui } = useMessages();
+  const inputLabel = label ?? ui.quantity;
   const inputId = React.useId();
   const ceiling = max === null ? Number.POSITIVE_INFINITY : max;
 
@@ -49,10 +53,14 @@ export function QuantityStepper({
   const atMin = value <= min;
   const atMax = value >= ceiling;
 
+  const stepButton =
+    "state-layer tap-target inline-flex items-center justify-center rounded-full text-ink " +
+    "disabled:cursor-not-allowed disabled:text-ink-subtle disabled:opacity-60";
+
   return (
     <div
       className={cn(
-        "inline-flex items-stretch overflow-hidden rounded-md border border-line-strong bg-surface",
+        "inline-flex items-center gap-1 rounded-full border border-line-strong bg-surface-container p-1",
         disabled && "opacity-55",
         className,
       )}
@@ -61,14 +69,14 @@ export function QuantityStepper({
         type="button"
         onClick={() => onChange(clamp(value - 1))}
         disabled={disabled || atMin}
-        aria-label="Decrease quantity"
-        className="tap-target inline-flex items-center justify-center text-ink transition-colors hover:bg-sunken disabled:cursor-not-allowed disabled:text-ink-subtle disabled:hover:bg-transparent"
+        aria-label={ui.decrease}
+        className={stepButton}
       >
         <Minus className="size-4" aria-hidden="true" />
       </button>
 
       <label htmlFor={inputId} className="sr-only">
-        {label}
+        {inputLabel}
       </label>
       <input
         id={inputId}
@@ -89,7 +97,7 @@ export function QuantityStepper({
           onChange(clamp(Number.isNaN(parsed) ? min : parsed));
         }}
         className={cn(
-          "h-11 w-12 border-x border-line-strong bg-surface text-center text-sm font-medium text-ink",
+          "h-10 w-10 rounded-full border-none bg-transparent text-center text-title-sm text-ink",
           "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           "disabled:cursor-not-allowed",
         )}
@@ -99,8 +107,8 @@ export function QuantityStepper({
         type="button"
         onClick={() => onChange(clamp(value + 1))}
         disabled={disabled || atMax}
-        aria-label="Increase quantity"
-        className="tap-target inline-flex items-center justify-center text-ink transition-colors hover:bg-sunken disabled:cursor-not-allowed disabled:text-ink-subtle disabled:hover:bg-transparent"
+        aria-label={ui.increase}
+        className={stepButton}
       >
         <Plus className="size-4" aria-hidden="true" />
       </button>

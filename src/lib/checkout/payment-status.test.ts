@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { describePaymentStatus, isPaymentSuccessful } from "@/lib/checkout/payment-status";
+import { messagesFor } from "@/i18n/messages";
 import type { PaymentStatus } from "@/lib/types/api";
+
+const EN = messagesFor("en").paymentStatus;
 
 /**
  * The success page reads `paymentStatus` from
@@ -12,7 +15,7 @@ import type { PaymentStatus } from "@/lib/types/api";
 
 describe("describePaymentStatus", () => {
   it("treats unpaid as NOT success - it is a pending webhook, not a receipt", () => {
-    const view = describePaymentStatus("unpaid");
+    const view = describePaymentStatus("unpaid", EN);
 
     expect(view.isSuccess).toBe(false);
     expect(isPaymentSuccessful("unpaid")).toBe(false);
@@ -26,7 +29,7 @@ describe("describePaymentStatus", () => {
   });
 
   it("treats paid as success and allows the cart to be cleared", () => {
-    const view = describePaymentStatus("paid");
+    const view = describePaymentStatus("paid", EN);
 
     expect(view.isSuccess).toBe(true);
     expect(view.outcome).toBe("confirmed");
@@ -35,7 +38,7 @@ describe("describePaymentStatus", () => {
   });
 
   it("treats authorized as success but keeps a refresh affordance", () => {
-    const view = describePaymentStatus("authorized");
+    const view = describePaymentStatus("authorized", EN);
 
     expect(view.isSuccess).toBe(true);
     expect(view.mayClearCart).toBe(true);
@@ -43,7 +46,7 @@ describe("describePaymentStatus", () => {
   });
 
   it("treats failed as a failure with a retry path and an intact cart", () => {
-    const view = describePaymentStatus("failed");
+    const view = describePaymentStatus("failed", EN);
 
     expect(view.isSuccess).toBe(false);
     expect(view.outcome).toBe("failed");
@@ -52,7 +55,7 @@ describe("describePaymentStatus", () => {
   });
 
   it("treats cancelled as a failure with a retry path", () => {
-    const view = describePaymentStatus("cancelled");
+    const view = describePaymentStatus("cancelled", EN);
 
     expect(view.isSuccess).toBe(false);
     expect(view.canRetry).toBe(true);
@@ -60,11 +63,11 @@ describe("describePaymentStatus", () => {
   });
 
   it("handles the refund statuses distinctly", () => {
-    expect(describePaymentStatus("partially_refunded").outcome).toBe("refunded");
-    expect(describePaymentStatus("partially_refunded").isSuccess).toBe(true);
+    expect(describePaymentStatus("partially_refunded", EN).outcome).toBe("refunded");
+    expect(describePaymentStatus("partially_refunded", EN).isSuccess).toBe(true);
 
-    expect(describePaymentStatus("refunded").outcome).toBe("refunded");
-    expect(describePaymentStatus("refunded").isSuccess).toBe(false);
+    expect(describePaymentStatus("refunded", EN).outcome).toBe("refunded");
+    expect(describePaymentStatus("refunded", EN).isSuccess).toBe(false);
   });
 
   it("only ever reports success for paid, authorized or partially refunded", () => {
@@ -84,8 +87,8 @@ describe("describePaymentStatus", () => {
   });
 
   it("never clears the cart for a status the server has not moved off unpaid/failed", () => {
-    expect(describePaymentStatus("unpaid").mayClearCart).toBe(false);
-    expect(describePaymentStatus("failed").mayClearCart).toBe(false);
-    expect(describePaymentStatus("cancelled").mayClearCart).toBe(false);
+    expect(describePaymentStatus("unpaid", EN).mayClearCart).toBe(false);
+    expect(describePaymentStatus("failed", EN).mayClearCart).toBe(false);
+    expect(describePaymentStatus("cancelled", EN).mayClearCart).toBe(false);
   });
 });

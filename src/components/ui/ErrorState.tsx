@@ -1,6 +1,9 @@
+"use client";
+
 import { CloudOff, TriangleAlert } from "lucide-react";
 import * as React from "react";
 
+import { useMessages } from "@/i18n/client";
 import { cn } from "@/lib/utils/cn";
 
 export interface ErrorStateProps {
@@ -27,13 +30,10 @@ export function ErrorState({
   action,
   className,
 }: ErrorStateProps) {
+  const { ui } = useMessages();
   const Icon = unreachable ? CloudOff : TriangleAlert;
-  const heading = title ?? (unreachable ? "We could not reach the store" : "Something went wrong");
-  const body =
-    message ??
-    (unreachable
-      ? "The store is not responding right now. Nothing has been lost - please try again in a moment."
-      : "Please try again. If it keeps happening, contact us and we will look into it.");
+  const heading = title ?? (unreachable ? ui.errorUnreachableTitle : ui.errorGenericTitle);
+  const body = message ?? (unreachable ? ui.errorUnreachableBody : ui.errorGenericBody);
 
   return (
     <div
@@ -43,8 +43,8 @@ export function ErrorState({
       <span className="mb-4 inline-flex size-12 items-center justify-center rounded-full bg-danger-tint">
         <Icon className="size-5.5 text-danger" aria-hidden="true" />
       </span>
-      <h2 className="text-base font-semibold text-ink">{heading}</h2>
-      <p className="mt-1.5 max-w-sm text-sm text-ink-muted">{body}</p>
+      <h2 className="text-title-md text-ink">{heading}</h2>
+      <p className="mt-1.5 max-w-sm text-body-md text-ink-muted">{body}</p>
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
   );

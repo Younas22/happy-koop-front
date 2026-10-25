@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AdminPageHeader } from "@/components/admin/AdminParts";
 import { ProductForm } from "@/components/admin/ProductForm";
 import { Button } from "@/components/ui/Button";
-import { fetchAdminCategories, fetchAdminMedia } from "@/lib/admin/queries";
+import { fetchAdminCategories, fetchAllAdminMedia } from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/session";
 import { getRuntimeConfig } from "@/lib/runtime-config";
 import { buildPageMetadata } from "@/lib/utils/seo";
@@ -25,7 +25,7 @@ export default async function AdminNewProductPage() {
   // A failed read here just means fewer attachment choices, not a broken form.
   const [categories, media] = await Promise.all([
     fetchAdminCategories(),
-    fetchAdminMedia({ type: "image" }),
+    fetchAllAdminMedia({ type: "image" }),
   ]);
 
   return (
@@ -43,7 +43,7 @@ export default async function AdminNewProductPage() {
       <ProductForm
         product={null}
         categories={categories.data ?? []}
-        media={media.data?.data ?? []}
+        media={media.data?.assets ?? []}
         currency={config.locale.currency}
         minorUnitExponent={config.locale.minorUnitExponent}
       />
