@@ -49,7 +49,7 @@ export async function SiteHeader({ config }: SiteHeaderProps) {
       <HeaderUtilityBar config={config} m={m} />
 
       <AppBar>
-        <div className="page-container flex h-16 items-center gap-2 sm:gap-3 md:h-18 md:gap-6">
+        <div className="page-container flex h-18 items-center gap-2 sm:gap-3 md:h-20 md:gap-6">
           {/* A phone's menu button belongs at the leading edge, before the
               brand mark - not as the fourth icon on the right. */}
           <MobileMenu
@@ -65,8 +65,8 @@ export async function SiteHeader({ config }: SiteHeaderProps) {
           <BrandLogo
             store={store}
             homeLabel={fmt(m.header.homeLabel, { store: store.name })}
-            height={48}
-            className="max-w-32 sm:max-w-48 lg:max-w-60"
+            height={60}
+            className="max-w-36 sm:max-w-52 lg:max-w-64"
             priority
           />
 
