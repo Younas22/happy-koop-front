@@ -65,8 +65,8 @@ export async function SiteHeader({ config }: SiteHeaderProps) {
           <BrandLogo
             store={store}
             homeLabel={fmt(m.header.homeLabel, { store: store.name })}
-            height={32}
-            className="max-w-28 sm:max-w-44 lg:max-w-56"
+            height={48}
+            className="max-w-32 sm:max-w-48 lg:max-w-60"
             priority
           />
 

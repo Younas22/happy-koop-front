@@ -104,9 +104,9 @@ export async function SiteFooter({ config }: SiteFooterProps) {
             <BrandLogo
               store={store}
               tone="dark"
-              height={34}
+              height={56}
               homeLabel={fmt(m.header.homeLabel, { store: store.name })}
-              className="max-w-52"
+              className="max-w-60"
             />
             {store.tagline ? (
               <p className="max-w-80 text-body-md text-ink-inverse/70">{store.tagline}</p>
