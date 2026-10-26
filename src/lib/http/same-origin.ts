@@ -82,3 +82,63 @@ export function postSameOrigin<T>(
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 }
+
+/**
+ * Multipart POST to a same-origin route handler that reports upload progress.
+ *
+ * `fetch` cannot observe request-body progress, so this uses XMLHttpRequest.
+ * `onProgress` receives the share of the body sent so far, from 0 to 1. Once
+ * it reaches 1 the server is still storing the file; the promise settles when
+ * the response arrives, with the same result shape as `requestSameOrigin`.
+ */
+export function uploadSameOrigin<T>(
+  path: string,
+  body: FormData,
+  onProgress?: (fraction: number) => void,
+): Promise<SameOriginResult<T>> {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", path);
+    xhr.setRequestHeader("Accept", "application/json");
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && event.total > 0) onProgress?.(event.loaded / event.total);
+    };
+
+    xhr.onerror = () => resolve({ ok: false, status: 0, error: UNREACHABLE });
+    xhr.onabort = xhr.onerror;
+
+    xhr.onload = () => {
+      let payload: unknown = null;
+      try {
+        payload = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+      } catch {
+        payload = null;
+      }
+
+      if (xhr.status < 200 || xhr.status >= 300) {
+        resolve({
+          ok: false,
+          status: xhr.status,
+          error: asApiErrorPayload(payload) ?? {
+            message:
+              xhr.status === 413
+                ? "This file is larger than the server accepts."
+                : "Something went wrong. Please try again.",
+            code: `HTTP_${xhr.status}`,
+            errors: null,
+          },
+        });
+        return;
+      }
+
+      const data =
+        payload && typeof payload === "object" && "data" in payload
+          ? (payload as { data: T }).data
+          : (payload as T);
+      resolve({ ok: true, status: xhr.status, data });
+    };
+
+    xhr.send(body);
+  });
+}
