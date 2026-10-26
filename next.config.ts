@@ -9,11 +9,31 @@ import type { NextConfig } from "next";
  * allowlist used to validate the runtime-config apiBaseUrl. This keeps a
  * compromised or misconfigured settings row from turning next/image into an
  * open image proxy.
+ *
+ * The bootstrap API host is always added, so images keep working on a deploy
+ * where NEXT_PUBLIC_ALLOWED_API_HOSTS was not set (remotePatterns are fixed at
+ * build time; an env var added later needs a redeploy).
  */
-const allowedHosts = (process.env.NEXT_PUBLIC_ALLOWED_API_HOSTS ?? "127.0.0.1,localhost")
-  .split(",")
-  .map((host) => host.trim())
-  .filter(Boolean);
+function bootstrapHost(): string | null {
+  try {
+    return new URL(
+      process.env.NEXT_PUBLIC_API_BOOTSTRAP_URL?.trim() || "https://shop.happykoop.be",
+    ).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+const allowedHosts = Array.from(
+  new Set(
+    [
+      ...(process.env.NEXT_PUBLIC_ALLOWED_API_HOSTS ?? "127.0.0.1,localhost").split(","),
+      bootstrapHost(),
+    ]
+      .map((host) => host?.trim().toLowerCase())
+      .filter((host): host is string => Boolean(host)),
+  ),
+);
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
