@@ -38,43 +38,68 @@ export function MediaManager({
   const router = useRouter();
   const [uploading, setUploading] = React.useState(false);
   const [uploadError, setUploadError] = React.useState<string | null>(null);
+  const [progress, setProgress] = React.useState<{ current: number; total: number } | null>(null);
   const [alt, setAlt] = React.useState("");
   const [folder, setFolder] = React.useState("");
   const [deleting, setDeleting] = React.useState<AdminMediaAsset | null>(null);
   const [deleteBusy, setDeleteBusy] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
 
+  /**
+   * Uploads every selected file, one request per file, in sequence. The API
+   * takes a single file per request, and going one at a time keeps the server
+   * and the upload rate limit comfortable. A rejected file does not stop the
+   * rest; its reason is listed once the batch finishes.
+   */
   async function upload(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(event.target.files ?? []);
+    // Allow re-selecting the same files after a failure.
+    event.target.value = "";
+    if (files.length === 0) return;
 
     setUploading(true);
     setUploadError(null);
 
-    const body = new FormData();
-    body.set("file", file);
-    if (alt.trim()) body.set("alt", alt.trim());
-    if (folder.trim()) body.set("folder", folder.trim());
+    const failures: string[] = [];
+    let uploaded = 0;
 
-    const result = await requestSameOrigin<AdminMediaAsset>("/api/admin/media", {
-      method: "POST",
-      body,
-    });
+    for (const [index, file] of files.entries()) {
+      setProgress({ current: index + 1, total: files.length });
 
-    setUploading(false);
-    // Allow re-uploading the same file after a failure.
-    event.target.value = "";
+      const body = new FormData();
+      body.set("file", file);
+      if (alt.trim()) body.set("alt", alt.trim());
+      if (folder.trim()) body.set("folder", folder.trim());
 
-    if (!result.ok) {
+      const result = await requestSameOrigin<AdminMediaAsset>("/api/admin/media", {
+        method: "POST",
+        body,
+      });
+
+      if (result.ok) {
+        uploaded += 1;
+        continue;
+      }
+
       const details = flattenFieldErrors(result.error.errors);
-      setUploadError(details.length > 0 ? details.join(" ") : result.error.message);
-      toast.error("The upload was rejected.");
-      return;
+      failures.push(`${file.name}: ${details.length > 0 ? details.join(" ") : result.error.message}`);
     }
 
-    setAlt("");
-    toast.success("File uploaded.");
-    router.refresh();
+    setUploading(false);
+    setProgress(null);
+
+    if (failures.length > 0) {
+      setUploadError(failures.join("\n"));
+      toast.error(
+        failures.length === 1 ? "1 file was rejected." : `${failures.length} files were rejected.`,
+      );
+    }
+
+    if (uploaded > 0) {
+      setAlt("");
+      toast.success(uploaded === 1 ? "File uploaded." : `${uploaded} files uploaded.`);
+      router.refresh();
+    }
   }
 
   async function confirmDelete() {
@@ -106,7 +131,7 @@ export function MediaManager({
 
         {uploadError ? (
           <Alert tone="danger" live title="The upload was rejected" className="mt-3">
-            {uploadError}
+            <span className="whitespace-pre-line">{uploadError}</span>
           </Alert>
         ) : null}
 
@@ -144,11 +169,16 @@ export function MediaManager({
             className="tap-target inline-flex cursor-pointer items-center gap-2 rounded-md border border-line-strong bg-surface px-4 text-sm font-medium text-ink hover:bg-sunken"
           >
             <Upload className="size-4" aria-hidden="true" />
-            {uploading ? "Uploading…" : "Choose a file"}
+            {uploading
+              ? progress && progress.total > 1
+                ? `Uploading ${progress.current} of ${progress.total}…`
+                : "Uploading…"
+              : "Choose files"}
           </label>
           <input
             id="media-file"
             type="file"
+            multiple
             accept="image/jpeg,image/png,image/webp,image/avif,video/mp4"
             className="sr-only"
             disabled={uploading}
