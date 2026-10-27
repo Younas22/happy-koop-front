@@ -473,6 +473,30 @@ export interface AdminMailSettingsUpdate {
   fromName: string | null;
 }
 
+export type ContactMessageStatus = "new" | "handled";
+
+/** A contact form message in the admin list. */
+export interface AdminContactMessageSummary {
+  id: number;
+  reference: string;
+  name: string;
+  email: string;
+  subject: string | null;
+  status: ContactMessageStatus;
+  userId: number | null;
+  receivedAt: string | null;
+  handledAt: string | null;
+  /** The start of the message, on one line. */
+  preview: string;
+}
+
+export interface AdminContactMessage extends Omit<
+  AdminContactMessageSummary,
+  "preview"
+> {
+  message: string;
+}
+
 export interface AdminBulkResult {
   succeeded: number[];
   failed: { id: number; message: string }[];

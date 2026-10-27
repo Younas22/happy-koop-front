@@ -16,6 +16,7 @@ import type {
   AdminMailTestResult,
   AdminPaymentSettingsUpdate,
   AdminProductDetail,
+  ContactMessageStatus,
   OrderStatus,
   PaymentStatus,
   ReviewModerationStatus,
@@ -459,6 +460,66 @@ export async function deleteMediaAction(
   revalidateCatalog();
   revalidatePath("/admin/media");
   return ok();
+}
+
+/* ------------------------------------------------------------------ *
+ * Contact messages
+ * ------------------------------------------------------------------ */
+
+export async function updateMessageStatusAction(
+  id: number,
+  status: ContactMessageStatus,
+): Promise<AdminActionResult> {
+  await requireAdmin("/admin/messages");
+  try {
+    await admin.updateAdminMessage(id, status);
+  } catch (error) {
+    return fail(error);
+  }
+  revalidatePath("/admin/messages");
+  revalidatePath(`/admin/messages/${id}`);
+  return ok();
+}
+
+export async function deleteMessageAction(
+  id: number,
+): Promise<AdminActionResult> {
+  await requireAdmin("/admin/messages");
+  try {
+    await admin.deleteAdminMessage(id);
+  } catch (error) {
+    return fail(error);
+  }
+  revalidatePath("/admin/messages");
+  return ok();
+}
+
+export async function bulkDeleteMessagesAction(
+  ids: number[],
+): Promise<AdminActionResult<AdminBulkResult>> {
+  await requireAdmin("/admin/messages");
+  let result: AdminBulkResult;
+  try {
+    result = await admin.bulkDeleteAdminMessages(ids);
+  } catch (error) {
+    return fail(error);
+  }
+  revalidatePath("/admin/messages");
+  return { ok: true, data: result };
+}
+
+export async function bulkMarkMessagesHandledAction(
+  ids: number[],
+): Promise<AdminActionResult<AdminBulkResult>> {
+  await requireAdmin("/admin/messages");
+  let result: AdminBulkResult;
+  try {
+    result = await admin.bulkUpdateAdminMessages(ids, "handled");
+  } catch (error) {
+    return fail(error);
+  }
+  revalidatePath("/admin/messages");
+  return { ok: true, data: result };
 }
 
 export async function bulkDeleteMediaAction(

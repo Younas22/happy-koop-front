@@ -13,6 +13,8 @@ import type {
   AdminBulkResult,
   AdminCategory,
   AdminConnectionCheck,
+  AdminContactMessage,
+  AdminContactMessageSummary,
   AdminCustomerDetail,
   AdminDashboard,
   AdminHomeSection,
@@ -31,6 +33,7 @@ import type {
   AdminReview,
   AdminStoreSettingsResponse,
   AdminUserSummary,
+  ContactMessageStatus,
   OrderStatus,
   Paginated,
   PaymentStatus,
@@ -540,6 +543,81 @@ export function bulkDeleteAdminMedia(
   ids: readonly number[],
 ): Promise<AdminBulkResult> {
   return apiPost<AdminBulkResult>("/admin/media/bulk-delete", { ids }, AUTH);
+}
+
+/* ------------------------------------------------------------------ *
+ * Contact messages
+ * ------------------------------------------------------------------ */
+
+export type AdminMessagesPage = Paginated<AdminContactMessageSummary> & {
+  /** Unread messages overall, whatever the filter. */
+  newCount: number;
+};
+
+export function fetchAdminMessages(
+  params: {
+    q?: string | null;
+    status?: ContactMessageStatus | null;
+    page?: number;
+  } = {},
+): Promise<Result<AdminMessagesPage>> {
+  return tryApi(async () => {
+    const page = await apiGetPaginated<AdminContactMessageSummary>(
+      "/admin/messages",
+      {
+        ...AUTH,
+        query: {
+          q: params.q ?? null,
+          status: params.status ?? null,
+          page: params.page && params.page > 1 ? params.page : null,
+        },
+      },
+    );
+    const meta = page.meta as Paginated<AdminContactMessageSummary>["meta"] & {
+      newCount?: number;
+    };
+    return { ...page, newCount: meta.newCount ?? 0 };
+  });
+}
+
+export function fetchAdminMessage(
+  id: number,
+): Promise<Result<AdminContactMessage>> {
+  return tryApi(() =>
+    apiGet<AdminContactMessage>(`/admin/messages/${id}`, AUTH),
+  );
+}
+
+export function updateAdminMessage(
+  id: number,
+  status: ContactMessageStatus,
+): Promise<AdminContactMessage> {
+  return apiPatch<AdminContactMessage>(
+    `/admin/messages/${id}`,
+    { status },
+    AUTH,
+  );
+}
+
+export function deleteAdminMessage(id: number): Promise<void> {
+  return apiDelete<void>(`/admin/messages/${id}`, AUTH);
+}
+
+export function bulkDeleteAdminMessages(
+  ids: readonly number[],
+): Promise<AdminBulkResult> {
+  return apiPost<AdminBulkResult>("/admin/messages/bulk-delete", { ids }, AUTH);
+}
+
+export function bulkUpdateAdminMessages(
+  ids: readonly number[],
+  status: ContactMessageStatus,
+): Promise<AdminBulkResult> {
+  return apiPatch<AdminBulkResult>(
+    "/admin/messages/bulk-status",
+    { ids, status },
+    AUTH,
+  );
 }
 
 /* ------------------------------------------------------------------ *

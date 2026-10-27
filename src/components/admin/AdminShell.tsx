@@ -6,6 +6,7 @@ import {
   FileText,
   FolderTree,
   Image as ImageIcon,
+  Inbox,
   LayoutDashboard,
   LayoutTemplate,
   Mail,
@@ -73,6 +74,7 @@ const GROUPS: { heading: string; items: NavItem[] }[] = [
       { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
       { href: "/admin/customers", label: "Customers", icon: Users },
       { href: "/admin/reviews", label: "Reviews", icon: Star },
+      { href: "/admin/messages", label: "Messages", icon: Inbox },
     ],
   },
   {
