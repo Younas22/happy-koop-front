@@ -96,14 +96,17 @@ export function PurchasePanel({ product, showStockCounts, reassurance }: Purchas
 
   return (
     <>
-      <div className="grid gap-6 lg:grid-cols-2 lg:gap-10">
+      {/* `grid-cols-1` is minmax(0, 1fr): without an explicit track the single
+          phone column grows to the gallery's thumbnail strip and pushes the
+          whole panel off the right edge of the screen. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-10">
         <ProductGallery
           media={product.media}
           productName={product.name}
           activeMediaId={purchase.mediaId}
         />
 
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           <div className="space-y-2">
             {product.brand ? (
               <p className="label-eyebrow">

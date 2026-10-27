@@ -71,7 +71,7 @@ export function ProductGallery({ media, productName, activeMediaId = null }: Pro
   }
 
   return (
-    <div className="space-y-3">
+    <div className="min-w-0 space-y-3">
       <div className="surface-card relative aspect-square overflow-hidden bg-surface-container">
         {active.type === "video" ? (
           <video
