@@ -18,6 +18,7 @@ import {
 import Image from "next/image";
 import { Link } from "@/i18n/Link";
 
+import { HeroSlider } from "@/components/home/HeroSlider";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { Button } from "@/components/ui/Button";
 import { plural } from "@/i18n/format";
@@ -50,7 +51,10 @@ import type {
  * unrecognised or absent name falls back to a neutral mark, so a benefit never
  * loses its tile over a typo.
  */
-const BENEFIT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+const BENEFIT_ICONS: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   "badge-check": BadgeCheck,
   box: Box,
   "grip-horizontal": GripHorizontal,
@@ -83,12 +87,16 @@ function BenefitIcon({ name }: { name: string | null }) {
 
 function SectionHeading({ children }: { children: string }) {
   return (
-    <h2 className="text-headline-sm text-ink sm:text-headline-md">{children}</h2>
+    <h2 className="text-headline-sm text-ink sm:text-headline-md">
+      {children}
+    </h2>
   );
 }
 
 function Hero({ hero }: { hero: HomeHero }) {
   const hasCta = Boolean(hero.ctaLabel && hero.ctaHref);
+  // Older API responses carry only the single `imageUrl`.
+  const images = hero.imageUrls ?? (hero.imageUrl ? [hero.imageUrl] : []);
 
   return (
     <section className="page-container pt-6 sm:pt-8">
@@ -114,16 +122,9 @@ function Hero({ hero }: { hero: HomeHero }) {
             ) : null}
           </div>
 
-          {hero.imageUrl ? (
-            <div className="relative order-first aspect-4/3 bg-surface-container lg:order-last lg:aspect-auto lg:min-h-100">
-              <Image
-                src={hero.imageUrl}
-                alt=""
-                fill
-                priority
-                sizes="(min-width: 1024px) 50vw, 100vw"
-                className="object-cover"
-              />
+          {images.length > 0 ? (
+            <div className="relative order-first aspect-4/3 overflow-hidden bg-surface-container lg:order-last lg:aspect-auto lg:min-h-100">
+              <HeroSlider images={images} />
             </div>
           ) : null}
         </div>
@@ -132,13 +133,19 @@ function Hero({ hero }: { hero: HomeHero }) {
   );
 }
 
-async function CategoryTiles({ section }: { section: HomeCategoryTilesSection }) {
+async function CategoryTiles({
+  section,
+}: {
+  section: HomeCategoryTilesSection;
+}) {
   if (section.categories.length === 0) return null;
   const { locale, m } = await getI18n();
 
   return (
     <section className="page-container pt-12 sm:pt-16">
-      {section.heading ? <SectionHeading>{section.heading}</SectionHeading> : null}
+      {section.heading ? (
+        <SectionHeading>{section.heading}</SectionHeading>
+      ) : null}
       <ul className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {section.categories.map((category) => (
           <li key={category.id}>
@@ -180,8 +187,14 @@ function ProductGridSection({ section }: { section: HomeProductGridSection }) {
 
   return (
     <section className="page-container pt-12 sm:pt-16">
-      {section.heading ? <SectionHeading>{section.heading}</SectionHeading> : null}
-      <ProductGrid products={section.products} className="mt-5" priorityCount={2} />
+      {section.heading ? (
+        <SectionHeading>{section.heading}</SectionHeading>
+      ) : null}
+      <ProductGrid
+        products={section.products}
+        className="mt-5"
+        priorityCount={2}
+      />
     </section>
   );
 }
@@ -191,14 +204,18 @@ function Benefits({ section }: { section: HomeBenefitsSection }) {
 
   return (
     <section className="page-container pt-12 sm:pt-16">
-      {section.heading ? <SectionHeading>{section.heading}</SectionHeading> : null}
+      {section.heading ? (
+        <SectionHeading>{section.heading}</SectionHeading>
+      ) : null}
       <ul className="mt-5 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
         {section.items.map((item) => (
           <li key={item.title} className="surface-card p-5 sm:p-6">
             <BenefitIcon name={item.icon} />
             <h3 className="mt-4 text-title-sm text-ink">{item.title}</h3>
             {item.body ? (
-              <p className="mt-1.5 text-body-md leading-relaxed text-ink-muted">{item.body}</p>
+              <p className="mt-1.5 text-body-md leading-relaxed text-ink-muted">
+                {item.body}
+              </p>
             ) : null}
           </li>
         ))}
@@ -212,7 +229,9 @@ function RichText({ section }: { section: HomeRichTextSection }) {
 
   return (
     <section className="page-container pt-12 sm:pt-16">
-      {section.heading ? <SectionHeading>{section.heading}</SectionHeading> : null}
+      {section.heading ? (
+        <SectionHeading>{section.heading}</SectionHeading>
+      ) : null}
       {/* Sanitized server-side (contract 4). */}
       <div
         className="prose-hk mt-5 max-w-prose"
@@ -225,9 +244,19 @@ function RichText({ section }: { section: HomeRichTextSection }) {
 function renderSection(section: HomeSection, index: number) {
   switch (section.type) {
     case "category_tiles":
-      return <CategoryTiles key={index} section={section as HomeCategoryTilesSection} />;
+      return (
+        <CategoryTiles
+          key={index}
+          section={section as HomeCategoryTilesSection}
+        />
+      );
     case "product_grid":
-      return <ProductGridSection key={index} section={section as HomeProductGridSection} />;
+      return (
+        <ProductGridSection
+          key={index}
+          section={section as HomeProductGridSection}
+        />
+      );
     case "benefits":
       return <Benefits key={index} section={section as HomeBenefitsSection} />;
     case "rich_text":

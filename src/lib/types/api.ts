@@ -265,11 +265,7 @@ export interface ProductSeoFields extends SeoFields {
 
 /** Contract 4 - availability states. `low_stock` is never an urgency device. */
 export type AvailabilityState =
-  | "in_stock"
-  | "low_stock"
-  | "out_of_stock"
-  | "preorder"
-  | "unavailable";
+  "in_stock" | "low_stock" | "out_of_stock" | "preorder" | "unavailable";
 
 /** Contract 4 - inventory policy. */
 export type InventoryPolicy = "track" | "continue" | "deny";
@@ -559,7 +555,10 @@ export interface Page {
 export interface HomeHero {
   headline: string;
   subheadline: string | null;
+  /** The first slide; kept for older API responses. */
   imageUrl: string | null;
+  /** Hero slides in the admin's order. Absent from older API responses. */
+  imageUrls?: string[];
   ctaLabel: string | null;
   ctaHref: string | null;
 }
@@ -605,7 +604,8 @@ export type KnownHomeSection =
  * Unknown `type` values MUST be skipped silently by the frontend, not rendered
  * as errors (contract 4). This union keeps them representable.
  */
-export type HomeSection = KnownHomeSection | { type: string; heading: string | null };
+export type HomeSection =
+  KnownHomeSection | { type: string; heading: string | null };
 
 export interface HomeContent {
   hero: HomeHero | null;
@@ -762,12 +762,7 @@ export interface CheckoutInitializeRequest {
 
 /** Contract 6 - fulfilment status. */
 export type OrderStatus =
-  | "pending"
-  | "processing"
-  | "shipped"
-  | "delivered"
-  | "cancelled"
-  | "refunded";
+  "pending" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
 
 /** Contract 6 - payment status. */
 export type PaymentStatus =
@@ -861,7 +856,9 @@ export interface AccountOrderSummary {
 }
 
 /** `GET /account/orders/{orderNumber}` - the full order without the token. */
-export type AccountOrderDetail = Omit<Order, "accessToken"> & { accessToken?: never };
+export type AccountOrderDetail = Omit<Order, "accessToken"> & {
+  accessToken?: never;
+};
 
 export interface PaymentAttempt {
   id: number;

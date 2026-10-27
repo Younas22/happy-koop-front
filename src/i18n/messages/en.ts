@@ -51,7 +51,8 @@ export const en = {
     errorUnreachableBody:
       "The store is not responding right now. Nothing has been lost - please try again in a moment.",
     errorGenericTitle: "Something went wrong",
-    errorGenericBody: "Please try again. If it keeps happening, contact us and we will look into it.",
+    errorGenericBody:
+      "Please try again. If it keeps happening, contact us and we will look into it.",
     reference: "Reference: {reference}",
   },
 
@@ -122,6 +123,10 @@ export const en = {
     notSetUpTitle: "The homepage has not been set up yet",
     notSetUpBody: "Once the store adds homepage content it will appear here.",
     productCount: { one: "{count} product", other: "{count} products" },
+    heroSlides: "Featured images",
+    heroPrevious: "Previous image",
+    heroNext: "Next image",
+    heroGoTo: "Show image {index} of {total}",
   },
 
   listing: {
@@ -137,11 +142,13 @@ export const en = {
     emptyTitle: "No products match these filters",
     emptyBody: "Try removing a filter or widening the price range.",
     searchEmptyTitle: "Nothing found for \u201c{term}\u201d",
-    searchEmptyBody: "Check the spelling, or try a shorter or more general term.",
+    searchEmptyBody:
+      "Check the spelling, or try a shorter or more general term.",
     searchPromptTitle: "Enter a search term",
     searchPromptBody: "Search by product name, SKU or description.",
     categoryEmptyTitle: "No products in this category yet",
-    categoryEmptyBody: "Once products are published here they will appear in this list.",
+    categoryEmptyBody:
+      "Once products are published here they will appear in this list.",
   },
 
   filters: {
@@ -198,8 +205,10 @@ export const en = {
     addedToCart: "Added to cart",
     addedNotice: "Added to your cart.",
     viewCart: "View cart",
-    combinationUnavailable: "That combination is not available. Choose a different option.",
-    combinationAlert: "That combination is not available. Pick a different option to continue.",
+    combinationUnavailable:
+      "That combination is not available. Choose a different option.",
+    combinationAlert:
+      "That combination is not available. Pick a different option to continue.",
     chooseOption: "Choose an option to continue.",
     notAvailable: "This item is not available to buy.",
     outOfStock: "This item is currently out of stock.",
@@ -343,7 +352,8 @@ export const en = {
     continue: "Continue to payment",
     blocked: "Choose a country we can deliver to in order to continue.",
     confirmChanges: "Confirm the cart changes above before continuing.",
-    nextStepNotice: "You will enter payment details on the next step. Nothing is charged until then.",
+    nextStepNotice:
+      "You will enter payment details on the next step. Nothing is charged until then.",
     summary: {
       label: "Order summary",
       show: "Show order summary",
@@ -356,7 +366,8 @@ export const en = {
       checking: "Checking prices and availability…",
     },
     shipping: {
-      chooseCountry: "Choose a delivery country above to see the available delivery options.",
+      chooseCountry:
+        "Choose a delivery country above to see the available delivery options.",
       checking: "Checking delivery options…",
       loadFailed: "We could not load delivery options",
       blockedTitle: "We cannot deliver to this country yet",
@@ -368,25 +379,29 @@ export const en = {
     },
     stripe: {
       testTitle: "Test mode",
-      testBody: "This store is in Stripe test mode. Real cards are not charged.",
+      testBody:
+        "This store is in Stripe test mode. Real cards are not charged.",
       failedTitle: "Payment not completed",
       failed: "The payment could not be completed. Nothing was charged.",
       processing: "Processing payment…",
       pay: "Pay {amount}",
-      secure: "Your card details are entered directly into Stripe and never reach this store\u2019s servers.",
+      secure:
+        "Your card details are entered directly into Stripe and never reach this store\u2019s servers.",
     },
     paypal: {
       sandboxTitle: "Sandbox mode",
       sandboxBody: "This store is in PayPal sandbox mode. No real money moves.",
       failedTitle: "Payment not completed",
-      problem: "PayPal reported a problem with this payment. Nothing has been charged - you can try again.",
+      problem:
+        "PayPal reported a problem with this payment. Nothing has been charged - you can try again.",
     },
   },
 
   paymentStatus: {
     paid: {
       title: "Payment confirmed",
-      description: "Your payment has been confirmed and your order is being prepared.",
+      description:
+        "Your payment has been confirmed and your order is being prepared.",
     },
     authorized: {
       title: "Payment authorized",
@@ -395,7 +410,8 @@ export const en = {
     },
     partially_refunded: {
       title: "Partially refunded",
-      description: "Part of this order has been refunded. The amounts below are from our records.",
+      description:
+        "Part of this order has been refunded. The amounts below are from our records.",
     },
     refunded: {
       title: "Refunded",
@@ -408,7 +424,8 @@ export const en = {
     },
     cancelled: {
       title: "Payment cancelled",
-      description: "The payment was cancelled, so the order has not been placed.",
+      description:
+        "The payment was cancelled, so the order has not been placed.",
     },
     unpaid: {
       title: "Payment not confirmed yet",
@@ -469,7 +486,8 @@ export const en = {
     successMetaTitle: "Order status",
     cancelMetaTitle: "Payment cancelled",
     noOrderTitle: "We do not know which order to show",
-    noOrderBody: "This link is missing the order number, so we cannot look up its status.",
+    noOrderBody:
+      "This link is missing the order number, so we cannot look up its status.",
     seeOrders: "See your orders",
     backToStore: "Back to the store",
     notConfirmedTitle: "We could not confirm this order",
@@ -477,7 +495,8 @@ export const en = {
       "We could not find that order with the details in this link. If you have an account, your orders are listed there.",
     checkAgain: "Check again",
     signInToSee: "Sign in to see your orders",
-    cartUntouched: "We have not changed your cart, because we could not verify this order\u2019s payment status.",
+    cartUntouched:
+      "We have not changed your cart, because we could not verify this order\u2019s payment status.",
     refresh: "Refresh status",
     retry: "Review cart and try again",
     viewInAccount: "View in your account",
@@ -534,7 +553,8 @@ export const en = {
     register: {
       metaTitle: "Create an account",
       title: "Create an account",
-      description: "Keep track of your orders and save addresses for next time.",
+      description:
+        "Keep track of your orders and save addresses for next time.",
       failed: "We could not create your account",
       confirm: "Confirm password",
       submitting: "Creating account…",
@@ -545,14 +565,16 @@ export const en = {
     forgot: {
       metaTitle: "Reset your password",
       title: "Reset your password",
-      description: "Enter the email address on your account and we will send a reset link.",
+      description:
+        "Enter the email address on your account and we will send a reset link.",
       failed: "We could not send the request",
       submitting: "Sending…",
       submit: "Send reset link",
       doneTitle: "Check your email",
       doneBody:
         "If an account exists for that address, we have sent a link to reset the password. The link expires after a short time, so use it soon.",
-      doneNote: "For your security we do not confirm whether an account exists.",
+      doneNote:
+        "For your security we do not confirm whether an account exists.",
       remembered: "Remembered it?",
       back: "Back to sign in",
     },
@@ -618,8 +640,10 @@ export const en = {
       name: "Enter your name.",
       email: "Enter a valid email address.",
       message: "Please describe your question in at least 10 characters.",
-      unreachable: "We could not reach the store. Please check your connection and try again.",
-      rateLimited: "That is a lot of messages in a short time. Please try again in a minute.",
+      unreachable:
+        "We could not reach the store. Please check your connection and try again.",
+      rateLimited:
+        "That is a lot of messages in a short time. Please try again in a minute.",
       notSent: "Your message was not sent. Please try again.",
     },
     notSentTitle: "Your message was not sent",
@@ -630,17 +654,18 @@ export const en = {
 
   notFound: {
     title: "We could not find that page",
-    description: "The link may be out of date, or the item may no longer be available.",
+    description:
+      "The link may be out of date, or the item may no longer be available.",
   },
 
   error: {
     title: "Something went wrong",
-    description: "This page could not be loaded. You can try again, or go back to the home page.",
+    description:
+      "This page could not be loaded. You can try again, or go back to the home page.",
   },
 
   degraded: {
     title: "Store settings are unavailable",
-    body:
-      "We could not load the store configuration, so some details may be missing. No product data or prices are being shown from a stale copy.",
+    body: "We could not load the store configuration, so some details may be missing. No product data or prices are being shown from a stale copy.",
   },
 };

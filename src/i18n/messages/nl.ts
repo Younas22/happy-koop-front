@@ -53,7 +53,8 @@ export const nl: Messages = {
     errorUnreachableBody:
       "De winkel reageert op dit moment niet. Er is niets verloren gegaan - probeer het zo opnieuw.",
     errorGenericTitle: "Er ging iets mis",
-    errorGenericBody: "Probeer het opnieuw. Blijft het gebeuren, neem dan contact met ons op en we zoeken het uit.",
+    errorGenericBody:
+      "Probeer het opnieuw. Blijft het gebeuren, neem dan contact met ons op en we zoeken het uit.",
     reference: "Referentie: {reference}",
   },
 
@@ -82,7 +83,10 @@ export const nl: Messages = {
     categories: "Categorieën",
     all: "Alles",
     cartEmpty: "Winkelwagen, leeg",
-    cartItems: { one: "Winkelwagen, {count} artikel", other: "Winkelwagen, {count} artikelen" },
+    cartItems: {
+      one: "Winkelwagen, {count} artikel",
+      other: "Winkelwagen, {count} artikelen",
+    },
     homeLabel: "{store} startpagina",
     main: "Hoofdmenu",
     pricesIn: "Prijzen in {currency}",
@@ -122,8 +126,13 @@ export const nl: Messages = {
 
   home: {
     notSetUpTitle: "De startpagina is nog niet ingericht",
-    notSetUpBody: "Zodra de winkel inhoud voor de startpagina toevoegt, verschijnt die hier.",
+    notSetUpBody:
+      "Zodra de winkel inhoud voor de startpagina toevoegt, verschijnt die hier.",
     productCount: { one: "{count} product", other: "{count} producten" },
+    heroSlides: "Uitgelichte afbeeldingen",
+    heroPrevious: "Vorige afbeelding",
+    heroNext: "Volgende afbeelding",
+    heroGoTo: "Toon afbeelding {index} van {total}",
   },
 
   listing: {
@@ -139,11 +148,13 @@ export const nl: Messages = {
     emptyTitle: "Geen producten voor deze filters",
     emptyBody: "Verwijder een filter of verruim de prijsklasse.",
     searchEmptyTitle: "Niets gevonden voor \u201c{term}\u201d",
-    searchEmptyBody: "Controleer de spelling of probeer een kortere of algemenere zoekterm.",
+    searchEmptyBody:
+      "Controleer de spelling of probeer een kortere of algemenere zoekterm.",
     searchPromptTitle: "Voer een zoekterm in",
     searchPromptBody: "Zoek op productnaam, SKU of beschrijving.",
     categoryEmptyTitle: "Nog geen producten in deze categorie",
-    categoryEmptyBody: "Zodra hier producten worden gepubliceerd, verschijnen ze in deze lijst.",
+    categoryEmptyBody:
+      "Zodra hier producten worden gepubliceerd, verschijnen ze in deze lijst.",
   },
 
   filters: {
@@ -200,8 +211,10 @@ export const nl: Messages = {
     addedToCart: "Toegevoegd aan winkelwagen",
     addedNotice: "Toegevoegd aan je winkelwagen.",
     viewCart: "Bekijk winkelwagen",
-    combinationUnavailable: "Die combinatie is niet beschikbaar. Kies een andere optie.",
-    combinationAlert: "Die combinatie is niet beschikbaar. Kies een andere optie om verder te gaan.",
+    combinationUnavailable:
+      "Die combinatie is niet beschikbaar. Kies een andere optie.",
+    combinationAlert:
+      "Die combinatie is niet beschikbaar. Kies een andere optie om verder te gaan.",
     chooseOption: "Kies een optie om verder te gaan.",
     notAvailable: "Dit artikel is niet te koop.",
     outOfStock: "Dit artikel is momenteel niet op voorraad.",
@@ -240,7 +253,8 @@ export const nl: Messages = {
     metaTitle: "Winkelwagen",
     title: "Je winkelwagen",
     emptyTitle: "Je winkelwagen is leeg",
-    emptyBody: "Artikelen die je toevoegt, worden hier bewaard terwijl je verder kijkt.",
+    emptyBody:
+      "Artikelen die je toevoegt, worden hier bewaard terwijl je verder kijkt.",
     checkFailedTitle: "We konden je winkelwagen niet controleren",
     sku: "SKU {sku}",
     quantityFor: "Aantal voor {name}",
@@ -281,7 +295,8 @@ export const nl: Messages = {
     selectCountry: "Kies een land",
     phone: "Telefoon",
     optional: "Optioneel",
-    phoneHint: "Optioneel. Alleen gebruikt als er een probleem is met de bezorging.",
+    phoneHint:
+      "Optioneel. Alleen gebruikt als er een probleem is met de bezorging.",
     errors: {
       firstName: "Vul een voornaam in.",
       lastName: "Vul een achternaam in.",
@@ -306,7 +321,8 @@ export const nl: Messages = {
       contactBody: "Hiermee sturen we je de orderbevestiging.",
       address: "Bezorgadres",
       method: "Verzendmethode",
-      methodBody: "De tarieven komen uit de ingestelde verzendzones van de winkel.",
+      methodBody:
+        "De tarieven komen uit de ingestelde verzendzones van de winkel.",
       payment: "Betaling",
     },
     orderN: "Bestelling {number}",
@@ -344,8 +360,10 @@ export const nl: Messages = {
     placing: "Bestelling plaatsen…",
     continue: "Verder naar betalen",
     blocked: "Kies een land waar we naartoe kunnen bezorgen om verder te gaan.",
-    confirmChanges: "Bevestig eerst de wijzigingen in je winkelwagen hierboven.",
-    nextStepNotice: "Je vult je betaalgegevens in bij de volgende stap. Tot dan wordt er niets afgeschreven.",
+    confirmChanges:
+      "Bevestig eerst de wijzigingen in je winkelwagen hierboven.",
+    nextStepNotice:
+      "Je vult je betaalgegevens in bij de volgende stap. Tot dan wordt er niets afgeschreven.",
     summary: {
       label: "Overzicht",
       show: "Overzicht tonen",
@@ -358,7 +376,8 @@ export const nl: Messages = {
       checking: "Prijzen en beschikbaarheid controleren…",
     },
     shipping: {
-      chooseCountry: "Kies hierboven een bezorgland om de beschikbare verzendopties te zien.",
+      chooseCountry:
+        "Kies hierboven een bezorgland om de beschikbare verzendopties te zien.",
       checking: "Verzendopties controleren…",
       loadFailed: "We konden de verzendopties niet laden",
       blockedTitle: "We bezorgen nog niet in dit land",
@@ -370,25 +389,30 @@ export const nl: Messages = {
     },
     stripe: {
       testTitle: "Testmodus",
-      testBody: "Deze winkel staat in de testmodus van Stripe. Echte kaarten worden niet belast.",
+      testBody:
+        "Deze winkel staat in de testmodus van Stripe. Echte kaarten worden niet belast.",
       failedTitle: "Betaling niet voltooid",
       failed: "De betaling kon niet worden voltooid. Er is niets afgeschreven.",
       processing: "Betaling verwerken…",
       pay: "Betaal {amount}",
-      secure: "Je kaartgegevens voer je rechtstreeks bij Stripe in; ze komen nooit op de servers van deze winkel.",
+      secure:
+        "Je kaartgegevens voer je rechtstreeks bij Stripe in; ze komen nooit op de servers van deze winkel.",
     },
     paypal: {
       sandboxTitle: "Sandboxmodus",
-      sandboxBody: "Deze winkel staat in de sandboxmodus van PayPal. Er wordt geen echt geld overgemaakt.",
+      sandboxBody:
+        "Deze winkel staat in de sandboxmodus van PayPal. Er wordt geen echt geld overgemaakt.",
       failedTitle: "Betaling niet voltooid",
-      problem: "PayPal meldde een probleem met deze betaling. Er is niets afgeschreven - je kunt het opnieuw proberen.",
+      problem:
+        "PayPal meldde een probleem met deze betaling. Er is niets afgeschreven - je kunt het opnieuw proberen.",
     },
   },
 
   paymentStatus: {
     paid: {
       title: "Betaling bevestigd",
-      description: "Je betaling is bevestigd en je bestelling wordt klaargemaakt.",
+      description:
+        "Je betaling is bevestigd en je bestelling wordt klaargemaakt.",
     },
     authorized: {
       title: "Betaling geautoriseerd",
@@ -397,7 +421,8 @@ export const nl: Messages = {
     },
     partially_refunded: {
       title: "Gedeeltelijk terugbetaald",
-      description: "Een deel van deze bestelling is terugbetaald. De bedragen hieronder komen uit onze administratie.",
+      description:
+        "Een deel van deze bestelling is terugbetaald. De bedragen hieronder komen uit onze administratie.",
     },
     refunded: {
       title: "Terugbetaald",
@@ -410,7 +435,8 @@ export const nl: Messages = {
     },
     cancelled: {
       title: "Betaling geannuleerd",
-      description: "De betaling is geannuleerd, dus de bestelling is niet geplaatst.",
+      description:
+        "De betaling is geannuleerd, dus de bestelling is niet geplaatst.",
     },
     unpaid: {
       title: "Betaling nog niet bevestigd",
@@ -471,7 +497,8 @@ export const nl: Messages = {
     successMetaTitle: "Bestelstatus",
     cancelMetaTitle: "Betaling geannuleerd",
     noOrderTitle: "We weten niet welke bestelling we moeten tonen",
-    noOrderBody: "In deze link ontbreekt het bestelnummer, dus we kunnen de status niet opzoeken.",
+    noOrderBody:
+      "In deze link ontbreekt het bestelnummer, dus we kunnen de status niet opzoeken.",
     seeOrders: "Bekijk je bestellingen",
     backToStore: "Terug naar de winkel",
     notConfirmedTitle: "We konden deze bestelling niet bevestigen",
@@ -479,7 +506,8 @@ export const nl: Messages = {
       "We konden die bestelling niet vinden met de gegevens in deze link. Heb je een account, dan staan je bestellingen daar.",
     checkAgain: "Opnieuw controleren",
     signInToSee: "Log in om je bestellingen te zien",
-    cartUntouched: "We hebben je winkelwagen niet gewijzigd, omdat we de betaalstatus van deze bestelling niet konden controleren.",
+    cartUntouched:
+      "We hebben je winkelwagen niet gewijzigd, omdat we de betaalstatus van deze bestelling niet konden controleren.",
     refresh: "Status vernieuwen",
     retry: "Winkelwagen bekijken en opnieuw proberen",
     viewInAccount: "Bekijk in je account",
@@ -487,9 +515,11 @@ export const nl: Messages = {
     whyTitle: "Waarom staat hier dat het niet bevestigd is?",
     whyBody:
       "Betaalbevestigingen komen van de betaalprovider, niet van je browser. Daarom tonen we een bestelling pas als betaald wanneer die bevestiging bij ons binnen is. Heb je betaald, vernieuw dan zo. Betaal niet twee keer - controleer eerst je bestelstatus.",
-    keepLinkPrefix: "Bewaar de link van deze pagina om je bestelling later opnieuw te bekijken, of",
+    keepLinkPrefix:
+      "Bewaar de link van deze pagina om je bestelling later opnieuw te bekijken, of",
     createAccount: "maak een account aan",
-    keepLinkSuffix: "met dit e-mailadres om hem in je bestelgeschiedenis te zien.",
+    keepLinkSuffix:
+      "met dit e-mailadres om hem in je bestelgeschiedenis te zien.",
     wentThroughTitle: "Deze betaling is toch gelukt",
     wentThroughBody:
       "Je kwam op de pagina voor geannuleerde betalingen, maar volgens onze gegevens is de betaling van deze bestelling {status}. Je hoeft verder niets te doen.",
@@ -536,7 +566,8 @@ export const nl: Messages = {
     register: {
       metaTitle: "Account aanmaken",
       title: "Account aanmaken",
-      description: "Houd je bestellingen bij en bewaar adressen voor de volgende keer.",
+      description:
+        "Houd je bestellingen bij en bewaar adressen voor de volgende keer.",
       failed: "We konden je account niet aanmaken",
       confirm: "Wachtwoord bevestigen",
       submitting: "Account aanmaken…",
@@ -547,14 +578,16 @@ export const nl: Messages = {
     forgot: {
       metaTitle: "Wachtwoord opnieuw instellen",
       title: "Wachtwoord opnieuw instellen",
-      description: "Vul het e-mailadres van je account in en we sturen je een link om het wachtwoord opnieuw in te stellen.",
+      description:
+        "Vul het e-mailadres van je account in en we sturen je een link om het wachtwoord opnieuw in te stellen.",
       failed: "We konden het verzoek niet versturen",
       submitting: "Versturen…",
       submit: "Link versturen",
       doneTitle: "Controleer je e-mail",
       doneBody:
         "Als er een account bestaat voor dat adres, hebben we een link gestuurd om het wachtwoord opnieuw in te stellen. De link verloopt na korte tijd, dus gebruik hem snel.",
-      doneNote: "Voor je veiligheid bevestigen we niet of er een account bestaat.",
+      doneNote:
+        "Voor je veiligheid bevestigen we niet of er een account bestaat.",
       remembered: "Weet je het weer?",
       back: "Terug naar inloggen",
     },
@@ -597,7 +630,8 @@ export const nl: Messages = {
     removeItem: "{name} verwijderen",
     checkFailed: "We kunnen je winkelwagen nu niet controleren.",
     unexpected: "De winkel gaf een onverwacht antwoord.",
-    unreachable: "We konden de winkel niet bereiken om je winkelwagen te controleren.",
+    unreachable:
+      "We konden de winkel niet bereiken om je winkelwagen te controleren.",
   },
 
   contact: {
@@ -620,8 +654,10 @@ export const nl: Messages = {
       name: "Vul je naam in.",
       email: "Vul een geldig e-mailadres in.",
       message: "Beschrijf je vraag in minstens 10 tekens.",
-      unreachable: "We kunnen de winkel niet bereiken. Controleer je verbinding en probeer het opnieuw.",
-      rateLimited: "Dat zijn veel berichten in korte tijd. Probeer het over een minuut opnieuw.",
+      unreachable:
+        "We kunnen de winkel niet bereiken. Controleer je verbinding en probeer het opnieuw.",
+      rateLimited:
+        "Dat zijn veel berichten in korte tijd. Probeer het over een minuut opnieuw.",
       notSent: "Je bericht is niet verstuurd. Probeer het opnieuw.",
     },
     notSentTitle: "Je bericht is niet verstuurd",
@@ -632,17 +668,18 @@ export const nl: Messages = {
 
   notFound: {
     title: "We kunnen deze pagina niet vinden",
-    description: "De link is misschien verouderd, of het artikel is niet meer beschikbaar.",
+    description:
+      "De link is misschien verouderd, of het artikel is niet meer beschikbaar.",
   },
 
   error: {
     title: "Er ging iets mis",
-    description: "Deze pagina kon niet worden geladen. Probeer het opnieuw of ga terug naar de startpagina.",
+    description:
+      "Deze pagina kon niet worden geladen. Probeer het opnieuw of ga terug naar de startpagina.",
   },
 
   degraded: {
     title: "Winkelinstellingen zijn niet beschikbaar",
-    body:
-      "We konden de winkelconfiguratie niet laden, dus sommige gegevens kunnen ontbreken. Er worden geen productgegevens of prijzen uit een verouderde kopie getoond.",
+    body: "We konden de winkelconfiguratie niet laden, dus sommige gegevens kunnen ontbreken. Er worden geen productgegevens of prijzen uit een verouderde kopie getoond.",
   },
 };
