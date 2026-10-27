@@ -16,6 +16,9 @@ import type {
   AdminCustomerDetail,
   AdminDashboard,
   AdminHomeSection,
+  AdminMailSettings,
+  AdminMailSettingsUpdate,
+  AdminMailTestResult,
   AdminMediaAsset,
   AdminOrderDetail,
   AdminOrderSummary,
@@ -581,6 +584,26 @@ export function testPaymentConnection(
   return apiPost<AdminConnectionCheck>(
     "/admin/settings/payments/test",
     { provider },
+    AUTH,
+  );
+}
+
+export function fetchMailSettings(): Promise<Result<AdminMailSettings>> {
+  return tryApi(() => apiGet<AdminMailSettings>("/admin/settings/mail", AUTH));
+}
+
+/** An omitted or empty `resendApiKey` keeps the stored key. */
+export function updateMailSettings(
+  body: AdminMailSettingsUpdate,
+): Promise<AdminMailSettings> {
+  return apiPut<AdminMailSettings>("/admin/settings/mail", body, AUTH);
+}
+
+/** Sends a real email right away; the returned message is sanitized. */
+export function sendTestMail(to: string | null): Promise<AdminMailTestResult> {
+  return apiPost<AdminMailTestResult>(
+    "/admin/settings/mail/test",
+    to ? { to } : {},
     AUTH,
   );
 }

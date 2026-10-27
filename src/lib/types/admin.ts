@@ -439,6 +439,40 @@ export interface AdminRefundResult extends AdminOrderDetail {
  * Result of an admin bulk endpoint. Ids the API could not find are simply
  * absent; `failed` lists the ones it found but refused, with the reason.
  */
+/** Email sender settings (Resend). The API key is never returned. */
+export interface AdminMailSettings {
+  resendApiKey: {
+    configured: boolean;
+    maskedSuffix: string | null;
+    updatedAt: string | null;
+  };
+  fromAddress: string | null;
+  fromName: string | null;
+  /** What the server is sending with right now, and where it came from. */
+  effective: {
+    mailer: string;
+    fromAddress: string;
+    fromName: string;
+    source: "admin" | "environment";
+  };
+  lastTest: AdminMailTestResult | null;
+}
+
+export interface AdminMailTestResult {
+  ok: boolean;
+  message: string;
+  checkedAt: string;
+  to: string;
+}
+
+/** Omitted or empty `resendApiKey` keeps the stored key. */
+export interface AdminMailSettingsUpdate {
+  resendApiKey?: string;
+  clearResendApiKey?: boolean;
+  fromAddress: string | null;
+  fromName: string | null;
+}
+
 export interface AdminBulkResult {
   succeeded: number[];
   failed: { id: number; message: string }[];

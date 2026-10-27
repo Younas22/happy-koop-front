@@ -9,7 +9,7 @@ export interface FormFieldProps {
   /** Must match the control's `id`. */
   id: string;
   label: string;
-  /** Helper text shown under the label. */
+  /** Helper text shown under the control. */
   description?: string | null;
   /** Validation message. Its presence sets `aria-invalid` on the control. */
   error?: string | null;
@@ -46,19 +46,14 @@ export function FormField({
 }: FormFieldProps) {
   const descriptionId = description ? `${id}-description` : undefined;
   const errorId = error ? `${id}-error` : undefined;
-  const describedBy = [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
+  const describedBy =
+    [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label htmlFor={id} required={required}>
         {label}
       </Label>
-
-      {description ? (
-        <p id={descriptionId} className="text-body-sm text-ink-muted">
-          {description}
-        </p>
-      ) : null}
 
       {children({
         id,
@@ -67,6 +62,14 @@ export function FormField({
         "aria-required": required ? true : undefined,
         invalid: Boolean(error),
       })}
+
+      {/* Under the control, not the label: fields side by side in a grid then
+          line up whether or not each one has helper text. */}
+      {description ? (
+        <p id={descriptionId} className="text-body-sm text-ink-muted">
+          {description}
+        </p>
+      ) : null}
 
       <div aria-live="polite">
         {error ? (

@@ -12,6 +12,8 @@ import { revalidateTag } from "next/cache";
 import type {
   AdminBulkResult,
   AdminConnectionCheck,
+  AdminMailSettingsUpdate,
+  AdminMailTestResult,
   AdminPaymentSettingsUpdate,
   AdminProductDetail,
   OrderStatus,
@@ -559,6 +561,36 @@ export async function testPaymentConnectionAction(
     const check = await admin.testPaymentConnection(provider);
     revalidatePath("/admin/settings/payments");
     return { ok: true, data: check };
+  } catch (error) {
+    return fail(error);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Email
+ * ------------------------------------------------------------------ */
+
+export async function saveMailSettingsAction(
+  body: AdminMailSettingsUpdate,
+): Promise<AdminActionResult> {
+  await requireAdmin("/admin/settings/email");
+  try {
+    await admin.updateMailSettings(body);
+  } catch (error) {
+    return fail(error);
+  }
+  revalidatePath("/admin/settings/email");
+  return ok();
+}
+
+export async function sendTestMailAction(
+  to: string | null,
+): Promise<AdminActionResult<AdminMailTestResult>> {
+  await requireAdmin("/admin/settings/email");
+  try {
+    const result = await admin.sendTestMail(to);
+    revalidatePath("/admin/settings/email");
+    return { ok: true, data: result };
   } catch (error) {
     return fail(error);
   }

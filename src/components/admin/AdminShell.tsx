@@ -8,6 +8,7 @@ import {
   Image as ImageIcon,
   LayoutDashboard,
   LayoutTemplate,
+  Mail,
   Menu,
   Package,
   ScrollText,
@@ -23,7 +24,12 @@ import { usePathname } from "next/navigation";
 import * as React from "react";
 
 import { Button } from "@/components/ui/Button";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTrigger } from "@/components/ui/Drawer";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTrigger,
+} from "@/components/ui/Drawer";
 import { DrawerTitle } from "@/components/ui/Drawer";
 import { cn } from "@/lib/utils/cn";
 
@@ -42,7 +48,10 @@ import { cn } from "@/lib/utils/cn";
 interface NavItem {
   href: string;
   label: string;
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
+  icon: React.ComponentType<{
+    className?: string;
+    "aria-hidden"?: boolean | "true" | "false";
+  }>;
 }
 
 const GROUPS: { heading: string; items: NavItem[] }[] = [
@@ -70,15 +79,24 @@ const GROUPS: { heading: string; items: NavItem[] }[] = [
     heading: "Content",
     items: [
       { href: "/admin/pages", label: "Pages", icon: FileText },
-      { href: "/admin/home-sections", label: "Home sections", icon: LayoutTemplate },
+      {
+        href: "/admin/home-sections",
+        label: "Home sections",
+        icon: LayoutTemplate,
+      },
     ],
   },
   {
     heading: "Configuration",
     items: [
-      { href: "/admin/settings/store", label: "Store settings", icon: Settings },
+      {
+        href: "/admin/settings/store",
+        label: "Store settings",
+        icon: Settings,
+      },
       { href: "/admin/settings/navigation", label: "Navigation", icon: Menu },
       { href: "/admin/settings/payments", label: "Payments", icon: CreditCard },
+      { href: "/admin/settings/email", label: "Email", icon: Mail },
       { href: "/admin/users", label: "Admin users", icon: UserCog },
       { href: "/admin/audit-logs", label: "Audit log", icon: ScrollText },
     ],
@@ -130,8 +148,12 @@ function NavList({
                     )}
                   >
                     <Icon className="size-4 shrink-0" aria-hidden="true" />
-                    {!collapsed ? <span className="truncate">{item.label}</span> : null}
-                    {collapsed ? <span className="sr-only">{item.label}</span> : null}
+                    {!collapsed ? (
+                      <span className="truncate">{item.label}</span>
+                    ) : null}
+                    {collapsed ? (
+                      <span className="sr-only">{item.label}</span>
+                    ) : null}
                   </Link>
                 </li>
               );
@@ -156,8 +178,9 @@ function AuthorizationNotice({ compact }: { compact?: boolean }) {
         Navigation is not access control
       </p>
       <p className="mt-1">
-        Hiding a link does not protect anything. The API authorizes every admin request on the
-        server, so permissions are enforced there - not by what this menu shows.
+        Hiding a link does not protect anything. The API authorizes every admin
+        request on the server, so permissions are enforced there - not by what
+        this menu shows.
       </p>
     </div>
   );
@@ -183,16 +206,27 @@ export function AdminShell({
         <div className="flex h-14 items-center gap-2 px-3 sm:px-4">
           <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
             <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon-sm" className="lg:hidden" aria-label="Open admin menu">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="lg:hidden"
+                aria-label="Open admin menu"
+              >
                 <Menu className="size-5" aria-hidden="true" />
               </Button>
             </DrawerTrigger>
             <DrawerContent side="left">
               <DrawerHeader>
-                <DrawerTitle className="text-base font-semibold text-ink">Admin</DrawerTitle>
+                <DrawerTitle className="text-base font-semibold text-ink">
+                  Admin
+                </DrawerTitle>
               </DrawerHeader>
               <div className="flex-1 overflow-y-auto p-3">
-                <NavList pathname={pathname} collapsed={false} onNavigate={() => setDrawerOpen(false)} />
+                <NavList
+                  pathname={pathname}
+                  collapsed={false}
+                  onNavigate={() => setDrawerOpen(false)}
+                />
                 <div className="mt-5">
                   <AuthorizationNotice />
                 </div>
@@ -209,7 +243,10 @@ export function AdminShell({
             onClick={() => setCollapsed((value) => !value)}
           >
             <ChevronLeft
-              className={cn("size-5 transition-transform", collapsed && "rotate-180")}
+              className={cn(
+                "size-5 transition-transform",
+                collapsed && "rotate-180",
+              )}
               aria-hidden="true"
             />
           </Button>

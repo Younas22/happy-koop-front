@@ -12,21 +12,23 @@ export const SelectValue = SelectPrimitive.Value;
 
 export const SelectTrigger = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & { invalid?: boolean }
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & {
+    invalid?: boolean;
+  }
 >(function SelectTrigger({ className, invalid, children, ...props }, ref) {
   return (
     <SelectPrimitive.Trigger
       ref={ref}
       aria-invalid={invalid || undefined}
       className={cn(
-        "group flex h-12 w-full items-center justify-between gap-2 rounded-md border bg-surface-low px-4 text-body-md text-ink",
+        "group flex h-12 w-full items-center justify-between gap-2 rounded-md border bg-surface px-4 shadow-xs text-body-md text-ink",
         "data-placeholder:text-ink-subtle",
-        "transition-[background-color,border-color] duration-200 ease-(--ease-standard)",
+        "transition-[background-color,border-color,box-shadow] duration-200 ease-(--ease-standard)",
         "disabled:cursor-not-allowed disabled:border-line disabled:bg-surface-container disabled:text-ink-subtle",
-        "focus:border-brand focus-visible:border-brand data-[state=open]:border-brand",
+        "focus:border-brand focus:ring-4 focus:ring-brand/15 focus-visible:border-brand data-[state=open]:border-brand",
         invalid
           ? "border-danger bg-danger-tint/60"
-          : "border-line-strong hover:border-ink-subtle hover:bg-surface-container",
+          : "border-line-strong hover:border-ink-subtle",
         className,
       )}
       {...props}
@@ -45,7 +47,10 @@ export const SelectTrigger = React.forwardRef<
 export const SelectContent = React.forwardRef<
   React.ComponentRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(function SelectContent({ className, children, position = "popper", ...props }, ref) {
+>(function SelectContent(
+  { className, children, position = "popper", ...props },
+  ref,
+) {
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -54,7 +59,8 @@ export const SelectContent = React.forwardRef<
         className={cn(
           "relative z-50 max-h-72 min-w-(--radix-select-trigger-width) overflow-hidden",
           "rounded-md border border-line bg-surface elevation-3",
-          position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
+          position === "popper" &&
+            "data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1",
           className,
         )}
         {...props}
@@ -62,7 +68,9 @@ export const SelectContent = React.forwardRef<
         <SelectPrimitive.ScrollUpButton className="flex h-6 items-center justify-center text-ink-muted">
           <ChevronUp className="size-4" aria-hidden="true" />
         </SelectPrimitive.ScrollUpButton>
-        <SelectPrimitive.Viewport className="p-1">{children}</SelectPrimitive.Viewport>
+        <SelectPrimitive.Viewport className="p-1">
+          {children}
+        </SelectPrimitive.Viewport>
         <SelectPrimitive.ScrollDownButton className="flex h-6 items-center justify-center text-ink-muted">
           <ChevronDown className="size-4" aria-hidden="true" />
         </SelectPrimitive.ScrollDownButton>
@@ -78,10 +86,7 @@ export const SelectLabel = React.forwardRef<
   return (
     <SelectPrimitive.Label
       ref={ref}
-      className={cn(
-        "label-eyebrow px-2 py-1.5",
-        className,
-      )}
+      className={cn("label-eyebrow px-2 py-1.5", className)}
       {...props}
     />
   );
