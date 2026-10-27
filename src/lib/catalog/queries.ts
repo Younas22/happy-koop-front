@@ -6,6 +6,7 @@ import {
   apiPost,
   tryApi,
 } from "@/lib/api/client";
+import { DEFAULT_LOCALE } from "@/i18n/config";
 import type {
   CartValidation,
   CartValidationRequest,
@@ -82,8 +83,13 @@ export const PRODUCT_SORTS = [
 
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
 
-export function isProductSort(value: string | null | undefined): value is ProductSort {
-  return typeof value === "string" && (PRODUCT_SORTS as readonly string[]).includes(value);
+export function isProductSort(
+  value: string | null | undefined,
+): value is ProductSort {
+  return (
+    typeof value === "string" &&
+    (PRODUCT_SORTS as readonly string[]).includes(value)
+  );
 }
 
 export interface ProductListParams {
@@ -98,7 +104,9 @@ export interface ProductListParams {
   perPage?: number;
 }
 
-export function fetchProducts(params: ProductListParams = {}): Promise<Result<Paginated<ProductCard>>> {
+export function fetchProducts(
+  params: ProductListParams = {},
+): Promise<Result<Paginated<ProductCard>>> {
   return tryApi(() =>
     apiGetPaginated<ProductCard>("/products", {
       // Query keys are snake_case per contract 1.1.
@@ -156,7 +164,10 @@ export function fetchProductReviews(
   );
 }
 
-export function fetchRelatedProducts(slug: string, limit = 4): Promise<Result<ProductCard[]>> {
+export function fetchRelatedProducts(
+  slug: string,
+  limit = 4,
+): Promise<Result<ProductCard[]>> {
   return tryApi(() =>
     apiGet<ProductCard[]>(`/products/${encodeURIComponent(slug)}/related`, {
       query: { limit },
@@ -170,7 +181,9 @@ export function fetchRelatedProducts(slug: string, limit = 4): Promise<Result<Pr
  * Categories
  * ------------------------------------------------------------------ */
 
-export function fetchCategories(options: { tree?: boolean } = {}): Promise<Result<Category[]>> {
+export function fetchCategories(
+  options: { tree?: boolean } = {},
+): Promise<Result<Category[]>> {
   return tryApi(() =>
     apiGet<Category[]>("/categories", {
       query: { tree: options.tree === true ? true : null },
@@ -199,30 +212,51 @@ export function fetchCategory(slug: string): Promise<Result<CategoryDetail>> {
  * Cached with the same tag as the pages themselves, so publishing or renaming
  * a page in the admin refreshes the footer list along with the page.
  */
-export function fetchPages(): Promise<Result<PageSummary[]>> {
+export function fetchPages(
+  locale?: string | null,
+): Promise<Result<PageSummary[]>> {
   return tryApi(() =>
     apiGet<PageSummary[]>("/pages", {
+      query: { locale: pageLocale(locale) },
       revalidate: REVALIDATE_PAGE,
       tags: [CACHE_TAGS.pages],
     }),
   );
 }
 
-export function fetchPage(slug: string): Promise<Result<Page>> {
+/**
+ * A CMS page in the visitor's language. The API returns the translation when
+ * the page has one and the default language for anything not translated; the
+ * locale is part of the URL, so each language is cached separately.
+ */
+export function fetchPage(
+  slug: string,
+  locale?: string | null,
+): Promise<Result<Page>> {
   return tryApi(() =>
     apiGet<Page>(`/pages/${encodeURIComponent(slug)}`, {
+      query: { locale: pageLocale(locale) },
       revalidate: REVALIDATE_PAGE,
       tags: [CACHE_TAGS.pages, CACHE_TAGS.page(slug)],
     }),
   );
 }
 
+/** The default language needs no parameter, which keeps its cache entry as it was. */
+function pageLocale(locale?: string | null): string | null {
+  return locale && locale !== DEFAULT_LOCALE ? locale : null;
+}
+
 /* ------------------------------------------------------------------ *
  * Cart and shipping (never cached - prices and stock must be live)
  * ------------------------------------------------------------------ */
 
-export function validateCart(body: CartValidationRequest): Promise<Result<CartValidation>> {
-  return tryApi(() => apiPost<CartValidation>("/cart/validate", body, { revalidate: false }));
+export function validateCart(
+  body: CartValidationRequest,
+): Promise<Result<CartValidation>> {
+  return tryApi(() =>
+    apiPost<CartValidation>("/cart/validate", body, { revalidate: false }),
+  );
 }
 
 export interface ShippingOptionsParams {

@@ -5,6 +5,7 @@ import { Link } from "@/i18n/Link";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { getLocale } from "@/i18n/server";
 import { fetchPages } from "@/lib/catalog/queries";
 import { getRuntimeConfig } from "@/lib/runtime-config";
 import { buildPageMetadata } from "@/lib/utils/seo";
@@ -27,12 +28,15 @@ export async function generateMetadata(): Promise<Metadata> {
  * invented, and a page with no excerpt simply shows its title.
  */
 export default async function PagesIndex() {
-  const { data: pages, error } = await fetchPages();
+  const { data: pages, error } = await fetchPages(await getLocale());
 
   if (!pages) {
     return (
       <div className="page-container py-10">
-        <ErrorState message={error?.message} unreachable={error?.isUnreachable()} />
+        <ErrorState
+          message={error?.message}
+          unreachable={error?.isUnreachable()}
+        />
       </div>
     );
   }
@@ -41,7 +45,9 @@ export default async function PagesIndex() {
     <div className="page-container py-6 sm:py-8">
       <Breadcrumbs items={[{ label: "Home", href: "/" }]} current="Pages" />
 
-      <h1 className="mt-3 text-headline-md text-ink sm:text-headline-lg">Pages</h1>
+      <h1 className="mt-3 text-headline-md text-ink sm:text-headline-lg">
+        Pages
+      </h1>
 
       {pages.length === 0 ? (
         <div className="mt-6">
@@ -63,7 +69,9 @@ export default async function PagesIndex() {
                   {page.title}
                 </span>
                 {page.excerpt ? (
-                  <span className="line-clamp-3 text-body-md text-ink-muted">{page.excerpt}</span>
+                  <span className="line-clamp-3 text-body-md text-ink-muted">
+                    {page.excerpt}
+                  </span>
                 ) : null}
               </Link>
             </li>

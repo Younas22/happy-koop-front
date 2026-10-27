@@ -3,13 +3,19 @@ import { notFound } from "next/navigation";
 
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { getLocale } from "@/i18n/server";
 import { fetchPage } from "@/lib/catalog/queries";
 import { getRuntimeConfig } from "@/lib/runtime-config";
 import { buildPageMetadata, htmlToMetaDescription } from "@/lib/utils/seo";
 
-export async function generateMetadata({ params }: PageProps<"/pages/[slug]">): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps<"/pages/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const [config, { data: page }] = await Promise.all([getRuntimeConfig(), fetchPage(slug)]);
+  const [config, { data: page }] = await Promise.all([
+    getRuntimeConfig(),
+    fetchPage(slug, await getLocale()),
+  ]);
 
   if (!page) {
     return buildPageMetadata(config, { title: "Page", noindex: true });
@@ -17,7 +23,8 @@ export async function generateMetadata({ params }: PageProps<"/pages/[slug]">): 
 
   return buildPageMetadata(config, {
     title: page.seo.title ?? page.title,
-    description: page.seo.description ?? page.excerpt ?? htmlToMetaDescription(page.body),
+    description:
+      page.seo.description ?? page.excerpt ?? htmlToMetaDescription(page.body),
     canonicalPath: `/pages/${page.slug}`,
     noindex: page.seo.noindex,
     ogType: "article",
@@ -27,7 +34,7 @@ export async function generateMetadata({ params }: PageProps<"/pages/[slug]">): 
 /** CMS page. The body is HTML sanitized server-side (contract 4). */
 export default async function CmsPage({ params }: PageProps<"/pages/[slug]">) {
   const { slug } = await params;
-  const { data: page, error } = await fetchPage(slug);
+  const { data: page, error } = await fetchPage(slug, await getLocale());
 
   if (error?.isNotFound()) {
     notFound();
@@ -36,7 +43,10 @@ export default async function CmsPage({ params }: PageProps<"/pages/[slug]">) {
   if (!page) {
     return (
       <div className="page-container py-10">
-        <ErrorState message={error?.message} unreachable={error?.isUnreachable()} />
+        <ErrorState
+          message={error?.message}
+          unreachable={error?.isUnreachable()}
+        />
       </div>
     );
   }
@@ -46,14 +56,24 @@ export default async function CmsPage({ params }: PageProps<"/pages/[slug]">) {
 
   return (
     <div className="page-container py-6 sm:py-8">
-      <Breadcrumbs items={[{ label: "Home", href: "/" }]} current={page.title} />
+      <Breadcrumbs
+        items={[{ label: "Home", href: "/" }]}
+        current={page.title}
+      />
 
       <article className="mt-4 max-w-3xl">
-        <h1 className="text-headline-sm text-ink sm:text-headline-md">{page.title}</h1>
-        {page.excerpt ? <p className="mt-2 text-body-lg text-ink-muted">{page.excerpt}</p> : null}
+        <h1 className="text-headline-sm text-ink sm:text-headline-md">
+          {page.title}
+        </h1>
+        {page.excerpt ? (
+          <p className="mt-2 text-body-lg text-ink-muted">{page.excerpt}</p>
+        ) : null}
 
         {page.body ? (
-          <div className="prose-hk mt-6" dangerouslySetInnerHTML={{ __html: page.body }} />
+          <div
+            className="prose-hk mt-6"
+            dangerouslySetInnerHTML={{ __html: page.body }}
+          />
         ) : null}
 
         {updatedValid ? (

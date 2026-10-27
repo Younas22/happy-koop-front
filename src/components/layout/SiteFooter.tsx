@@ -57,12 +57,14 @@ export async function SiteFooter({ config }: SiteFooterProps) {
 
   const shipping = config.policies.shippingSummary?.trim() || null;
   const returns = config.policies.returnsSummary?.trim() || null;
-  const hasContact = Boolean(store.email || store.phone || store.addressLines.length > 0);
+  const hasContact = Boolean(
+    store.email || store.phone || store.addressLines.length > 0,
+  );
 
   // A failed read simply means no automatic column; the configured navigation
   // is unaffected and the footer still renders.
   const [pageResult, categoryResult] = await Promise.all([
-    fetchPages(),
+    fetchPages(locale),
     fetchCategories({ tree: true }),
   ]);
 
@@ -80,7 +82,9 @@ export async function SiteFooter({ config }: SiteFooterProps) {
           <div className="page-container grid gap-6 py-8 sm:grid-cols-2 sm:gap-10">
             {shipping ? (
               <div className="space-y-2">
-                <h2 className="label-eyebrow text-ink-inverse/55">{m.footer.shipping}</h2>
+                <h2 className="label-eyebrow text-ink-inverse/55">
+                  {m.footer.shipping}
+                </h2>
                 <p className="max-w-prose text-body-md whitespace-pre-line text-ink-inverse/80">
                   {shipping}
                 </p>
@@ -88,7 +92,9 @@ export async function SiteFooter({ config }: SiteFooterProps) {
             ) : null}
             {returns ? (
               <div className="space-y-2">
-                <h2 className="label-eyebrow text-ink-inverse/55">{m.footer.returns}</h2>
+                <h2 className="label-eyebrow text-ink-inverse/55">
+                  {m.footer.returns}
+                </h2>
                 <p className="max-w-prose text-body-md whitespace-pre-line text-ink-inverse/80">
                   {returns}
                 </p>
@@ -109,7 +115,9 @@ export async function SiteFooter({ config }: SiteFooterProps) {
               className="max-w-64"
             />
             {store.tagline ? (
-              <p className="max-w-80 text-body-md text-ink-inverse/70">{store.tagline}</p>
+              <p className="max-w-80 text-body-md text-ink-inverse/70">
+                {store.tagline}
+              </p>
             ) : null}
             {socials.length > 0 ? (
               <ul className="flex flex-wrap items-center gap-2.5">
@@ -122,7 +130,10 @@ export async function SiteFooter({ config }: SiteFooterProps) {
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer me"
-                      aria-label={fmt(m.footer.socialOn, { store: store.name, network: label })}
+                      aria-label={fmt(m.footer.socialOn, {
+                        store: store.name,
+                        network: label,
+                      })}
                       title={label}
                       className="inline-flex size-11 items-center justify-center rounded-full border border-white/15 bg-white/5 text-ink-inverse/80 transition-[color,background-color,border-color] duration-200 ease-(--ease-standard) hover:border-white hover:bg-white hover:text-ink"
                     >
@@ -176,7 +187,10 @@ export async function SiteFooter({ config }: SiteFooterProps) {
               <ul className="space-y-0.5">
                 {shownPages.map((page) => (
                   <li key={page.slug}>
-                    <Link href={`/pages/${page.slug}`} className={footerLinkClass}>
+                    <Link
+                      href={`/pages/${page.slug}`}
+                      className={footerLinkClass}
+                    >
                       {page.title}
                     </Link>
                   </li>
@@ -246,21 +260,31 @@ export async function SiteFooter({ config }: SiteFooterProps) {
                 test/sandbox provider says so instead of looking like a
                 working checkout. */}
             {payments.length > 0 ? (
-              <ul aria-label={m.footer.payments} className="flex flex-wrap items-center gap-2">
+              <ul
+                aria-label={m.footer.payments}
+                className="flex flex-wrap items-center gap-2"
+              >
                 {payments.map((method) => (
                   <li
                     key={method.provider}
                     className="inline-flex min-h-8 items-center gap-1 rounded-md border border-white/15 px-2.5 text-label-md text-ink-inverse/85"
                   >
-                    {method.provider === "paypal" ? m.footer.paypal : m.footer.card}
+                    {method.provider === "paypal"
+                      ? m.footer.paypal
+                      : m.footer.card}
                     {method.testMode ? (
-                      <span className="text-ink-inverse/50"> · {m.footer.testMode}</span>
+                      <span className="text-ink-inverse/50">
+                        {" "}
+                        · {m.footer.testMode}
+                      </span>
                     ) : null}
                   </li>
                 ))}
               </ul>
             ) : null}
-            <p className="tabular-nums">{fmt(m.footer.pricesIn, { currency: storeLocale.currency })}</p>
+            <p className="tabular-nums">
+              {fmt(m.footer.pricesIn, { currency: storeLocale.currency })}
+            </p>
             <LanguageSwitcher tone="dark" />
           </div>
         </div>

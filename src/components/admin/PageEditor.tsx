@@ -34,13 +34,22 @@ const schema = z.object({
     .trim()
     .min(1, "Enter a slug.")
     .max(200)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers and hyphens."),
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      "Use lowercase letters, numbers and hyphens.",
+    ),
   excerpt: z.string().trim().max(500),
   body: z.string().max(200000),
   seoTitle: z.string().trim().max(160),
   seoDescription: z.string().trim().max(320),
   seoNoindex: z.boolean(),
   isPublished: z.boolean(),
+  // Dutch. Empty fields fall back to the English text on the storefront.
+  nlTitle: z.string().trim().max(200),
+  nlExcerpt: z.string().trim().max(500),
+  nlBody: z.string().max(200000),
+  nlSeoTitle: z.string().trim().max(160),
+  nlSeoDescription: z.string().trim().max(320),
 });
 
 type Values = z.infer<typeof schema>;
@@ -74,8 +83,14 @@ export function PageEditor({ page }: { page: AdminPage | null }) {
       seoDescription: page?.seo.description ?? "",
       seoNoindex: page?.seo.noindex ?? false,
       isPublished: page?.isPublished ?? false,
+      nlTitle: page?.translations?.nl?.title ?? "",
+      nlExcerpt: page?.translations?.nl?.excerpt ?? "",
+      nlBody: page?.translations?.nl?.body ?? "",
+      nlSeoTitle: page?.translations?.nl?.seoTitle ?? "",
+      nlSeoDescription: page?.translations?.nl?.seoDescription ?? "",
     },
   });
+  const [language, setLanguage] = React.useState<"en" | "nl">("en");
 
   async function onSubmit(values: Values) {
     setFormError(null);
@@ -89,6 +104,15 @@ export function PageEditor({ page }: { page: AdminPage | null }) {
       seoDescription: values.seoDescription || null,
       seoNoindex: values.seoNoindex,
       isPublished: values.isPublished,
+      translations: {
+        nl: {
+          title: values.nlTitle || null,
+          excerpt: values.nlExcerpt || null,
+          body: values.nlBody || null,
+          seoTitle: values.nlSeoTitle || null,
+          seoDescription: values.nlSeoDescription || null,
+        },
+      },
     });
 
     if (!result.ok) {
@@ -126,14 +150,51 @@ export function PageEditor({ page }: { page: AdminPage | null }) {
   }
 
   return (
-    <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      noValidate
+      onSubmit={form.handleSubmit(onSubmit)}
+      className="space-y-4"
+    >
       {formError ? (
         <Alert tone="danger" live title="The page was not saved">
           {formError}
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <FormField
+        id="page-slug"
+        label="URL slug"
+        required
+        description="The page is served at /pages/{slug}, in every language."
+        error={form.formState.errors.slug?.message ?? null}
+      >
+        {(field) => <Input {...field} {...form.register("slug")} />}
+      </FormField>
+
+      {/* Both languages stay mounted, so switching keeps what was typed. */}
+      <div
+        role="group"
+        aria-label="Content language"
+        className="inline-flex rounded-full border border-line-strong p-1"
+      >
+        {(["en", "nl"] as const).map((code) => (
+          <button
+            key={code}
+            type="button"
+            onClick={() => setLanguage(code)}
+            aria-pressed={language === code}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+              language === code
+                ? "bg-brand text-brand-ink"
+                : "text-ink-muted hover:text-ink"
+            }`}
+          >
+            {code === "en" ? "English" : "Nederlands"}
+          </button>
+        ))}
+      </div>
+
+      <div className={language === "en" ? "space-y-4" : "hidden"}>
         <FormField
           id="page-title"
           label="Title"
@@ -144,50 +205,126 @@ export function PageEditor({ page }: { page: AdminPage | null }) {
         </FormField>
 
         <FormField
-          id="page-slug"
-          label="URL slug"
-          required
-          description="The page is served at /pages/{slug}."
-          error={form.formState.errors.slug?.message ?? null}
+          id="page-excerpt"
+          label="Excerpt"
+          description="Short summary, used where a preview is needed."
+          error={form.formState.errors.excerpt?.message ?? null}
         >
-          {(field) => <Input {...field} {...form.register("slug")} />}
+          {(field) => (
+            <Textarea {...field} rows={2} {...form.register("excerpt")} />
+          )}
         </FormField>
+
+        <FormField
+          id="page-body"
+          label="Body"
+          description="HTML is allowed and is sanitized on the server before it is stored."
+          error={form.formState.errors.body?.message ?? null}
+        >
+          {(field) => (
+            <Textarea
+              {...field}
+              rows={16}
+              className="font-mono text-xs"
+              {...form.register("body")}
+            />
+          )}
+        </FormField>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField
+            id="page-seo-title"
+            label="SEO title"
+            error={form.formState.errors.seoTitle?.message ?? null}
+          >
+            {(field) => <Input {...field} {...form.register("seoTitle")} />}
+          </FormField>
+
+          <FormField
+            id="page-seo-description"
+            label="SEO description"
+            error={form.formState.errors.seoDescription?.message ?? null}
+          >
+            {(field) => (
+              <Input {...field} {...form.register("seoDescription")} />
+            )}
+          </FormField>
+        </div>
       </div>
 
-      <FormField
-        id="page-excerpt"
-        label="Excerpt"
-        description="Short summary, used where a preview is needed."
-        error={form.formState.errors.excerpt?.message ?? null}
-      >
-        {(field) => <Textarea {...field} rows={2} {...form.register("excerpt")} />}
-      </FormField>
+      <div className={language === "nl" ? "space-y-4" : "hidden"}>
+        <p className="text-sm text-ink-muted">
+          Shown to visitors browsing in Dutch. Leave a field empty to show the
+          English text instead.
+        </p>
 
-      <FormField
-        id="page-body"
-        label="Body"
-        description="HTML is allowed and is sanitized on the server before it is stored."
-        error={form.formState.errors.body?.message ?? null}
-      >
-        {(field) => <Textarea {...field} rows={16} className="font-mono text-xs" {...form.register("body")} />}
-      </FormField>
-
-      <div className="grid gap-4 sm:grid-cols-2">
         <FormField
-          id="page-seo-title"
-          label="SEO title"
-          error={form.formState.errors.seoTitle?.message ?? null}
+          id="page-nl-title"
+          label="Titel"
+          error={form.formState.errors.nlTitle?.message ?? null}
         >
-          {(field) => <Input {...field} {...form.register("seoTitle")} />}
+          {(field) => (
+            <Input {...field} lang="nl" {...form.register("nlTitle")} />
+          )}
         </FormField>
 
         <FormField
-          id="page-seo-description"
-          label="SEO description"
-          error={form.formState.errors.seoDescription?.message ?? null}
+          id="page-nl-excerpt"
+          label="Samenvatting"
+          error={form.formState.errors.nlExcerpt?.message ?? null}
         >
-          {(field) => <Input {...field} {...form.register("seoDescription")} />}
+          {(field) => (
+            <Textarea
+              {...field}
+              lang="nl"
+              rows={2}
+              {...form.register("nlExcerpt")}
+            />
+          )}
         </FormField>
+
+        <FormField
+          id="page-nl-body"
+          label="Inhoud"
+          description="HTML is allowed and is sanitized on the server before it is stored."
+          error={form.formState.errors.nlBody?.message ?? null}
+        >
+          {(field) => (
+            <Textarea
+              {...field}
+              lang="nl"
+              rows={16}
+              className="font-mono text-xs"
+              {...form.register("nlBody")}
+            />
+          )}
+        </FormField>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField
+            id="page-nl-seo-title"
+            label="SEO-titel"
+            error={form.formState.errors.nlSeoTitle?.message ?? null}
+          >
+            {(field) => (
+              <Input {...field} lang="nl" {...form.register("nlSeoTitle")} />
+            )}
+          </FormField>
+
+          <FormField
+            id="page-nl-seo-description"
+            label="SEO-beschrijving"
+            error={form.formState.errors.nlSeoDescription?.message ?? null}
+          >
+            {(field) => (
+              <Input
+                {...field}
+                lang="nl"
+                {...form.register("nlSeoDescription")}
+              />
+            )}
+          </FormField>
+        </div>
       </div>
 
       <div className="space-y-1">
@@ -195,18 +332,26 @@ export function PageEditor({ page }: { page: AdminPage | null }) {
           id="page-published"
           label="Published - visible in the store"
           checked={form.watch("isPublished") === true}
-          onCheckedChange={(checked) => form.setValue("isPublished", checked === true)}
+          onCheckedChange={(checked) =>
+            form.setValue("isPublished", checked === true)
+          }
         />
         <CheckboxField
           id="page-noindex"
           label="Ask search engines not to index this page"
           checked={form.watch("seoNoindex") === true}
-          onCheckedChange={(checked) => form.setValue("seoNoindex", checked === true)}
+          onCheckedChange={(checked) =>
+            form.setValue("seoNoindex", checked === true)
+          }
         />
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="submit" loading={form.formState.isSubmitting} loadingLabel="Saving…">
+        <Button
+          type="submit"
+          loading={form.formState.isSubmitting}
+          loadingLabel="Saving…"
+        >
           {page ? "Save page" : "Create page"}
         </Button>
 

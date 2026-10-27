@@ -368,7 +368,18 @@ export interface AdminCategory extends Category {
   seoDescription: string | null;
 }
 
+/** A page's content in one extra language; `null` falls back to the default. */
+export interface AdminPageTranslation {
+  title: string | null;
+  body: string | null;
+  excerpt: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+}
+
 export interface AdminPage extends Page {
+  /** Other languages, keyed by locale. */
+  translations?: Partial<Record<"nl", AdminPageTranslation>>;
   isPublished: boolean;
   publishedAt: string | null;
   createdAt: string | null;
