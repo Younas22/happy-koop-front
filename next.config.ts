@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 /**
  * Image hosts are derived from the configured API origins. Product and
- * branding images are served by Laravel (local: /storage/...), so those
+ * branding images are served by Laravel (/uploads/..., older ones /storage/...), so those
  * origins must be allowlisted for next/image optimisation.
  *
  * Only hosts listed in NEXT_PUBLIC_ALLOWED_API_HOSTS are permitted - the same
@@ -62,6 +62,8 @@ const nextConfig: NextConfig = {
       (["http", "https"] as const).flatMap((protocol) => [
         { protocol, hostname, pathname: "/storage/**" },
         { protocol, hostname, pathname: "/**/storage/**" },
+        { protocol, hostname, pathname: "/uploads/**" },
+        { protocol, hostname, pathname: "/**/uploads/**" },
       ]),
     ),
 

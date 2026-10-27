@@ -3,13 +3,31 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-import { AdminError, AdminPageHeader, AdminTableWrap, Td, Th } from "@/components/admin/AdminParts";
+import { bulkDeleteProductsAction } from "@/app/admin/actions";
+import {
+  AdminError,
+  AdminPageHeader,
+  AdminTableWrap,
+  Td,
+  Th,
+} from "@/components/admin/AdminParts";
+import {
+  BulkActionBar,
+  BulkDeleteButton,
+  BulkSelectAll,
+  BulkSelection,
+  BulkSelectRow,
+} from "@/components/admin/BulkSelection";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
-import { fetchAdminCategories, fetchAdminProducts, isAdminProductSort } from "@/lib/admin/queries";
+import {
+  fetchAdminCategories,
+  fetchAdminProducts,
+  isAdminProductSort,
+} from "@/lib/admin/queries";
 import { requireAdmin } from "@/lib/auth/session";
 import { formatMoney } from "@/lib/money";
 import { getRuntimeConfig } from "@/lib/runtime-config";
@@ -39,7 +57,9 @@ const STATUSES = ["draft", "published", "archived"] as const;
  * this table - it exists on the admin payload but belongs on the edit screen,
  * not in a list that may be glanced at on a shared screen.
  */
-export default async function AdminProductsPage({ searchParams }: PageProps<"/admin/products">) {
+export default async function AdminProductsPage({
+  searchParams,
+}: PageProps<"/admin/products">) {
   await requireAdmin("/admin/products");
   const params = await searchParams;
 
@@ -58,7 +78,8 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
     fetchAdminProducts({
       q: q || null,
       status: status || null,
-      category: Number.isFinite(categoryId) && categoryId > 0 ? categoryId : null,
+      category:
+        Number.isFinite(categoryId) && categoryId > 0 ? categoryId : null,
       trashed,
       sort,
       page,
@@ -71,7 +92,8 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
     `/admin/products${buildQuery({
       q: q || null,
       status: status || null,
-      category: Number.isFinite(categoryId) && categoryId > 0 ? categoryId : null,
+      category:
+        Number.isFinite(categoryId) && categoryId > 0 ? categoryId : null,
       trashed: trashed ? "1" : null,
       sort,
       ...overrides,
@@ -98,14 +120,25 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
         className="surface-card mb-4 grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-5"
       >
         <div className="lg:col-span-2">
-          <label htmlFor="product-q" className="mb-1 block text-xs font-medium text-ink-muted">
+          <label
+            htmlFor="product-q"
+            className="mb-1 block text-xs font-medium text-ink-muted"
+          >
             Search name, SKU or brand
           </label>
-          <Input id="product-q" name="q" defaultValue={q} placeholder="Search products" />
+          <Input
+            id="product-q"
+            name="q"
+            defaultValue={q}
+            placeholder="Search products"
+          />
         </div>
 
         <div>
-          <label htmlFor="product-status" className="mb-1 block text-xs font-medium text-ink-muted">
+          <label
+            htmlFor="product-status"
+            className="mb-1 block text-xs font-medium text-ink-muted"
+          >
             Status
           </label>
           <select
@@ -133,7 +166,11 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
           <select
             id="product-category"
             name="category"
-            defaultValue={Number.isFinite(categoryId) && categoryId > 0 ? String(categoryId) : ""}
+            defaultValue={
+              Number.isFinite(categoryId) && categoryId > 0
+                ? String(categoryId)
+                : ""
+            }
             className="h-11 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink"
           >
             <option value="">Any category</option>
@@ -146,7 +183,10 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
         </div>
 
         <div>
-          <label htmlFor="product-sort" className="mb-1 block text-xs font-medium text-ink-muted">
+          <label
+            htmlFor="product-sort"
+            className="mb-1 block text-xs font-medium text-ink-muted"
+          >
             Sort
           </label>
           <select
@@ -173,7 +213,9 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
             <Link href="/admin/products">Clear</Link>
           </Button>
           <Button asChild variant="ghost" className="ml-auto">
-            <Link href={buildHref({ trashed: trashed ? null : "1", page: null })}>
+            <Link
+              href={buildHref({ trashed: trashed ? null : "1", page: null })}
+            >
               {trashed ? "Show active products" : "Show deleted products"}
             </Link>
           </Button>
@@ -184,7 +226,9 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
         <AdminError error={products.error} />
       ) : (products.data?.data.length ?? 0) === 0 ? (
         <EmptyState
-          title={q || status ? "No products match these filters" : "No products yet"}
+          title={
+            q || status ? "No products match these filters" : "No products yet"
+          }
           description={
             q || status
               ? "Try a different search or clear the filters."
@@ -197,10 +241,27 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
           }
         />
       ) : (
-        <>
+        <BulkSelection
+          ids={(products.data?.data ?? []).map((product) => product.id)}
+        >
+          {trashed ? null : (
+            <BulkActionBar>
+              <BulkDeleteButton
+                action={bulkDeleteProductsAction}
+                singular="product"
+                plural="products"
+                description="They are removed from the storefront and the admin list. Orders that contain them keep their own item snapshots, so order history is unaffected."
+              />
+            </BulkActionBar>
+          )}
           <AdminTableWrap>
             <thead>
               <tr>
+                {trashed ? null : (
+                  <Th className="w-10">
+                    <BulkSelectAll />
+                  </Th>
+                )}
                 <Th>Product</Th>
                 <Th>Status</Th>
                 <Th className="text-right">Price</Th>
@@ -214,6 +275,14 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
             <tbody>
               {(products.data?.data ?? []).map((product) => (
                 <tr key={product.id}>
+                  {trashed ? null : (
+                    <Td>
+                      <BulkSelectRow
+                        id={product.id}
+                        label={`Select ${product.name}`}
+                      />
+                    </Td>
+                  )}
                   <Td>
                     <div className="flex items-center gap-3">
                       <div className="relative size-10 shrink-0 overflow-hidden rounded-md border border-line bg-sunken">
@@ -235,7 +304,8 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
                           {product.name}
                         </Link>
                         <p className="text-xs text-ink-muted">
-                          {product.sku ? `SKU ${product.sku}` : "No SKU"} · /{product.slug}
+                          {product.sku ? `SKU ${product.sku}` : "No SKU"} · /
+                          {product.slug}
                         </p>
                       </div>
                     </div>
@@ -253,11 +323,17 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
                       {product.status}
                     </Badge>
                   </Td>
-                  <Td className="text-right tabular-nums">{formatMoney(product.price)}</Td>
                   <Td className="text-right tabular-nums">
-                    {product.inventoryPolicy === "track" ? product.stockQuantity : "Not tracked"}
+                    {formatMoney(product.price)}
                   </Td>
-                  <Td className="text-right tabular-nums">{product.variantCount}</Td>
+                  <Td className="text-right tabular-nums">
+                    {product.inventoryPolicy === "track"
+                      ? product.stockQuantity
+                      : "Not tracked"}
+                  </Td>
+                  <Td className="text-right tabular-nums">
+                    {product.variantCount}
+                  </Td>
                   <Td className="text-right">
                     <Button asChild size="sm" variant="secondary">
                       <Link href={`/admin/products/${product.id}`}>Edit</Link>
@@ -272,10 +348,12 @@ export default async function AdminProductsPage({ searchParams }: PageProps<"/ad
             <Pagination
               className="mt-5"
               meta={products.data.meta}
-              buildHref={(target) => buildHref({ page: target <= 1 ? null : target })}
+              buildHref={(target) =>
+                buildHref({ page: target <= 1 ? null : target })
+              }
             />
           ) : null}
-        </>
+        </BulkSelection>
       )}
     </>
   );

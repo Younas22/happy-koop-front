@@ -10,6 +10,7 @@ import {
 } from "@/lib/api/client";
 import type {
   AdminAuditLogEntry,
+  AdminBulkResult,
   AdminCategory,
   AdminConnectionCheck,
   AdminCustomerDetail,
@@ -76,7 +77,10 @@ export const ADMIN_PRODUCT_SORTS = [
 export type AdminProductSort = (typeof ADMIN_PRODUCT_SORTS)[number];
 
 export function isAdminProductSort(value: unknown): value is AdminProductSort {
-  return typeof value === "string" && (ADMIN_PRODUCT_SORTS as readonly string[]).includes(value);
+  return (
+    typeof value === "string" &&
+    (ADMIN_PRODUCT_SORTS as readonly string[]).includes(value)
+  );
 }
 
 export interface AdminProductListParams {
@@ -108,15 +112,22 @@ export function fetchAdminProducts(
   );
 }
 
-export function fetchAdminProduct(id: number): Promise<Result<AdminProductDetail>> {
-  return tryApi(() => apiGet<AdminProductDetail>(`/admin/products/${id}`, AUTH));
+export function fetchAdminProduct(
+  id: number,
+): Promise<Result<AdminProductDetail>> {
+  return tryApi(() =>
+    apiGet<AdminProductDetail>(`/admin/products/${id}`, AUTH),
+  );
 }
 
 export function createAdminProduct(body: unknown): Promise<AdminProductDetail> {
   return apiPost<AdminProductDetail>("/admin/products", body, AUTH);
 }
 
-export function updateAdminProduct(id: number, body: unknown): Promise<AdminProductDetail> {
+export function updateAdminProduct(
+  id: number,
+  body: unknown,
+): Promise<AdminProductDetail> {
   return apiPatch<AdminProductDetail>(`/admin/products/${id}`, body, AUTH);
 }
 
@@ -124,24 +135,51 @@ export function deleteAdminProduct(id: number): Promise<void> {
   return apiDelete<void>(`/admin/products/${id}`, AUTH);
 }
 
+export function bulkDeleteAdminProducts(
+  ids: readonly number[],
+): Promise<AdminBulkResult> {
+  return apiPost<AdminBulkResult>("/admin/products/bulk-delete", { ids }, AUTH);
+}
+
 /** Replaces the option/variant set atomically (contract 8). */
-export function replaceProductVariants(id: number, body: unknown): Promise<AdminProductDetail> {
-  return apiPut<AdminProductDetail>(`/admin/products/${id}/variants`, body, AUTH);
+export function replaceProductVariants(
+  id: number,
+  body: unknown,
+): Promise<AdminProductDetail> {
+  return apiPut<AdminProductDetail>(
+    `/admin/products/${id}/variants`,
+    body,
+    AUTH,
+  );
 }
 
 export function replaceProductSpecifications(
   id: number,
   body: unknown,
 ): Promise<AdminProductDetail> {
-  return apiPut<AdminProductDetail>(`/admin/products/${id}/specifications`, body, AUTH);
+  return apiPut<AdminProductDetail>(
+    `/admin/products/${id}/specifications`,
+    body,
+    AUTH,
+  );
 }
 
-export function replaceProductFaqs(id: number, body: unknown): Promise<AdminProductDetail> {
+export function replaceProductFaqs(
+  id: number,
+  body: unknown,
+): Promise<AdminProductDetail> {
   return apiPut<AdminProductDetail>(`/admin/products/${id}/faqs`, body, AUTH);
 }
 
-export function replaceProductRelated(id: number, body: unknown): Promise<AdminProductDetail> {
-  return apiPut<AdminProductDetail>(`/admin/products/${id}/related`, body, AUTH);
+export function replaceProductRelated(
+  id: number,
+  body: unknown,
+): Promise<AdminProductDetail> {
+  return apiPut<AdminProductDetail>(
+    `/admin/products/${id}/related`,
+    body,
+    AUTH,
+  );
 }
 
 export function attachProductMedia(
@@ -155,7 +193,11 @@ export function reorderProductMedia(
   id: number,
   body: { mediaIds: number[] },
 ): Promise<AdminProductDetail> {
-  return apiPatch<AdminProductDetail>(`/admin/products/${id}/media/reorder`, body, AUTH);
+  return apiPatch<AdminProductDetail>(
+    `/admin/products/${id}/media/reorder`,
+    body,
+    AUTH,
+  );
 }
 
 /* ------------------------------------------------------------------ *
@@ -170,12 +212,25 @@ export function createAdminCategory(body: unknown): Promise<AdminCategory> {
   return apiPost<AdminCategory>("/admin/categories", body, AUTH);
 }
 
-export function updateAdminCategory(id: number, body: unknown): Promise<AdminCategory> {
+export function updateAdminCategory(
+  id: number,
+  body: unknown,
+): Promise<AdminCategory> {
   return apiPatch<AdminCategory>(`/admin/categories/${id}`, body, AUTH);
 }
 
 export function deleteAdminCategory(id: number): Promise<void> {
   return apiDelete<void>(`/admin/categories/${id}`, AUTH);
+}
+
+export function bulkDeleteAdminCategories(
+  ids: readonly number[],
+): Promise<AdminBulkResult> {
+  return apiPost<AdminBulkResult>(
+    "/admin/categories/bulk-delete",
+    { ids },
+    AUTH,
+  );
 }
 
 /* ------------------------------------------------------------------ *
@@ -218,16 +273,50 @@ export function fetchAdminOrder(id: number): Promise<Result<AdminOrderDetail>> {
 /** Transitions are validated server-side; an invalid one returns 409. */
 export function updateOrderStatus(
   id: number,
-  body: { status?: OrderStatus; paymentStatus?: PaymentStatus; adminNote?: string | null },
+  body: {
+    status?: OrderStatus;
+    paymentStatus?: PaymentStatus;
+    adminNote?: string | null;
+  },
 ): Promise<AdminOrderDetail> {
   return apiPatch<AdminOrderDetail>(`/admin/orders/${id}/status`, body, AUTH);
 }
 
+/** Each order is moved on its own; refused transitions come back in `failed`. */
+export function bulkUpdateOrderStatus(
+  ids: readonly number[],
+  status: OrderStatus,
+): Promise<AdminBulkResult> {
+  return apiPatch<AdminBulkResult>(
+    "/admin/orders/bulk-status",
+    { ids, status },
+    AUTH,
+  );
+}
+
+export function deleteAdminOrder(id: number): Promise<void> {
+  return apiDelete<void>(`/admin/orders/${id}`, AUTH);
+}
+
+export function bulkDeleteAdminOrders(
+  ids: readonly number[],
+): Promise<AdminBulkResult> {
+  return apiPost<AdminBulkResult>("/admin/orders/bulk-delete", { ids }, AUTH);
+}
+
 export function updateOrderFulfilment(
   id: number,
-  body: { carrier: string | null; trackingNumber: string | null; trackingUrl: string | null },
+  body: {
+    carrier: string | null;
+    trackingNumber: string | null;
+    trackingUrl: string | null;
+  },
 ): Promise<AdminOrderDetail> {
-  return apiPatch<AdminOrderDetail>(`/admin/orders/${id}/fulfilment`, body, AUTH);
+  return apiPatch<AdminOrderDetail>(
+    `/admin/orders/${id}/fulfilment`,
+    body,
+    AUTH,
+  );
 }
 
 /** `amount` is minor units and must not exceed the refundable balance. */
@@ -256,8 +345,12 @@ export function fetchAdminCustomers(
   );
 }
 
-export function fetchAdminCustomer(id: number): Promise<Result<AdminCustomerDetail>> {
-  return tryApi(() => apiGet<AdminCustomerDetail>(`/admin/customers/${id}`, AUTH));
+export function fetchAdminCustomer(
+  id: number,
+): Promise<Result<AdminCustomerDetail>> {
+  return tryApi(() =>
+    apiGet<AdminCustomerDetail>(`/admin/customers/${id}`, AUTH),
+  );
 }
 
 export function fetchAdminUsers(
@@ -278,7 +371,10 @@ export function createAdminUser(body: unknown): Promise<AdminUserSummary> {
   return apiPost<AdminUserSummary>("/admin/users", body, AUTH);
 }
 
-export function updateAdminUser(id: number, body: unknown): Promise<AdminUserSummary> {
+export function updateAdminUser(
+  id: number,
+  body: unknown,
+): Promise<AdminUserSummary> {
   return apiPatch<AdminUserSummary>(`/admin/users/${id}`, body, AUTH);
 }
 
@@ -292,7 +388,11 @@ export function deleteAdminUser(id: number): Promise<void> {
  * ------------------------------------------------------------------ */
 
 export function fetchAdminReviews(
-  params: { status?: ReviewModerationStatus | null; product?: number | null; page?: number } = {},
+  params: {
+    status?: ReviewModerationStatus | null;
+    product?: number | null;
+    page?: number;
+  } = {},
 ): Promise<Result<Paginated<AdminReview>>> {
   return tryApi(() =>
     apiGetPaginated<AdminReview>("/admin/reviews", {
@@ -349,7 +449,9 @@ export function fetchAdminHomeSections(): Promise<Result<AdminHomeSection[]>> {
 }
 
 /** Replaces the whole homepage composition atomically. */
-export function replaceHomeSections(body: unknown): Promise<AdminHomeSection[]> {
+export function replaceHomeSections(
+  body: unknown,
+): Promise<AdminHomeSection[]> {
   return apiPut<AdminHomeSection[]>("/admin/home-sections", body, AUTH);
 }
 
@@ -358,7 +460,11 @@ export function replaceHomeSections(body: unknown): Promise<AdminHomeSection[]> 
  * ------------------------------------------------------------------ */
 
 export function fetchAdminMedia(
-  params: { type?: "image" | "video" | null; folder?: string | null; page?: number } = {},
+  params: {
+    type?: "image" | "video" | null;
+    folder?: string | null;
+    page?: number;
+  } = {},
 ): Promise<Result<Paginated<AdminMediaAsset>>> {
   return tryApi(() =>
     apiGetPaginated<AdminMediaAsset>("/admin/media", {
@@ -405,7 +511,11 @@ export async function fetchAllAdminMedia(
     const next = await fetchAdminMedia({ ...params, page });
     // A failed later page is not worth failing the whole screen over: the
     // picker shows what did load and says the list is incomplete.
-    if (!next.data) return { data: { assets, total: first.data.meta.total, truncated: true }, error: null };
+    if (!next.data)
+      return {
+        data: { assets, total: first.data.meta.total, truncated: true },
+        error: null,
+      };
     assets.push(...next.data.data);
   }
 
@@ -423,20 +533,38 @@ export function deleteAdminMedia(id: number): Promise<void> {
   return apiDelete<void>(`/admin/media/${id}`, AUTH);
 }
 
+export function bulkDeleteAdminMedia(
+  ids: readonly number[],
+): Promise<AdminBulkResult> {
+  return apiPost<AdminBulkResult>("/admin/media/bulk-delete", { ids }, AUTH);
+}
+
 /* ------------------------------------------------------------------ *
  * Settings
  * ------------------------------------------------------------------ */
 
-export function fetchStoreSettings(): Promise<Result<AdminStoreSettingsResponse>> {
-  return tryApi(() => apiGet<AdminStoreSettingsResponse>("/admin/settings/store", AUTH));
+export function fetchStoreSettings(): Promise<
+  Result<AdminStoreSettingsResponse>
+> {
+  return tryApi(() =>
+    apiGet<AdminStoreSettingsResponse>("/admin/settings/store", AUTH),
+  );
 }
 
-export function updateStoreSettings(body: unknown): Promise<AdminStoreSettingsResponse> {
-  return apiPut<AdminStoreSettingsResponse>("/admin/settings/store", body, AUTH);
+export function updateStoreSettings(
+  body: unknown,
+): Promise<AdminStoreSettingsResponse> {
+  return apiPut<AdminStoreSettingsResponse>(
+    "/admin/settings/store",
+    body,
+    AUTH,
+  );
 }
 
 export function fetchPaymentSettings(): Promise<Result<AdminPaymentSettings>> {
-  return tryApi(() => apiGet<AdminPaymentSettings>("/admin/settings/payments", AUTH));
+  return tryApi(() =>
+    apiGet<AdminPaymentSettings>("/admin/settings/payments", AUTH),
+  );
 }
 
 /** Omitted secret fields stay unchanged; `null` clears (contract 8.2). */
@@ -450,7 +578,11 @@ export function updatePaymentSettings(
 export function testPaymentConnection(
   provider: "stripe" | "paypal",
 ): Promise<AdminConnectionCheck> {
-  return apiPost<AdminConnectionCheck>("/admin/settings/payments/test", { provider }, AUTH);
+  return apiPost<AdminConnectionCheck>(
+    "/admin/settings/payments/test",
+    { provider },
+    AUTH,
+  );
 }
 
 /* ------------------------------------------------------------------ *

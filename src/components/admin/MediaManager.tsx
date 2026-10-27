@@ -6,7 +6,14 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
-import { deleteMediaAction } from "@/app/admin/actions";
+import { bulkDeleteMediaAction, deleteMediaAction } from "@/app/admin/actions";
+import {
+  BulkActionBar,
+  BulkDeleteButton,
+  BulkSelectAll,
+  BulkSelection,
+  BulkSelectRow,
+} from "@/components/admin/BulkSelection";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -36,13 +43,18 @@ const STATUS_LABEL: Record<UploadItem["status"], string> = {
 
 /** Overall bar for the batch plus one bar per file. */
 function UploadProgress({ items }: { items: readonly UploadItem[] }) {
-  const finished = items.filter((item) => item.status === "done" || item.status === "failed");
+  const finished = items.filter(
+    (item) => item.status === "done" || item.status === "failed",
+  );
   // A file counts fully once the server has answered; until then, by bytes
   // sent, capped short of complete while the server is still processing it.
   const overall =
     items.reduce(
       (sum, item) =>
-        sum + (item.status === "done" || item.status === "failed" ? 1 : item.fraction * 0.95),
+        sum +
+        (item.status === "done" || item.status === "failed"
+          ? 1
+          : item.fraction * 0.95),
       0,
     ) / items.length;
   const percent = Math.round(overall * 100);
@@ -52,7 +64,8 @@ function UploadProgress({ items }: { items: readonly UploadItem[] }) {
       <div>
         <div className="flex items-center justify-between text-xs text-ink-muted">
           <span>
-            {finished.length} of {items.length} {items.length === 1 ? "file" : "files"}
+            {finished.length} of {items.length}{" "}
+            {items.length === 1 ? "file" : "files"}
           </span>
           <span className="tabular-nums">{percent}%</span>
         </div>
@@ -73,14 +86,21 @@ function UploadProgress({ items }: { items: readonly UploadItem[] }) {
 
       <ul className="max-h-72 space-y-2 overflow-y-auto">
         {items.map((item) => {
-          const itemPercent = item.status === "done" ? 100 : Math.round(item.fraction * 100);
+          const itemPercent =
+            item.status === "done" ? 100 : Math.round(item.fraction * 100);
           return (
             <li key={item.key} className="rounded-md border border-line p-2.5">
               <div className="flex items-center gap-2 text-xs">
                 {item.status === "done" ? (
-                  <CheckCircle2 className="size-4 shrink-0 text-success" aria-hidden="true" />
+                  <CheckCircle2
+                    className="size-4 shrink-0 text-success"
+                    aria-hidden="true"
+                  />
                 ) : item.status === "failed" ? (
-                  <XCircle className="size-4 shrink-0 text-danger" aria-hidden="true" />
+                  <XCircle
+                    className="size-4 shrink-0 text-danger"
+                    aria-hidden="true"
+                  />
                 ) : item.status === "waiting" ? (
                   <span className="size-4 shrink-0" aria-hidden="true" />
                 ) : (
@@ -89,9 +109,13 @@ function UploadProgress({ items }: { items: readonly UploadItem[] }) {
                     aria-hidden="true"
                   />
                 )}
-                <span className="min-w-0 flex-1 truncate font-medium text-ink">{item.name}</span>
+                <span className="min-w-0 flex-1 truncate font-medium text-ink">
+                  {item.name}
+                </span>
                 <span className="shrink-0 tabular-nums text-ink-muted">
-                  {item.status === "uploading" ? `${itemPercent}%` : STATUS_LABEL[item.status]}
+                  {item.status === "uploading"
+                    ? `${itemPercent}%`
+                    : STATUS_LABEL[item.status]}
                 </span>
               </div>
               {item.status === "failed" ? (
@@ -139,6 +163,7 @@ export function MediaManager({
   const [deleting, setDeleting] = React.useState<AdminMediaAsset | null>(null);
   const [deleteBusy, setDeleteBusy] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
+  const ids = React.useMemo(() => assets.map((asset) => asset.id), [assets]);
 
   /**
    * Uploads every selected file, one request per file, in sequence. The API
@@ -164,7 +189,9 @@ export function MediaManager({
     );
 
     const patch = (index: number, changes: Partial<UploadItem>) =>
-      setQueue((items) => items.map((item, i) => (i === index ? { ...item, ...changes } : item)));
+      setQueue((items) =>
+        items.map((item, i) => (i === index ? { ...item, ...changes } : item)),
+      );
 
     let failures = 0;
     let uploaded = 0;
@@ -177,9 +204,17 @@ export function MediaManager({
       if (alt.trim()) body.set("alt", alt.trim());
       if (folder.trim()) body.set("folder", folder.trim());
 
-      const result = await uploadSameOrigin<AdminMediaAsset>("/api/admin/media", body, (fraction) =>
-        // Bytes sent is not the end: the server still stores and resizes it.
-        patch(index, fraction >= 1 ? { status: "processing", fraction: 1 } : { fraction }),
+      const result = await uploadSameOrigin<AdminMediaAsset>(
+        "/api/admin/media",
+        body,
+        (fraction) =>
+          // Bytes sent is not the end: the server still stores and resizes it.
+          patch(
+            index,
+            fraction >= 1
+              ? { status: "processing", fraction: 1 }
+              : { fraction },
+          ),
       );
 
       if (result.ok) {
@@ -199,12 +234,18 @@ export function MediaManager({
     setUploading(false);
 
     if (failures > 0) {
-      toast.error(failures === 1 ? "1 file was rejected." : `${failures} files were rejected.`);
+      toast.error(
+        failures === 1
+          ? "1 file was rejected."
+          : `${failures} files were rejected.`,
+      );
     }
 
     if (uploaded > 0) {
       setAlt("");
-      toast.success(uploaded === 1 ? "File uploaded." : `${uploaded} files uploaded.`);
+      toast.success(
+        uploaded === 1 ? "File uploaded." : `${uploaded} files uploaded.`,
+      );
       router.refresh();
     }
   }
@@ -232,8 +273,8 @@ export function MediaManager({
       <div className="surface-card p-4">
         <h2 className="text-sm font-semibold text-ink">Upload</h2>
         <p className="mt-1 text-xs text-ink-muted">
-          JPEG, PNG, WebP, AVIF and MP4 are accepted. The server checks the real file type, size and
-          dimensions, and rejects anything else.
+          JPEG, PNG, WebP, AVIF and MP4 are accepted. The server checks the real
+          file type, size and dimensions, and rejects anything else.
         </p>
 
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
@@ -252,7 +293,11 @@ export function MediaManager({
             )}
           </FormField>
 
-          <FormField id="media-folder" label="Folder" description="Optional grouping label.">
+          <FormField
+            id="media-folder"
+            label="Folder"
+            description="Optional grouping label."
+          >
             {(field) => (
               <Input
                 {...field}
@@ -292,60 +337,87 @@ export function MediaManager({
           description="Upload an image to use it on products, categories or the homepage."
         />
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {assets.map((asset) => (
-            <li key={asset.id} className="surface-card overflow-hidden">
-              <div className="relative aspect-square bg-sunken">
-                {asset.type === "image" ? (
-                  <Image
-                    src={asset.thumbnailUrl ?? asset.url}
-                    alt={asset.alt ?? ""}
-                    fill
-                    sizes="200px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <span className="flex h-full items-center justify-center text-xs text-ink-muted">
-                    Video
+        <BulkSelection ids={ids}>
+          <div className="mb-3 flex min-h-12 items-center gap-3 px-1">
+            <BulkSelectAll label="Select all files on this page" />
+            <span className="text-sm text-ink-muted">
+              Select all on this page
+            </span>
+          </div>
+          <BulkActionBar>
+            <BulkDeleteButton
+              action={bulkDeleteMediaAction}
+              singular="file"
+              plural="files"
+              description="Anything still using these files will lose its image. This cannot be undone."
+            />
+          </BulkActionBar>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {assets.map((asset) => (
+              <li key={asset.id} className="surface-card overflow-hidden">
+                <div className="relative aspect-square bg-sunken">
+                  <span className="absolute top-2 left-2 z-[1] rounded-xs bg-surface/90 p-0.5">
+                    <BulkSelectRow
+                      id={asset.id}
+                      label={`Select ${asset.originalFilename ?? `media #${asset.id}`}`}
+                    />
                   </span>
-                )}
-              </div>
+                  {asset.type === "image" ? (
+                    <Image
+                      src={asset.thumbnailUrl ?? asset.url}
+                      alt={asset.alt ?? ""}
+                      fill
+                      sizes="200px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-full items-center justify-center text-xs text-ink-muted">
+                      Video
+                    </span>
+                  )}
+                </div>
 
-              <div className="p-2.5">
-                <p className="truncate text-xs font-medium text-ink">
-                  {asset.originalFilename ?? `#${asset.id}`}
-                </p>
-                <p className="mt-0.5 text-2xs text-ink-muted">
-                  {asset.width && asset.height ? `${asset.width}×${asset.height} · ` : ""}
-                  {Math.max(1, Math.round(asset.sizeBytes / 1024))} KB
-                </p>
-                <p className="text-2xs text-ink-subtle">
-                  {formatDate(asset.createdAt, { locale, timeZone }) ?? ""}
-                </p>
+                <div className="p-2.5">
+                  <p className="truncate text-xs font-medium text-ink">
+                    {asset.originalFilename ?? `#${asset.id}`}
+                  </p>
+                  <p className="mt-0.5 text-2xs text-ink-muted">
+                    {asset.width && asset.height
+                      ? `${asset.width}×${asset.height} · `
+                      : ""}
+                    {Math.max(1, Math.round(asset.sizeBytes / 1024))} KB
+                  </p>
+                  <p className="text-2xs text-ink-subtle">
+                    {formatDate(asset.createdAt, { locale, timeZone }) ?? ""}
+                  </p>
 
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="mt-1.5 text-danger"
-                  onClick={() => {
-                    setDeleteError(null);
-                    setDeleting(asset);
-                  }}
-                >
-                  <Trash2 className="size-4" aria-hidden="true" />
-                  Delete
-                </Button>
-              </div>
-            </li>
-          ))}
-        </ul>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="mt-1.5 text-danger"
+                    onClick={() => {
+                      setDeleteError(null);
+                      setDeleting(asset);
+                    }}
+                  >
+                    <Trash2 className="size-4" aria-hidden="true" />
+                    Delete
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </BulkSelection>
       )}
 
       <ConfirmDialog
         open={deleting !== null}
         onOpenChange={(open) => (open ? null : setDeleting(null))}
         title="Delete this file?"
-        recordName={deleting?.originalFilename ?? (deleting ? `Media #${deleting.id}` : "")}
+        recordName={
+          deleting?.originalFilename ??
+          (deleting ? `Media #${deleting.id}` : "")
+        }
         description="Anything still using this file will lose its image. This cannot be undone."
         confirmLabel="Delete file"
         busy={deleteBusy}

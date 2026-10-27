@@ -10,6 +10,7 @@ import { revalidateRuntimeConfig } from "@/lib/runtime-config";
 import { CACHE_TAGS } from "@/lib/catalog/queries";
 import { revalidateTag } from "next/cache";
 import type {
+  AdminBulkResult,
   AdminConnectionCheck,
   AdminPaymentSettingsUpdate,
   AdminProductDetail,
@@ -34,16 +35,22 @@ import type {
  */
 
 export type AdminActionResult<T = undefined> =
-  | { ok: true; data: T }
-  | { ok: false; error: ApiErrorPayload };
+  { ok: true; data: T } | { ok: false; error: ApiErrorPayload };
 
 function fail(error: unknown): { ok: false; error: ApiErrorPayload } {
   if (error instanceof ApiError) {
-    return { ok: false, error: { message: error.message, code: error.code, errors: error.errors } };
+    return {
+      ok: false,
+      error: { message: error.message, code: error.code, errors: error.errors },
+    };
   }
   return {
     ok: false,
-    error: { message: "Something went wrong. Please try again.", code: "SERVER_ERROR", errors: null },
+    error: {
+      message: "Something went wrong. Please try again.",
+      code: "SERVER_ERROR",
+      errors: null,
+    },
   };
 }
 
@@ -97,7 +104,9 @@ export async function updateProductAction(
   return ok();
 }
 
-export async function deleteProductAction(id: number): Promise<AdminActionResult> {
+export async function deleteProductAction(
+  id: number,
+): Promise<AdminActionResult> {
   await requireAdmin("/admin/products");
 
   try {
@@ -109,6 +118,23 @@ export async function deleteProductAction(id: number): Promise<AdminActionResult
   revalidateCatalog();
   revalidatePath("/admin/products");
   return ok();
+}
+
+export async function bulkDeleteProductsAction(
+  ids: number[],
+): Promise<AdminActionResult<AdminBulkResult>> {
+  await requireAdmin("/admin/products");
+
+  let result: AdminBulkResult;
+  try {
+    result = await admin.bulkDeleteAdminProducts(ids);
+  } catch (error) {
+    return fail(error);
+  }
+
+  revalidateCatalog();
+  revalidatePath("/admin/products");
+  return { ok: true, data: result };
 }
 
 export async function replaceProductVariantsAction(
@@ -217,7 +243,9 @@ export async function saveCategoryAction(
   return ok();
 }
 
-export async function deleteCategoryAction(id: number): Promise<AdminActionResult> {
+export async function deleteCategoryAction(
+  id: number,
+): Promise<AdminActionResult> {
   await requireAdmin("/admin/categories");
   try {
     await admin.deleteAdminCategory(id);
@@ -229,13 +257,32 @@ export async function deleteCategoryAction(id: number): Promise<AdminActionResul
   return ok();
 }
 
+export async function bulkDeleteCategoriesAction(
+  ids: number[],
+): Promise<AdminActionResult<AdminBulkResult>> {
+  await requireAdmin("/admin/categories");
+  let result: AdminBulkResult;
+  try {
+    result = await admin.bulkDeleteAdminCategories(ids);
+  } catch (error) {
+    return fail(error);
+  }
+  revalidateCatalog();
+  revalidatePath("/admin/categories");
+  return { ok: true, data: result };
+}
+
 /* ------------------------------------------------------------------ *
  * Orders
  * ------------------------------------------------------------------ */
 
 export async function updateOrderStatusAction(
   id: number,
-  body: { status?: OrderStatus; paymentStatus?: PaymentStatus; adminNote?: string | null },
+  body: {
+    status?: OrderStatus;
+    paymentStatus?: PaymentStatus;
+    adminNote?: string | null;
+  },
 ): Promise<AdminActionResult> {
   await requireAdmin("/admin/orders");
   try {
@@ -251,7 +298,11 @@ export async function updateOrderStatusAction(
 
 export async function updateFulfilmentAction(
   id: number,
-  body: { carrier: string | null; trackingNumber: string | null; trackingUrl: string | null },
+  body: {
+    carrier: string | null;
+    trackingNumber: string | null;
+    trackingUrl: string | null;
+  },
 ): Promise<AdminActionResult> {
   await requireAdmin("/admin/orders");
   try {
@@ -277,6 +328,49 @@ export async function refundOrderAction(
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${id}`);
   return ok();
+}
+
+/** Orders that cannot make the move are reported in `failed`, not thrown. */
+export async function bulkUpdateOrderStatusAction(
+  ids: number[],
+  status: OrderStatus,
+): Promise<AdminActionResult<AdminBulkResult>> {
+  await requireAdmin("/admin/orders");
+  let result: AdminBulkResult;
+  try {
+    result = await admin.bulkUpdateOrderStatus(ids, status);
+  } catch (error) {
+    return fail(error);
+  }
+  revalidatePath("/admin/orders");
+  return { ok: true, data: result };
+}
+
+export async function deleteOrderAction(
+  id: number,
+): Promise<AdminActionResult> {
+  await requireAdmin("/admin/orders");
+  try {
+    await admin.deleteAdminOrder(id);
+  } catch (error) {
+    return fail(error);
+  }
+  revalidatePath("/admin/orders");
+  return ok();
+}
+
+export async function bulkDeleteOrdersAction(
+  ids: number[],
+): Promise<AdminActionResult<AdminBulkResult>> {
+  await requireAdmin("/admin/orders");
+  let result: AdminBulkResult;
+  try {
+    result = await admin.bulkDeleteAdminOrders(ids);
+  } catch (error) {
+    return fail(error);
+  }
+  revalidatePath("/admin/orders");
+  return { ok: true, data: result };
 }
 
 /* ------------------------------------------------------------------ *
@@ -309,7 +403,10 @@ export async function savePageAction(
   await requireAdmin("/admin/pages");
 
   try {
-    const saved = id === null ? await admin.createAdminPage(body) : await admin.updateAdminPage(id, body);
+    const saved =
+      id === null
+        ? await admin.createAdminPage(body)
+        : await admin.updateAdminPage(id, body);
     revalidateTag(CACHE_TAGS.pages, "max");
     revalidatePath("/admin/pages");
     return { ok: true, data: { id: saved.id } };
@@ -330,7 +427,9 @@ export async function deletePageAction(id: number): Promise<AdminActionResult> {
   return ok();
 }
 
-export async function replaceHomeSectionsAction(sections: unknown): Promise<AdminActionResult> {
+export async function replaceHomeSectionsAction(
+  sections: unknown,
+): Promise<AdminActionResult> {
   await requireAdmin("/admin/home-sections");
   try {
     await admin.replaceHomeSections({ sections });
@@ -346,7 +445,9 @@ export async function replaceHomeSectionsAction(sections: unknown): Promise<Admi
  * Media
  * ------------------------------------------------------------------ */
 
-export async function deleteMediaAction(id: number): Promise<AdminActionResult> {
+export async function deleteMediaAction(
+  id: number,
+): Promise<AdminActionResult> {
   await requireAdmin("/admin/media");
   try {
     await admin.deleteAdminMedia(id);
@@ -358,6 +459,21 @@ export async function deleteMediaAction(id: number): Promise<AdminActionResult> 
   return ok();
 }
 
+export async function bulkDeleteMediaAction(
+  ids: number[],
+): Promise<AdminActionResult<AdminBulkResult>> {
+  await requireAdmin("/admin/media");
+  let result: AdminBulkResult;
+  try {
+    result = await admin.bulkDeleteAdminMedia(ids);
+  } catch (error) {
+    return fail(error);
+  }
+  revalidateCatalog();
+  revalidatePath("/admin/media");
+  return { ok: true, data: result };
+}
+
 /* ------------------------------------------------------------------ *
  * Settings
  * ------------------------------------------------------------------ */
@@ -367,7 +483,9 @@ export async function deleteMediaAction(id: number): Promise<AdminActionResult> 
  * so the storefront picks up the new name, colours, currency and URLs without
  * waiting out the 60s window (contract 3, rule 6).
  */
-export async function saveStoreSettingsAction(body: unknown): Promise<AdminActionResult> {
+export async function saveStoreSettingsAction(
+  body: unknown,
+): Promise<AdminActionResult> {
   await requireAdmin("/admin/settings/store");
 
   try {
@@ -389,7 +507,9 @@ export async function saveStoreSettingsAction(body: unknown): Promise<AdminActio
  * setting, and the public runtime-config cache is refreshed so the storefront
  * header and footer pick the new links up immediately (contract 3, rule 6).
  */
-export async function saveNavigationAction(navigation: unknown): Promise<AdminActionResult> {
+export async function saveNavigationAction(
+  navigation: unknown,
+): Promise<AdminActionResult> {
   await requireAdmin("/admin/settings/navigation");
 
   try {
@@ -469,7 +589,9 @@ export async function saveAdminUserAction(
 }
 
 /** The API refuses self-deletion and removing your own admin role. */
-export async function deleteAdminUserAction(id: number): Promise<AdminActionResult> {
+export async function deleteAdminUserAction(
+  id: number,
+): Promise<AdminActionResult> {
   await requireAdmin("/admin/users");
   try {
     await admin.deleteAdminUser(id);

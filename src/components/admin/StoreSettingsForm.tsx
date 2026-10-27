@@ -434,7 +434,7 @@ export function StoreSettingsForm({
           <FormField
             id="setting-currency"
             label="Currency"
-            description="ISO 4217 code from the supported list."
+            description="ISO 4217 code, e.g. EUR. All products and shipping rates switch to it; amounts are kept, not converted."
             error={form.formState.errors.currency?.message ?? null}
           >
             {(field) => <Input {...field} {...form.register("currency")} />}

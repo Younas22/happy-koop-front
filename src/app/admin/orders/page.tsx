@@ -1,8 +1,30 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { AdminError, AdminPageHeader, AdminTableWrap, Td, Th } from "@/components/admin/AdminParts";
-import { OrderStatusBadge, PaymentStatusBadge } from "@/components/orders/OrderStatusBadge";
+import { bulkDeleteOrdersAction } from "@/app/admin/actions";
+import {
+  AdminError,
+  AdminPageHeader,
+  AdminTableWrap,
+  Td,
+  Th,
+} from "@/components/admin/AdminParts";
+import {
+  BulkActionBar,
+  BulkDeleteButton,
+  BulkSelectAll,
+  BulkSelection,
+  BulkSelectRow,
+} from "@/components/admin/BulkSelection";
+import {
+  DeleteOrderButton,
+  ORDER_DELETE_DESCRIPTION,
+  OrderBulkStatus,
+} from "@/components/admin/OrderBulkActions";
+import {
+  OrderStatusBadge,
+  PaymentStatusBadge,
+} from "@/components/orders/OrderStatusBadge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input } from "@/components/ui/Input";
@@ -51,7 +73,9 @@ function one(value: string | string[] | undefined): string {
 const selectClass =
   "h-11 w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink";
 
-export default async function AdminOrdersPage({ searchParams }: PageProps<"/admin/orders">) {
+export default async function AdminOrdersPage({
+  searchParams,
+}: PageProps<"/admin/orders">) {
   await requireAdmin("/admin/orders");
   const config = await getRuntimeConfig();
   const params = await searchParams;
@@ -62,7 +86,9 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
     ? (statusRaw as OrderStatus)
     : null;
   const paymentRaw = one(params.payment_status);
-  const paymentStatus = (PAYMENT_STATUSES as readonly string[]).includes(paymentRaw)
+  const paymentStatus = (PAYMENT_STATUSES as readonly string[]).includes(
+    paymentRaw,
+  )
     ? (paymentRaw as PaymentStatus)
     : null;
   const from = one(params.from).trim() || null;
@@ -90,11 +116,17 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
       ...overrides,
     })}`;
 
-  const dateOptions = { locale: config.locale.locale, timeZone: config.locale.timezone };
+  const dateOptions = {
+    locale: config.locale.locale,
+    timeZone: config.locale.timezone,
+  };
 
   return (
     <>
-      <AdminPageHeader title="Orders" description="Every order, with its authoritative status." />
+      <AdminPageHeader
+        title="Orders"
+        description="Every order, with its authoritative status."
+      />
 
       <form
         method="get"
@@ -102,17 +134,33 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
         className="surface-card mb-4 grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-5"
       >
         <div className="lg:col-span-2">
-          <label htmlFor="order-q" className="mb-1 block text-xs font-medium text-ink-muted">
+          <label
+            htmlFor="order-q"
+            className="mb-1 block text-xs font-medium text-ink-muted"
+          >
             Search order number, email or name
           </label>
-          <Input id="order-q" name="q" defaultValue={q} placeholder="Search orders" />
+          <Input
+            id="order-q"
+            name="q"
+            defaultValue={q}
+            placeholder="Search orders"
+          />
         </div>
 
         <div>
-          <label htmlFor="order-status" className="mb-1 block text-xs font-medium text-ink-muted">
+          <label
+            htmlFor="order-status"
+            className="mb-1 block text-xs font-medium text-ink-muted"
+          >
             Fulfilment status
           </label>
-          <select id="order-status" name="status" defaultValue={status ?? ""} className={selectClass}>
+          <select
+            id="order-status"
+            name="status"
+            defaultValue={status ?? ""}
+            className={selectClass}
+          >
             <option value="">Any</option>
             {ORDER_STATUSES.map((value) => (
               <option key={value} value={value}>
@@ -123,7 +171,10 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
         </div>
 
         <div>
-          <label htmlFor="order-payment" className="mb-1 block text-xs font-medium text-ink-muted">
+          <label
+            htmlFor="order-payment"
+            className="mb-1 block text-xs font-medium text-ink-muted"
+          >
             Payment status
           </label>
           <select
@@ -143,16 +194,32 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
 
         <div className="grid grid-cols-2 gap-2">
           <div>
-            <label htmlFor="order-from" className="mb-1 block text-xs font-medium text-ink-muted">
+            <label
+              htmlFor="order-from"
+              className="mb-1 block text-xs font-medium text-ink-muted"
+            >
               From
             </label>
-            <Input id="order-from" name="from" type="date" defaultValue={from ?? ""} />
+            <Input
+              id="order-from"
+              name="from"
+              type="date"
+              defaultValue={from ?? ""}
+            />
           </div>
           <div>
-            <label htmlFor="order-to" className="mb-1 block text-xs font-medium text-ink-muted">
+            <label
+              htmlFor="order-to"
+              className="mb-1 block text-xs font-medium text-ink-muted"
+            >
               To
             </label>
-            <Input id="order-to" name="to" type="date" defaultValue={to ?? ""} />
+            <Input
+              id="order-to"
+              name="to"
+              type="date"
+              defaultValue={to ?? ""}
+            />
           </div>
         </div>
 
@@ -178,10 +245,22 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
           }
         />
       ) : (
-        <>
+        <BulkSelection ids={(data?.data ?? []).map((order) => order.id)}>
+          <BulkActionBar>
+            <OrderBulkStatus />
+            <BulkDeleteButton
+              action={bulkDeleteOrdersAction}
+              singular="order"
+              plural="orders"
+              description={ORDER_DELETE_DESCRIPTION}
+            />
+          </BulkActionBar>
           <AdminTableWrap>
             <thead>
               <tr>
+                <Th className="w-10">
+                  <BulkSelectAll />
+                </Th>
                 <Th>Order</Th>
                 <Th>Customer</Th>
                 <Th>Placed</Th>
@@ -197,6 +276,12 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
               {(data?.data ?? []).map((order) => (
                 <tr key={order.id}>
                   <Td>
+                    <BulkSelectRow
+                      id={order.id}
+                      label={`Select order ${order.orderNumber}`}
+                    />
+                  </Td>
+                  <Td>
                     <Link
                       href={`/admin/orders/${order.id}`}
                       className="font-medium text-ink hover:underline"
@@ -204,13 +289,19 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
                       {order.orderNumber}
                     </Link>
                     <span className="block text-xs text-ink-muted">
-                      {order.itemCount} {order.itemCount === 1 ? "item" : "items"}
-                      {order.paymentProvider ? ` · ${order.paymentProvider}` : ""}
+                      {order.itemCount}{" "}
+                      {order.itemCount === 1 ? "item" : "items"}
+                      {order.paymentProvider
+                        ? ` · ${order.paymentProvider}`
+                        : ""}
                     </span>
                   </Td>
                   <Td className="break-words">{order.email ?? "-"}</Td>
                   <Td>
-                    {formatDate(order.placedAt ?? order.createdAt, dateOptions) ?? "Not recorded"}
+                    {formatDate(
+                      order.placedAt ?? order.createdAt,
+                      dateOptions,
+                    ) ?? "Not recorded"}
                   </Td>
                   <Td>
                     <OrderStatusBadge status={order.status} />
@@ -218,11 +309,20 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
                   <Td>
                     <PaymentStatusBadge status={order.paymentStatus} />
                   </Td>
-                  <Td className="text-right tabular-nums">{formatMoney(order.total)}</Td>
+                  <Td className="text-right tabular-nums">
+                    {formatMoney(order.total)}
+                  </Td>
                   <Td className="text-right">
-                    <Button asChild size="sm" variant="secondary">
-                      <Link href={`/admin/orders/${order.id}`}>Open</Link>
-                    </Button>
+                    <div className="flex justify-end gap-1.5">
+                      <Button asChild size="sm" variant="secondary">
+                        <Link href={`/admin/orders/${order.id}`}>Open</Link>
+                      </Button>
+                      <DeleteOrderButton
+                        id={order.id}
+                        orderNumber={order.orderNumber}
+                        size="sm"
+                      />
+                    </div>
                   </Td>
                 </tr>
               ))}
@@ -233,10 +333,12 @@ export default async function AdminOrdersPage({ searchParams }: PageProps<"/admi
             <Pagination
               className="mt-5"
               meta={data.meta}
-              buildHref={(target) => buildHref({ page: target <= 1 ? null : target })}
+              buildHref={(target) =>
+                buildHref({ page: target <= 1 ? null : target })
+              }
             />
           ) : null}
-        </>
+        </BulkSelection>
       )}
     </>
   );

@@ -375,11 +375,7 @@ export interface AdminPage extends Page {
 }
 
 export type HomeSectionType =
-  | "hero"
-  | "category_tiles"
-  | "product_grid"
-  | "benefits"
-  | "rich_text";
+  "hero" | "category_tiles" | "product_grid" | "benefits" | "rich_text";
 
 export const HOME_SECTION_TYPES: readonly HomeSectionType[] = [
   "hero",
@@ -437,6 +433,15 @@ export interface AdminDashboard {
 /** POST /admin/orders/{id}/refund response: the order plus the reference. */
 export interface AdminRefundResult extends AdminOrderDetail {
   refundReference: string | null;
+}
+
+/**
+ * Result of an admin bulk endpoint. Ids the API could not find are simply
+ * absent; `failed` lists the ones it found but refused, with the reason.
+ */
+export interface AdminBulkResult {
+  succeeded: number[];
+  failed: { id: number; message: string }[];
 }
 
 /** Address shape used by the admin order detail view. */

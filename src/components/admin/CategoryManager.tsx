@@ -6,8 +6,19 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
-import { deleteCategoryAction, saveCategoryAction } from "@/app/admin/actions";
+import {
+  bulkDeleteCategoriesAction,
+  deleteCategoryAction,
+  saveCategoryAction,
+} from "@/app/admin/actions";
 import { AdminTableWrap, Td, Th } from "@/components/admin/AdminParts";
+import {
+  BulkActionBar,
+  BulkDeleteButton,
+  BulkSelectAll,
+  BulkSelection,
+  BulkSelectRow,
+} from "@/components/admin/BulkSelection";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { MediaPickerField } from "@/components/admin/MediaPickerField";
 import { Alert } from "@/components/ui/Alert";
@@ -93,7 +104,10 @@ export function CategoryManager({
 }) {
   const router = useRouter();
 
-  const [editing, setEditing] = React.useState<{ open: boolean; category: AdminCategory | null }>({
+  const [editing, setEditing] = React.useState<{
+    open: boolean;
+    category: AdminCategory | null;
+  }>({
     open: false,
     category: null,
   });
@@ -105,6 +119,10 @@ export function CategoryManager({
   const [deleteBusy, setDeleteBusy] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
 
+  const ids = React.useMemo(
+    () => categories.map((category) => category.id),
+    [categories],
+  );
   const byId = React.useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
     [categories],
@@ -120,7 +138,8 @@ export function CategoryManager({
     setSaving(true);
     setFormError(null);
 
-    const parentId = draft.parentId === "" ? null : Number.parseInt(draft.parentId, 10);
+    const parentId =
+      draft.parentId === "" ? null : Number.parseInt(draft.parentId, 10);
     const sortOrder = Number.parseInt(draft.sortOrder, 10);
 
     const result = await saveCategoryAction(editing.category?.id ?? null, {
@@ -139,7 +158,9 @@ export function CategoryManager({
 
     if (!result.ok) {
       const details = flattenFieldErrors(result.error.errors);
-      setFormError(details.length > 0 ? details.join(" ") : result.error.message);
+      setFormError(
+        details.length > 0 ? details.join(" ") : result.error.message,
+      );
       return;
     }
 
@@ -182,82 +203,117 @@ export function CategoryManager({
           action={<Button onClick={() => open(null)}>New category</Button>}
         />
       ) : (
-        <AdminTableWrap>
-          <thead>
-            <tr>
-              <Th className="w-16">
-                <span className="sr-only">Image</span>
-              </Th>
-              <Th>Name</Th>
-              <Th>Parent</Th>
-              <Th className="text-right">Products</Th>
-              <Th className="text-right">Order</Th>
-              <Th>Active</Th>
-              <Th>
-                <span className="sr-only">Actions</span>
-              </Th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((category) => (
-              <tr key={category.id}>
-                <Td>
-                  <span className="relative block size-10 overflow-hidden rounded-md border border-line bg-sunken">
-                    {category.imageUrl ? (
-                      <Image
-                        src={category.imageUrl}
-                        alt=""
-                        fill
-                        sizes="40px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <span className="flex h-full items-center justify-center">
-                        <ImageIcon className="size-4 text-ink-subtle" aria-hidden="true" />
-                      </span>
-                    )}
-                  </span>
-                </Td>
-                <Td>
-                  <span className="font-medium text-ink">{category.name}</span>
-                  <span className="block text-xs text-ink-muted">/{category.slug}</span>
-                </Td>
-                <Td>
-                  {category.parentId === null
-                    ? "-"
-                    : (byId.get(category.parentId)?.name ?? `#${category.parentId}`)}
-                </Td>
-                <Td className="text-right tabular-nums">{category.productCount}</Td>
-                <Td className="text-right tabular-nums">{category.sortOrder}</Td>
-                <Td>
-                  <Badge tone={category.isActive ? "success" : "neutral"}>
-                    {category.isActive ? "Active" : "Hidden"}
-                  </Badge>
-                </Td>
-                <Td className="text-right">
-                  <div className="flex justify-end gap-1.5">
-                    <Button size="sm" variant="secondary" onClick={() => open(category)}>
-                      <Pencil className="size-4" aria-hidden="true" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-danger"
-                      onClick={() => {
-                        setDeleteError(null);
-                        setDeleting(category);
-                      }}
-                    >
-                      <Trash2 className="size-4" aria-hidden="true" />
-                      Delete
-                    </Button>
-                  </div>
-                </Td>
+        <BulkSelection ids={ids}>
+          <BulkActionBar>
+            <BulkDeleteButton
+              action={bulkDeleteCategoriesAction}
+              singular="category"
+              plural="categories"
+              description="Products are not deleted, only unlinked from these categories."
+            />
+          </BulkActionBar>
+          <AdminTableWrap>
+            <thead>
+              <tr>
+                <Th className="w-10">
+                  <BulkSelectAll />
+                </Th>
+                <Th className="w-16">
+                  <span className="sr-only">Image</span>
+                </Th>
+                <Th>Name</Th>
+                <Th>Parent</Th>
+                <Th className="text-right">Products</Th>
+                <Th className="text-right">Order</Th>
+                <Th>Active</Th>
+                <Th>
+                  <span className="sr-only">Actions</span>
+                </Th>
               </tr>
-            ))}
-          </tbody>
-        </AdminTableWrap>
+            </thead>
+            <tbody>
+              {categories.map((category) => (
+                <tr key={category.id}>
+                  <Td>
+                    <BulkSelectRow
+                      id={category.id}
+                      label={`Select ${category.name}`}
+                    />
+                  </Td>
+                  <Td>
+                    <span className="relative block size-10 overflow-hidden rounded-md border border-line bg-sunken">
+                      {category.imageUrl ? (
+                        <Image
+                          src={category.imageUrl}
+                          alt=""
+                          fill
+                          sizes="40px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-full items-center justify-center">
+                          <ImageIcon
+                            className="size-4 text-ink-subtle"
+                            aria-hidden="true"
+                          />
+                        </span>
+                      )}
+                    </span>
+                  </Td>
+                  <Td>
+                    <span className="font-medium text-ink">
+                      {category.name}
+                    </span>
+                    <span className="block text-xs text-ink-muted">
+                      /{category.slug}
+                    </span>
+                  </Td>
+                  <Td>
+                    {category.parentId === null
+                      ? "-"
+                      : (byId.get(category.parentId)?.name ??
+                        `#${category.parentId}`)}
+                  </Td>
+                  <Td className="text-right tabular-nums">
+                    {category.productCount}
+                  </Td>
+                  <Td className="text-right tabular-nums">
+                    {category.sortOrder}
+                  </Td>
+                  <Td>
+                    <Badge tone={category.isActive ? "success" : "neutral"}>
+                      {category.isActive ? "Active" : "Hidden"}
+                    </Badge>
+                  </Td>
+                  <Td className="text-right">
+                    <div className="flex justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => open(category)}
+                      >
+                        <Pencil className="size-4" aria-hidden="true" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-danger"
+                        onClick={() => {
+                          setDeleteError(null);
+                          setDeleting(category);
+                        }}
+                      >
+                        <Trash2 className="size-4" aria-hidden="true" />
+                        Delete
+                      </Button>
+                    </div>
+                  </Td>
+                </tr>
+              ))}
+            </tbody>
+          </AdminTableWrap>
+        </BulkSelection>
       )}
 
       <Dialog
@@ -266,7 +322,9 @@ export function CategoryManager({
       >
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>{editing.category ? "Edit category" : "New category"}</DialogTitle>
+            <DialogTitle>
+              {editing.category ? "Edit category" : "New category"}
+            </DialogTitle>
             <DialogDescription>
               Categories appear in the shop filters and get their own page.
             </DialogDescription>
@@ -285,7 +343,10 @@ export function CategoryManager({
                   {...field}
                   value={draft.name}
                   onChange={(event) =>
-                    setDraft((current) => ({ ...current, name: event.target.value }))
+                    setDraft((current) => ({
+                      ...current,
+                      name: event.target.value,
+                    }))
                   }
                 />
               )}
@@ -301,7 +362,10 @@ export function CategoryManager({
                   {...field}
                   value={draft.slug}
                   onChange={(event) =>
-                    setDraft((current) => ({ ...current, slug: event.target.value }))
+                    setDraft((current) => ({
+                      ...current,
+                      slug: event.target.value,
+                    }))
                   }
                 />
               )}
@@ -318,12 +382,17 @@ export function CategoryManager({
                   className={selectClass}
                   value={draft.parentId}
                   onChange={(event) =>
-                    setDraft((current) => ({ ...current, parentId: event.target.value }))
+                    setDraft((current) => ({
+                      ...current,
+                      parentId: event.target.value,
+                    }))
                   }
                 >
                   <option value="">No parent (top level)</option>
                   {categories
-                    .filter((candidate) => candidate.id !== editing.category?.id)
+                    .filter(
+                      (candidate) => candidate.id !== editing.category?.id,
+                    )
                     .map((candidate) => (
                       <option key={candidate.id} value={candidate.id}>
                         {candidate.name}
@@ -340,7 +409,10 @@ export function CategoryManager({
                   rows={3}
                   value={draft.description}
                   onChange={(event) =>
-                    setDraft((current) => ({ ...current, description: event.target.value }))
+                    setDraft((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
                   }
                 />
               )}
@@ -351,7 +423,9 @@ export function CategoryManager({
               label="Category image"
               description="Used by the home page's category tiles section. The category page itself does not show it."
               value={draft.imageMediaId}
-              onChange={(next) => setDraft((current) => ({ ...current, imageMediaId: next }))}
+              onChange={(next) =>
+                setDraft((current) => ({ ...current, imageMediaId: next }))
+              }
               media={media}
               total={mediaTotal}
               truncated={mediaTruncated}
@@ -365,7 +439,10 @@ export function CategoryManager({
                     inputMode="numeric"
                     value={draft.sortOrder}
                     onChange={(event) =>
-                      setDraft((current) => ({ ...current, sortOrder: event.target.value }))
+                      setDraft((current) => ({
+                        ...current,
+                        sortOrder: event.target.value,
+                      }))
                     }
                   />
                 )}
@@ -377,7 +454,10 @@ export function CategoryManager({
                   label="Visible in the shop"
                   checked={draft.isActive}
                   onCheckedChange={(checked) =>
-                    setDraft((current) => ({ ...current, isActive: checked === true }))
+                    setDraft((current) => ({
+                      ...current,
+                      isActive: checked === true,
+                    }))
                   }
                 />
               </div>
@@ -389,7 +469,10 @@ export function CategoryManager({
                   {...field}
                   value={draft.seoTitle}
                   onChange={(event) =>
-                    setDraft((current) => ({ ...current, seoTitle: event.target.value }))
+                    setDraft((current) => ({
+                      ...current,
+                      seoTitle: event.target.value,
+                    }))
                   }
                 />
               )}
@@ -402,7 +485,10 @@ export function CategoryManager({
                   rows={2}
                   value={draft.seoDescription}
                   onChange={(event) =>
-                    setDraft((current) => ({ ...current, seoDescription: event.target.value }))
+                    setDraft((current) => ({
+                      ...current,
+                      seoDescription: event.target.value,
+                    }))
                   }
                 />
               )}
@@ -410,10 +496,17 @@ export function CategoryManager({
           </DialogBody>
 
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setEditing({ open: false, category: null })}>
+            <Button
+              variant="ghost"
+              onClick={() => setEditing({ open: false, category: null })}
+            >
               Cancel
             </Button>
-            <Button loading={saving} loadingLabel="Saving…" onClick={() => void save()}>
+            <Button
+              loading={saving}
+              loadingLabel="Saving…"
+              onClick={() => void save()}
+            >
               {editing.category ? "Save category" : "Create category"}
             </Button>
           </DialogFooter>

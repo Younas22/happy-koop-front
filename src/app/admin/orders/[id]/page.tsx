@@ -4,13 +4,17 @@ import { notFound } from "next/navigation";
 
 import { AdminError, AdminPageHeader } from "@/components/admin/AdminParts";
 import { OrderAdminControls } from "@/components/admin/OrderAdminControls";
+import { DeleteOrderButton } from "@/components/admin/OrderBulkActions";
 import {
   AddressBlock,
   OrderItemList,
   OrderTotalsList,
   TrackingBlock,
 } from "@/components/orders/OrderParts";
-import { OrderStatusBadge, PaymentStatusBadge } from "@/components/orders/OrderStatusBadge";
+import {
+  OrderStatusBadge,
+  PaymentStatusBadge,
+} from "@/components/orders/OrderStatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader, CardTitle } from "@/components/ui/Card";
 import { fetchAdminOrder } from "@/lib/admin/queries";
@@ -31,7 +35,9 @@ export async function generateMetadata({
   });
 }
 
-export default async function AdminOrderDetailPage({ params }: PageProps<"/admin/orders/[id]">) {
+export default async function AdminOrderDetailPage({
+  params,
+}: PageProps<"/admin/orders/[id]">) {
   await requireAdmin("/admin/orders");
   const { id } = await params;
   const orderId = Number.parseInt(id, 10);
@@ -63,7 +69,10 @@ export default async function AdminOrderDetailPage({ params }: PageProps<"/admin
     );
   }
 
-  const dateOptions = { locale: config.locale.locale, timeZone: config.locale.timezone };
+  const dateOptions = {
+    locale: config.locale.locale,
+    timeZone: config.locale.timezone,
+  };
 
   return (
     <>
@@ -86,6 +95,12 @@ export default async function AdminOrderDetailPage({ params }: PageProps<"/admin
             <Button asChild variant="ghost">
               <Link href="/admin/orders">All orders</Link>
             </Button>
+            <DeleteOrderButton
+              id={order.id}
+              orderNumber={order.orderNumber}
+              redirectTo="/admin/orders"
+              label="Delete order"
+            />
           </>
         }
       />
@@ -111,10 +126,14 @@ export default async function AdminOrderDetailPage({ params }: PageProps<"/admin
               <CardTitle>Totals</CardTitle>
             </CardHeader>
             <CardBody>
-              <OrderTotalsList totals={order.totals} couponCode={order.couponCode} />
+              <OrderTotalsList
+                totals={order.totals}
+                couponCode={order.couponCode}
+              />
               {order.shippingMethod ? (
                 <p className="mt-3 text-xs text-ink-muted">
-                  Shipping method: {order.shippingMethod.label ?? order.shippingMethod.id}
+                  Shipping method:{" "}
+                  {order.shippingMethod.label ?? order.shippingMethod.id}
                 </p>
               ) : null}
             </CardBody>
@@ -136,14 +155,20 @@ export default async function AdminOrderDetailPage({ params }: PageProps<"/admin
                 <p className="mb-1 text-xs font-semibold tracking-wide text-ink-subtle uppercase">
                   Shipping
                 </p>
-                <AddressBlock address={order.shippingAddress} locale={config.locale.locale} />
+                <AddressBlock
+                  address={order.shippingAddress}
+                  locale={config.locale.locale}
+                />
               </div>
               <div>
                 <p className="mb-1 text-xs font-semibold tracking-wide text-ink-subtle uppercase">
                   Billing
                 </p>
                 {order.billingAddress ? (
-                  <AddressBlock address={order.billingAddress} locale={config.locale.locale} />
+                  <AddressBlock
+                    address={order.billingAddress}
+                    locale={config.locale.locale}
+                  />
                 ) : (
                   <p className="text-sm text-ink-muted">Same as shipping.</p>
                 )}
@@ -196,7 +221,9 @@ export default async function AdminOrderDetailPage({ params }: PageProps<"/admin
                 <CardTitle>Customer note</CardTitle>
               </CardHeader>
               <CardBody>
-                <p className="text-sm whitespace-pre-line text-ink-muted">{order.customerNote}</p>
+                <p className="text-sm whitespace-pre-line text-ink-muted">
+                  {order.customerNote}
+                </p>
               </CardBody>
             </Card>
           ) : null}
