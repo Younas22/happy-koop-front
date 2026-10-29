@@ -357,6 +357,58 @@ export interface AdminProductDetail {
 }
 
 /* ------------------------------------------------------------------ *
+ * Shipping
+ * ------------------------------------------------------------------ */
+
+export interface AdminShippingRate {
+  id: number;
+  code: string;
+  label: string;
+  description: string | null;
+  price: Money;
+  /** Rate is offered only at or above this subtotal; `null` = always. */
+  minSubtotal: Money | null;
+  /** Free at or above this subtotal; `null` = never free. */
+  freeAbove: Money | null;
+  estimateMinDays: number | null;
+  estimateMaxDays: number | null;
+  isDefault: boolean;
+  isActive: boolean;
+}
+
+export interface AdminShippingZone {
+  id: number;
+  name: string;
+  /** ISO-3166-1 alpha-2 codes, or `*` for every country no other zone covers. */
+  countryCodes: string[];
+  isActive: boolean;
+  sortOrder: number;
+  rates: AdminShippingRate[];
+  updatedAt: string | null;
+}
+
+/** POST/PATCH body. `rates` replaces the zone's whole rate list. */
+export interface AdminShippingZoneInput {
+  name: string;
+  countryCodes: string[];
+  isActive: boolean;
+  sortOrder: number;
+  rates: {
+    id: number | null;
+    code: string;
+    label: string;
+    description: string | null;
+    priceAmount: number;
+    minSubtotalAmount: number | null;
+    freeAboveAmount: number | null;
+    estimateMinDays: number | null;
+    estimateMaxDays: number | null;
+    isDefault: boolean;
+    isActive: boolean;
+  }[];
+}
+
+/* ------------------------------------------------------------------ *
  * Categories, pages, home sections
  * ------------------------------------------------------------------ */
 

@@ -31,6 +31,8 @@ import type {
   AdminProductSummary,
   AdminRefundResult,
   AdminReview,
+  AdminShippingZone,
+  AdminShippingZoneInput,
   AdminStoreSettingsResponse,
   AdminUserSummary,
   ContactMessageStatus,
@@ -237,6 +239,35 @@ export function bulkDeleteAdminCategories(
     { ids },
     AUTH,
   );
+}
+
+/* ------------------------------------------------------------------ *
+ * Shipping zones
+ * ------------------------------------------------------------------ */
+
+export function fetchAdminShippingZones(): Promise<
+  Result<AdminShippingZone[]>
+> {
+  return tryApi(() =>
+    apiGet<AdminShippingZone[]>("/admin/shipping-zones", AUTH),
+  );
+}
+
+export function createAdminShippingZone(
+  body: AdminShippingZoneInput,
+): Promise<AdminShippingZone> {
+  return apiPost<AdminShippingZone>("/admin/shipping-zones", body, AUTH);
+}
+
+export function updateAdminShippingZone(
+  id: number,
+  body: AdminShippingZoneInput,
+): Promise<AdminShippingZone> {
+  return apiPatch<AdminShippingZone>(`/admin/shipping-zones/${id}`, body, AUTH);
+}
+
+export function deleteAdminShippingZone(id: number): Promise<void> {
+  return apiDelete<void>(`/admin/shipping-zones/${id}`, AUTH);
 }
 
 /* ------------------------------------------------------------------ *

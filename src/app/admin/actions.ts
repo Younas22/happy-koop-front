@@ -16,6 +16,7 @@ import type {
   AdminMailTestResult,
   AdminPaymentSettingsUpdate,
   AdminProductDetail,
+  AdminShippingZoneInput,
   ContactMessageStatus,
   OrderStatus,
   PaymentStatus,
@@ -273,6 +274,48 @@ export async function bulkDeleteCategoriesAction(
   revalidateCatalog();
   revalidatePath("/admin/categories");
   return { ok: true, data: result };
+}
+
+/* ------------------------------------------------------------------ *
+ * Shipping zones
+ * ------------------------------------------------------------------ */
+
+// Product pages show the free-shipping threshold, so a rate change
+// revalidates the catalog too. Checkout reads rates uncached.
+
+export async function saveShippingZoneAction(
+  id: number | null,
+  body: AdminShippingZoneInput,
+): Promise<AdminActionResult> {
+  await requireAdmin("/admin/shipping");
+
+  try {
+    if (id === null) {
+      await admin.createAdminShippingZone(body);
+    } else {
+      await admin.updateAdminShippingZone(id, body);
+    }
+  } catch (error) {
+    return fail(error);
+  }
+
+  revalidateCatalog();
+  revalidatePath("/admin/shipping");
+  return ok();
+}
+
+export async function deleteShippingZoneAction(
+  id: number,
+): Promise<AdminActionResult> {
+  await requireAdmin("/admin/shipping");
+  try {
+    await admin.deleteAdminShippingZone(id);
+  } catch (error) {
+    return fail(error);
+  }
+  revalidateCatalog();
+  revalidatePath("/admin/shipping");
+  return ok();
 }
 
 /* ------------------------------------------------------------------ *

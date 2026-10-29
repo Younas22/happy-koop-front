@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   ShoppingCart,
   Star,
+  Truck,
   Users,
   UserCog,
 } from "lucide-react";
@@ -97,6 +98,7 @@ const GROUPS: { heading: string; items: NavItem[] }[] = [
         icon: Settings,
       },
       { href: "/admin/settings/navigation", label: "Navigation", icon: Menu },
+      { href: "/admin/shipping", label: "Shipping", icon: Truck },
       { href: "/admin/settings/payments", label: "Payments", icon: CreditCard },
       { href: "/admin/settings/email", label: "Email", icon: Mail },
       { href: "/admin/users", label: "Admin users", icon: UserCog },
